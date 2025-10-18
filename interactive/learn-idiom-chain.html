@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成语接龙大冒险</title>
+    <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        @keyframes correct {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes wrong {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        
+        .correct-animation {
+            animation: correct 0.5s ease;
+        }
+        
+        .wrong-animation {
+            animation: wrong 0.3s ease;
+        }
+        
+        .character-missing {
+            display: inline-block;
+            min-width: 1.5em;
+            border-bottom: 3px solid #4f46e5;
+            margin: 0 2px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-blue-50 to-indigo-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-3xl">
+        <!-- 顶部标题和得分 -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-indigo-700 mb-2">成语接龙大冒险</h1>
+            <div class="text-xl font-semibold text-gray-700">
+                当前得分: <span id="score" class="text-indigo-600">0</span>
+            </div>
+        </header>
+        
+        <!-- 游戏主区域 -->
+        <main class="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <!-- 成语显示区 -->
+            <div class="text-center mb-8">
+                <div id="idiom-display" class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+                    守_待兔
+                </div>
+                <div class="text-sm text-gray-500">请填写下划线处的汉字</div>
+            </div>
+            
+            <!-- 输入和提交区域 -->
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <input 
+                    type="text" 
+                    id="answer-input" 
+                    maxlength="1" 
+                    class="flex-1 border-2 border-indigo-200 rounded-lg px-4 py-3 text-center text-xl focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    placeholder="输入汉字"
+                >
+                <button 
+                    id="submit-btn" 
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200"
+                >
+                    提交
+                </button>
+            </div>
+            
+            <!-- 反馈区域 -->
+            <div id="feedback" class="mt-6 text-center hidden">
+                <div id="feedback-message" class="text-lg font-medium mb-2"></div>
+                <button 
+                    id="next-btn" 
+                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 hidden"
+                >
+                    下一个成语
+                </button>
+                <button 
+                    id="retry-btn" 
+                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 hidden"
+                >
+                    重试
+                </button>
+            </div>
+        </main>
+        
+        <!-- 游戏说明 -->
+        <footer class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">游戏说明</h2>
+            <ul class="space-y-2 text-gray-600">
+                <li><i class="fas fa-check-circle text-indigo-500 mr-2"></i> 填写成语中缺失的汉字</li>
+                <li><i class="fas fa-check-circle text-indigo-500 mr-2"></i> 答对得1分，自动进入下一题</li>
+                <li><i class="fas fa-check-circle text-indigo-500 mr-2"></i> 答错会显示正确答案，可以重试</li>
+                <li><i class="fas fa-check-circle text-indigo-500 mr-2"></i> 按回车键可直接提交答案</li>
+            </ul>
+            
+            <div class="mt-6 text-center text-sm text-gray-500">
+                <p>页面内容均由 AI 生成，仅供参考</p>
+                <p>created by <a href="https://space.coze.cn" class="text-indigo-600 hover:underline">coze space</a></p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 成语数据
+        const idioms = [
+            { full: "守株待兔", missing: 2 },
+            { full: "画龙点睛", missing: 3 },
+            { full: "望梅止渴", missing: 2 },
+            { full: "亡羊补牢", missing: 2 },
+            { full: "掩耳盗铃", missing: 2 },
+            { full: "刻舟求剑", missing: 2 },
+            { full: "狐假虎威", missing: 2 },
+            { full: "卧薪尝胆", missing: 2 },
+            { full: "负荆请罪", missing: 2 },
+            { full: "完璧归赵", missing: 2 }
+        ];
+        
+        // 游戏状态
+        let currentIdiomIndex = 0;
+        let score = 0;
+        let currentIdiom = idioms[currentIdiomIndex];
+        
+        // DOM元素
+        const idiomDisplay = document.getElementById('idiom-display');
+        const answerInput = document.getElementById('answer-input');
+        const submitBtn = document.getElementById('submit-btn');
+        const feedback = document.getElementById('feedback');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const nextBtn = document.getElementById('next-btn');
+        const retryBtn = document.getElementById('retry-btn');
+        const scoreDisplay = document.getElementById('score');
+        
+        // 初始化游戏
+        function initGame() {
+            displayIdiom();
+            answerInput.value = '';
+            feedback.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            retryBtn.classList.add('hidden');
+            answerInput.focus();
+        }
+        
+        // 显示当前成语
+        function displayIdiom() {
+            const idiom = currentIdiom.full;
+            const missingIndex = currentIdiom.missing;
+            
+            let displayText = '';
+            for (let i = 0; i < idiom.length; i++) {
+                if (i === missingIndex) {
+                    displayText += `<span class="character-missing">_</span>`;
+                } else {
+                    displayText += idiom[i];
+                }
+            }
+            
+            idiomDisplay.innerHTML = displayText;
+        }
+        
+        // 检查答案
+        function checkAnswer() {
+            const userAnswer = answerInput.value.trim();
+            const correctAnswer = currentIdiom.full[currentIdiom.missing];
+            
+            if (userAnswer === correctAnswer) {
+                // 答对
+                score++;
+                scoreDisplay.textContent = score;
+                feedbackMessage.textContent = `答对了！正确答案是"${correctAnswer}"`;
+                feedbackMessage.className = 'text-lg font-medium mb-2 text-green-600';
+                nextBtn.classList.remove('hidden');
+                retryBtn.classList.add('hidden');
+                idiomDisplay.classList.add('correct-animation');
+                
+                setTimeout(() => {
+                    idiomDisplay.classList.remove('correct-animation');
+                }, 500);
+            } else {
+                // 答错
+                feedbackMessage.textContent = `答错了！正确答案是"${correctAnswer}"`;
+                feedbackMessage.className = 'text-lg font-medium mb-2 text-red-600';
+                nextBtn.classList.add('hidden');
+                retryBtn.classList.remove('hidden');
+                idiomDisplay.classList.add('wrong-animation');
+                
+                setTimeout(() => {
+                    idiomDisplay.classList.remove('wrong-animation');
+                }, 300);
+            }
+            
+            feedback.classList.remove('hidden');
+        }
+        
+        // 下一题
+        function nextIdiom() {
+            currentIdiomIndex = (currentIdiomIndex + 1) % idioms.length;
+            currentIdiom = idioms[currentIdiomIndex];
+            initGame();
+        }
+        
+        // 重试当前题目
+        function retryCurrent() {
+            answerInput.value = '';
+            answerInput.focus();
+            feedback.classList.add('hidden');
+        }
+        
+        // 事件监听
+        submitBtn.addEventListener('click', checkAnswer);
+        nextBtn.addEventListener('click', nextIdiom);
+        retryBtn.addEventListener('click', retryCurrent);
+        
+        answerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+        
+        // 开始游戏
+        initGame();
+    </script>
+</body>
+</html>
