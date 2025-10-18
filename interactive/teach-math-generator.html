@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数学题互动出题器</title>
+    <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: #2d3748;
+        }
+        
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 28px 0 rgba(31, 38, 135, 0.2);
+        }
+        
+        .correct-answer {
+            animation: correctPulse 0.5s ease;
+            color: #10b981;
+        }
+        
+        .wrong-answer {
+            animation: wrongShake 0.5s ease;
+            color: #ef4444;
+        }
+        
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto py-8 px-4">
+        <div class="max-w-3xl mx-auto">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl md:text-4xl font-bold text-indigo-600 mb-2">
+                    <i class="fas fa-calculator mr-2"></i>数学题互动出题器
+                </h1>
+                <p class="text-gray-600">选择年级和题型，开始你的数学挑战吧！</p>
+            </div>
+            
+            <div class="glassmorphism p-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">选择年级</label>
+                        <select id="gradeSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="1">一年级</option>
+                            <option value="2">二年级</option>
+                            <option value="3">三年级</option>
+                            <option value="4">四年级</option>
+                            <option value="5">五年级</option>
+                            <option value="6">六年级</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">选择题型</label>
+                        <select id="typeSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="addition">加法</option>
+                            <option value="subtraction">减法</option>
+                            <option value="multiplication">乘法</option>
+                            <option value="division">除法</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button id="generateBtn" class="w-full btn-primary py-3 rounded-lg font-medium">
+                    <i class="fas fa-magic mr-2"></i>生成题目
+                </button>
+            </div>
+            
+            <div id="questionContainer" class="glassmorphism p-8 mb-8 hidden">
+                <div class="text-center mb-6">
+                    <h2 id="questionTitle" class="text-2xl font-bold text-indigo-600 mb-2"></h2>
+                    <p id="questionText" class="text-4xl font-bold my-6"></p>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">输入你的答案</label>
+                    <input id="answerInput" type="number" class="w-full p-4 border border-gray-300 rounded-lg text-2xl text-center focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="输入答案">
+                </div>
+                
+                <div id="resultContainer" class="hidden mb-6">
+                    <div id="resultText" class="text-center text-xl font-medium"></div>
+                    <div id="correctAnswer" class="text-center text-gray-600 mt-2"></div>
+                </div>
+                
+                <div class="flex justify-between">
+                    <button id="checkBtn" class="btn-primary py-3 px-6 rounded-lg font-medium">
+                        <i class="fas fa-check mr-2"></i>检查答案
+                    </button>
+                    <button id="nextBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 px-6 rounded-lg font-medium transition-colors">
+                        <i class="fas fa-forward mr-2"></i>下一题
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const gradeSelect = document.getElementById('gradeSelect');
+            const typeSelect = document.getElementById('typeSelect');
+            const generateBtn = document.getElementById('generateBtn');
+            const questionContainer = document.getElementById('questionContainer');
+            const questionTitle = document.getElementById('questionTitle');
+            const questionText = document.getElementById('questionText');
+            const answerInput = document.getElementById('answerInput');
+            const checkBtn = document.getElementById('checkBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const resultContainer = document.getElementById('resultContainer');
+            const resultText = document.getElementById('resultText');
+            const correctAnswer = document.getElementById('correctAnswer');
+            
+            let currentQuestion = null;
+            let currentAnswer = null;
+            
+            // 生成题目
+            generateBtn.addEventListener('click', function() {
+                const grade = parseInt(gradeSelect.value);
+                const type = typeSelect.value;
+                
+                currentQuestion = generateQuestion(grade, type);
+                currentAnswer = calculateAnswer(currentQuestion);
+                
+                questionTitle.textContent = `${grade}年级${getTypeName(type)}题`;
+                questionText.textContent = currentQuestion;
+                answerInput.value = '';
+                resultContainer.classList.add('hidden');
+                
+                questionContainer.classList.remove('hidden');
+                answerInput.focus();
+            });
+            
+            // 检查答案
+            checkBtn.addEventListener('click', function() {
+                if (!currentQuestion) return;
+                
+                const userAnswer = parseInt(answerInput.value);
+                if (isNaN(userAnswer)) {
+                    resultText.textContent = '请输入有效的数字答案';
+                    resultText.className = 'text-center text-xl font-medium text-yellow-500';
+                    resultContainer.classList.remove('hidden');
+                    return;
+                }
+                
+                if (userAnswer === currentAnswer) {
+                    resultText.textContent = '回答正确！太棒了！';
+                    resultText.className = 'text-center text-xl font-medium correct-answer';
+                    correctAnswer.textContent = '';
+                } else {
+                    resultText.textContent = '回答错误，再试一次吧！';
+                    resultText.className = 'text-center text-xl font-medium wrong-answer';
+                    correctAnswer.textContent = `正确答案: ${currentAnswer}`;
+                }
+                
+                resultContainer.classList.remove('hidden');
+            });
+            
+            // 下一题
+            nextBtn.addEventListener('click', function() {
+                if (!currentQuestion) return;
+                
+                const grade = parseInt(gradeSelect.value);
+                const type = typeSelect.value;
+                
+                currentQuestion = generateQuestion(grade, type);
+                currentAnswer = calculateAnswer(currentQuestion);
+                
+                questionTitle.textContent = `${grade}年级${getTypeName(type)}题`;
+                questionText.textContent = currentQuestion;
+                answerInput.value = '';
+                resultContainer.classList.add('hidden');
+                answerInput.focus();
+            });
+            
+            // 回车键检查答案
+            answerInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkBtn.click();
+                }
+            });
+            
+            // 生成题目函数
+            function generateQuestion(grade, type) {
+                let num1, num2;
+                
+                switch(grade) {
+                    case 1:
+                        num1 = Math.floor(Math.random() * 10) + 1;
+                        num2 = Math.floor(Math.random() * 10) + 1;
+                        break;
+                    case 2:
+                        num1 = Math.floor(Math.random() * 20) + 1;
+                        num2 = Math.floor(Math.random() * 20) + 1;
+                        break;
+                    case 3:
+                        num1 = Math.floor(Math.random() * 50) + 1;
+                        num2 = Math.floor(Math.random() * 50) + 1;
+                        break;
+                    case 4:
+                        num1 = Math.floor(Math.random() * 100) + 1;
+                        num2 = Math.floor(Math.random() * 100) + 1;
+                        break;
+                    case 5:
+                        num1 = Math.floor(Math.random() * 1000) + 1;
+                        num2 = Math.floor(Math.random() * 1000) + 1;
+                        break;
+                    case 6:
+                        num1 = Math.floor(Math.random() * 10000) + 1;
+                        num2 = Math.floor(Math.random() * 10000) + 1;
+                        break;
+                }
+                
+                switch(type) {
+                    case 'addition':
+                        return `${num1} + ${num2} = ?`;
+                    case 'subtraction':
+                        // 确保减法结果为正数
+                        if (num1 < num2) [num1, num2] = [num2, num1];
+                        return `${num1} - ${num2} = ?`;
+                    case 'multiplication':
+                        // 低年级乘法限制范围
+                        if (grade <= 2) {
+                            num1 = Math.floor(Math.random() * 5) + 1;
+                            num2 = Math.floor(Math.random() * 5) + 1;
+                        } else if (grade <= 4) {
+                            num1 = Math.floor(Math.random() * 10) + 1;
+                            num2 = Math.floor(Math.random() * 10) + 1;
+                        }
+                        return `${num1} × ${num2} = ?`;
+                    case 'division':
+                        // 确保除法结果为整数
+                        num2 = Math.floor(Math.random() * 10) + 1;
+                        num1 = num2 * (Math.floor(Math.random() * 10) + 1);
+                        return `${num1} ÷ ${num2} = ?`;
+                }
+            }
+            
+            // 计算答案
+            function calculateAnswer(question) {
+                const parts = question.split(' ');
+                const num1 = parseInt(parts[0]);
+                const operator = parts[1];
+                const num2 = parseInt(parts[2]);
+                
+                switch(operator) {
+                    case '+': return num1 + num2;
+                    case '-': return num1 - num2;
+                    case '×': return num1 * num2;
+                    case '÷': return num1 / num2;
+                }
+            }
+            
+            // 获取题型名称
+            function getTypeName(type) {
+                switch(type) {
+                    case 'addition': return '加法';
+                    case 'subtraction': return '减法';
+                    case 'multiplication': return '乘法';
+                    case 'division': return '除法';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
