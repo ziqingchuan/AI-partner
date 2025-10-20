@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小学英语单词3D翻转卡片</title>
+    <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        .flip-card {
+            perspective: 1000px;
+            width: 280px;
+            height: 180px;
+        }
+        
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .flip-card-front {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+        }
+        
+        .flip-card-back {
+            background: white;
+            transform: rotateY(180deg);
+            color: #2d3748;
+        }
+        
+        .category-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .category-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .word-card {
+            transition: all 0.3s ease;
+        }
+        
+        .word-card:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8 text-indigo-600">
+            <i class="fas fa-language mr-2"></i>小学英语单词3D翻转卡片
+        </h1>
+        
+        <!-- 分类导航 -->
+        <div class="flex flex-wrap justify-center gap-3 mb-8">
+            <!-- 全部分类 -->
+            <button class="category-btn bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full" data-category="all">
+                <i class="fas fa-star mr-1"></i>全部
+            </button>
+
+            <!-- 颜色分类 -->
+            <button class="category-btn bg-red-100 text-red-700 px-4 py-2 rounded-full" data-category="colors">
+                <i class="fas fa-palette mr-1"></i>颜色
+            </button>
+
+            <!-- 数字分类 -->
+            <button class="category-btn bg-blue-100 text-blue-700 px-4 py-2 rounded-full" data-category="numbers">
+                <i class="fas fa-sort-numeric-up mr-1"></i>数字
+            </button>
+
+            <!-- 动物分类 -->
+            <button class="category-btn bg-green-100 text-green-700 px-4 py-2 rounded-full" data-category="animals">
+                <i class="fas fa-paw mr-1"></i>动物
+            </button>
+
+            <!-- 水果分类 -->
+            <button class="category-btn bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full" data-category="fruits">
+                <i class="fas fa-apple-alt mr-1"></i>水果
+            </button>
+
+            <!-- 学校分类 -->
+            <button class="category-btn bg-purple-100 text-purple-700 px-4 py-2 rounded-full" data-category="school">
+                <i class="fas fa-school mr-1"></i>学校
+            </button>
+
+            <!-- 家庭分类 -->
+            <button class="category-btn bg-pink-100 text-pink-700 px-4 py-2 rounded-full" data-category="family">
+                <i class="fas fa-home mr-1"></i>家庭
+            </button>
+
+            <!-- 身体部位分类 -->
+            <button class="category-btn bg-orange-100 text-orange-700 px-4 py-2 rounded-full" data-category="body">
+                <i class="fas fa-heart mr-1"></i>身体
+            </button>
+        </div>
+        
+        <!-- 单词卡片区域 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="wordCardsContainer">
+            <!-- 卡片将通过JS动态生成 -->
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 单词数据
+            const wordsData = {
+                all: [
+                    // 基础颜色类（扩展至20+）
+                    { word: "Red", phonetic: "/red/", meaning: "红色", example: "The apple is red.", category: "colors" },
+                    { word: "Blue", phonetic: "/bluː/", meaning: "蓝色", example: "The sky is blue.", category: "colors" },
+                    { word: "Green", phonetic: "/ɡriːn/", meaning: "绿色", example: "Grass is green.", category: "colors" },
+                    { word: "Yellow", phonetic: "/ˈjel.əʊ/", meaning: "黄色", example: "The sun is yellow.", category: "colors" },
+                    { word: "Black", phonetic: "/blæk/", meaning: "黑色", example: "My shoes are black.", category: "colors" },
+                    { word: "White", phonetic: "/waɪt/", meaning: "白色", example: "Snow is white.", category: "colors" },
+                    { word: "Pink", phonetic: "/pɪŋk/", meaning: "粉色", example: "She likes pink dresses.", category: "colors" },
+                    { word: "Purple", phonetic: "/ˈpɜː.pəl/", meaning: "紫色", example: "Grapes are purple.", category: "colors" },
+                    { word: "Orange", phonetic: "/ˈɒr.ɪndʒ/", meaning: "橙色", example: "The orange fruit is orange.", category: "colors" },
+                    { word: "Brown", phonetic: "/braʊn/", meaning: "棕色", example: "The bear is brown.", category: "colors" },
+                    { word: "Gray", phonetic: "/ɡreɪ/", meaning: "灰色", example: "The elephant is gray.", category: "colors" },
+                    { word: "Gold", phonetic: "/ɡəʊld/", meaning: "金色", example: "The medal is gold.", category: "colors" },
+                    { word: "Silver", phonetic: "/ˈsɪl.vər/", meaning: "银色", example: "The spoon is silver.", category: "colors" },
+                    { word: "Aqua", phonetic: "/ˈɑː.kwə/", meaning: "水绿色", example: "The pool water is aqua.", category: "colors" },
+                    { word: "Magenta", phonetic: "/məˈdʒent.ə/", meaning: "洋红色", example: "Her dress is magenta.", category: "colors" },
+                    { word: "Turquoise", phonetic: "/ˈtɜː.kwɔɪz/", meaning: "青绿色", example: "The gemstone is turquoise.", category: "colors" },
+                    { word: "Lime", phonetic: "/laɪm/", meaning: "酸橙绿", example: "The lime fruit is lime green.", category: "colors" },
+                    { word: "Coral", phonetic: "/ˈkɔː.rəl/", meaning: "珊瑚色", example: "The fish has coral scales.", category: "colors" },
+                    { word: "Violet", phonetic: "/ˈvaɪ.ə.lət/", meaning: "紫罗兰色", example: "The flower is violet.", category: "colors" },
+                    { word: "Indigo", phonetic: "/ˈɪn.dɪ.ɡəʊ/", meaning: "靛蓝色", example: "The night sky turns indigo.", category: "colors" },
+                    { word: "Beige", phonetic: "/beɪʒ/", meaning: "米色", example: "The sofa is beige.", category: "colors" },
+
+                    // 数字类（1-100基础+序数词）
+                    { word: "One", phonetic: "/wʌn/", meaning: "一", example: "I have one apple.", category: "numbers" },
+                    { word: "Two", phonetic: "/tuː/", meaning: "二", example: "Two cats are playing.", category: "numbers" },
+                    { word: "Three", phonetic: "/θriː/", meaning: "三", example: "Three little pigs.", category: "numbers" },
+                    { word: "Four", phonetic: "/fɔːr/", meaning: "四", example: "Four seasons in a year.", category: "numbers" },
+                    { word: "Five", phonetic: "/faɪv/", meaning: "五", example: "I have five fingers.", category: "numbers" },
+                    { word: "Six", phonetic: "/sɪks/", meaning: "六", example: "Six days in a week.", category: "numbers" },
+                    { word: "Seven", phonetic: "/ˈsev.ən/", meaning: "七", example: "Seven colors in rainbow.", category: "numbers" },
+                    { word: "Eight", phonetic: "/eɪt/", meaning: "八", example: "Eight legs of spider.", category: "numbers" },
+                    { word: "Nine", phonetic: "/naɪn/", meaning: "九", example: "Nine planets (before Pluto).", category: "numbers" },
+                    { word: "Ten", phonetic: "/ten/", meaning: "十", example: "Ten toes on my feet.", category: "numbers" },
+                    { word: "Eleven", phonetic: "/ɪˈlev.ən/", meaning: "十一", example: "My birthday is on eleven.", category: "numbers" },
+                    { word: "Twelve", phonetic: "/twelv/", meaning: "十二", example: "Twelve months in a year.", category: "numbers" },
+                    { word: "Thirteen", phonetic: "/ˌθɜːˈtiːn/", meaning: "十三", example: "A baker's dozen is thirteen.", category: "numbers" },
+                    { word: "Fourteen", phonetic: "/ˌfɔːˈtiːn/", meaning: "十四", example: "Fourteen students in class.", category: "numbers" },
+                    { word: "Fifteen", phonetic: "/ˌfɪfˈtiːn/", meaning: "十五", example: "Fifteen minutes past three.", category: "numbers" },
+                    { word: "Sixteen", phonetic: "/ˌsɪksˈtiːn/", meaning: "十六", example: "Sixteen ounces in a pound.", category: "numbers" },
+                    { word: "Seventeen", phonetic: "/ˌsev.ənˈtiːn/", meaning: "十七", example: "Seventeen cents in change.", category: "numbers" },
+                    { word: "Eighteen", phonetic: "/ˌeɪˈtiːn/", meaning: "十八", example: "Eighteen holes in golf.", category: "numbers" },
+                    { word: "Nineteen", phonetic: "/ˌnaɪnˈtiːn/", meaning: "十九", example: "Nineteen keys on keyboard.", category: "numbers" },
+                    { word: "Twenty", phonetic: "/ˈtwen.ti/", meaning: "二十", example: "Twenty questions game.", category: "numbers" },
+                    { word: "Thirty", phonetic: "/ˈθɜː.ti/", meaning: "三十", example: "Thirty days has September.", category: "numbers" },
+                    { word: "Forty", phonetic: "/ˈfɔː.ti/", meaning: "四十", example: "Forty winks nap.", category: "numbers" },
+                    { word: "Fifty", phonetic: "/ˈfɪf.ti/", meaning: "五十", example: "Fifty states in USA.", category: "numbers" },
+                    { word: "Sixty", phonetic: "/ˈsɪk.sti/", meaning: "六十", example: "Sixty seconds in minute.", category: "numbers" },
+                    { word: "Seventy", phonetic: "/ˈsev.ən.ti/", meaning: "七十", example: "Seventy years old.", category: "numbers" },
+                    { word: "Eighty", phonetic: "/ˈeɪ.ti/", meaning: "八十", example: "Eighty miles per hour.", category: "numbers" },
+                    { word: "Ninety", phonetic: "/ˈnaɪn.ti/", meaning: "九十", example: "Ninety degrees hot.", category: "numbers" },
+                    { word: "One Hundred", phonetic: "/wʌn ˈhʌn.drəd/", meaning: "一百", example: "One hundred years ago.", category: "numbers" },
+                    { word: "First", phonetic: "/fɜːst/", meaning: "第一", example: "I came first in race.", category: "numbers" },
+                    { word: "Second", phonetic: "/ˈsek.ənd/", meaning: "第二", example: "Second place ribbon.", category: "numbers" },
+                    { word: "Third", phonetic: "/θɜːd/", meaning: "第三", example: "Third time lucky.", category: "numbers" },
+
+                    // 动物类（20+常见动物）
+                    { word: "Dog", phonetic: "/dɒɡ/", meaning: "狗", example: "The dog is cute.", category: "animals" },
+                    { word: "Cat", phonetic: "/kæt/", meaning: "猫", example: "The cat is sleeping.", category: "animals" },
+                    { word: "Bird", phonetic: "/bɜːd/", meaning: "鸟", example: "The bird can fly.", category: "animals" },
+                    { word: "Fish", phonetic: "/fɪʃ/", meaning: "鱼", example: "The fish swims in water.", category: "animals" },
+                    { word: "Cow", phonetic: "/kaʊ/", meaning: "牛", example: "The cow gives milk.", category: "animals" },
+                    { word: "Pig", phonetic: "/pɪɡ/", meaning: "猪", example: "The pig likes mud.", category: "animals" },
+                    { word: "Sheep", phonetic: "/ʃiːp/", meaning: "羊", example: "The sheep has wool.", category: "animals" },
+                    { word: "Horse", phonetic: "/hɔːrs/", meaning: "马", example: "The horse runs fast.", category: "animals" },
+                    { word: "Rabbit", phonetic: "/ˈræb.ɪt/", meaning: "兔子", example: "The rabbit has long ears.", category: "animals" },
+                    { word: "Mouse", phonetic: "/maʊs/", meaning: "老鼠", example: "The mouse is small.", category: "animals" },
+                    { word: "Monkey", phonetic: "/ˈmʌŋ.ki/", meaning: "猴子", example: "The monkey eats bananas.", category: "animals" },
+                    { word: "Elephant", phonetic: "/ˈel.ɪ.fənt/", meaning: "大象", example: "The elephant has a trunk.", category: "animals" },
+                    { word: "Lion", phonetic: "/ˈlaɪ.ən/", meaning: "狮子", example: "The lion is the king.", category: "animals" },
+                    { word: "Tiger", phonetic: "/ˈtaɪ.ɡər/", meaning: "老虎", example: "The tiger has stripes.", category: "animals" },
+                    { word: "Bear", phonetic: "/beər/", meaning: "熊", example: "The bear hibernates.", category: "animals" },
+                    { word: "Zebra", phonetic: "/ˈzeb.rə/", meaning: "斑马", example: "The zebra has stripes.", category: "animals" },
+                    { word: "Giraffe", phonetic: "/dʒɪˈrɑːf/", meaning: "长颈鹿", example: "The giraffe is tall.", category: "animals" },
+                    { word: "Kangaroo", phonetic: "/ˌkæŋ.ɡəˈruː/", meaning: "袋鼠", example: "The kangaroo has a pouch.", category: "animals" },
+                    { word: "Penguin", phonetic: "/ˈpeŋ.ɡwɪn/", meaning: "企鹅", example: "The penguin lives in cold places.", category: "animals" },
+                    { word: "Dolphin", phonetic: "/ˈdɒl.fɪn/", meaning: "海豚", example: "The dolphin is smart.", category: "animals" },
+                    { word: "Whale", phonetic: "/weɪl/", meaning: "鲸鱼", example: "The whale is huge.", category: "animals" },
+                    { word: "Butterfly", phonetic: "/ˈbʌt.ə.flaɪ/", meaning: "蝴蝶", example: "The butterfly is colorful.", category: "animals" },
+                    { word: "Frog", phonetic: "/frɒɡ/", meaning: "青蛙", example: "The frog jumps high.", category: "animals" },
+
+                    // 水果类（20+常见水果）
+                    { word: "Apple", phonetic: "/ˈæp.əl/", meaning: "苹果", example: "I like to eat apples.", category: "fruits" },
+                    { word: "Banana", phonetic: "/bəˈnɑː.nə/", meaning: "香蕉", example: "Bananas are yellow.", category: "fruits" },
+                    { word: "Orange", phonetic: "/ˈɒr.ɪndʒ/", meaning: "橙子", example: "Oranges are sweet.", category: "fruits" },
+                    { word: "Pear", phonetic: "/peər/", meaning: "梨", example: "The pear is juicy.", category: "fruits" },
+                    { word: "Grape", phonetic: "/ɡreɪp/", meaning: "葡萄", example: "Grapes grow in bunches.", category: "fruits" },
+                    { word: "Strawberry", phonetic: "/ˈstrɔː.bər.i/", meaning: "草莓", example: "Strawberries are red.", category: "fruits" },
+                    { word: "Watermelon", phonetic: "/ˈwɔː.təˌmel.ən/", meaning: "西瓜", example: "Watermelon is refreshing.", category: "fruits" },
+                    { word: "Pineapple", phonetic: "/ˈpaɪn.æp.əl/", meaning: "菠萝", example: "Pineapple is spiky.", category: "fruits" },
+                    { word: "Mango", phonetic: "/ˈmæŋ.ɡəʊ/", meaning: "芒果", example: "Mangoes are tropical.", category: "fruits" },
+                    { word: "Peach", phonetic: "/piːtʃ/", meaning: "桃子", example: "The peach is fuzzy.", category: "fruits" },
+                    { word: "Cherry", phonetic: "/ˈtʃer.i/", meaning: "樱桃", example: "Cherries are small.", category: "fruits" },
+                    { word: "Kiwi", phonetic: "/ˈkiː.wiː/", meaning: "猕猴桃", example: "Kiwi has green inside.", category: "fruits" },
+                    { word: "Lemon", phonetic: "/ˈlem.ən/", meaning: "柠檬", example: "Lemons are sour.", category: "fruits" },
+                    { word: "Lime", phonetic: "/laɪm/", meaning: "酸橙", example: "Lime makes drinks sour.", category: "fruits" },
+                    { word: "Blueberry", phonetic: "/ˈbluː.bər.i/", meaning: "蓝莓", example: "Blueberries are tiny.", category: "fruits" },
+                    { word: "Raspberry", phonetic: "/ˈræz.bər.i/", meaning: "覆盆子", example: "Raspberries are fragile.", category: "fruits" },
+                    { word: "Plum", phonetic: "/plʌm/", meaning: "李子", example: "Plums come in colors.", category: "fruits" },
+                    { word: "Apricot", phonetic: "/ˈeɪ.prɪ.kɒt/", meaning: "杏子", example: "Apricots are golden.", category: "fruits" },
+                    { word: "Coconut", phonetic: "/ˈkoʊ.kə.nʌt/", meaning: "椰子", example: "Coconut grows on trees.", category: "fruits" },
+                    { word: "Avocado", phonetic: "/ˌæv.əˈkɑː.doʊ/", meaning: "牛油果", example: "Avocado is creamy.", category: "fruits" },
+                    { word: "Pomegranate", phonetic: "/ˈpɒm.ɪˌɡræn.ɪt/", meaning: "石榴", example: "Pomegranate has many seeds.", category: "fruits" },
+
+                    // 学校类（20+校园相关词汇）
+                    { word: "School", phonetic: "/skuːl/", meaning: "学校", example: "I go to school every day.", category: "school" },
+                    { word: "Teacher", phonetic: "/ˈtiː.tʃər/", meaning: "老师", example: "The teacher helps us learn.", category: "school" },
+                    { word: "Student", phonetic: "/ˈstuː.dənt/", meaning: "学生", example: "I am a student.", category: "school" },
+                    { word: "Classroom", phonetic: "/ˈklɑː.sruːm/", meaning: "教室", example: "We study in the classroom.", category: "school" },
+                    { word: "Desk", phonetic: "/desk/", meaning: "课桌", example: "My book is on the desk.", category: "school" },
+                    { word: "Chair", phonetic: "/tʃeər/", meaning: "椅子", example: "I sit on the chair.", category: "school" },
+                    { word: "Book", phonetic: "/bʊk/", meaning: "书", example: "I read a book.", category: "school" },
+                    { word: "Pen", phonetic: "/pen/", meaning: "钢笔", example: "I write with a pen.", category: "school" },
+                    { word: "Pencil", phonetic: "/ˈpen.səl/", meaning: "铅笔", example: "I use a pencil for drawing.", category: "school" },
+                    { word: "Eraser", phonetic: "/ɪˈreɪ.sər/", meaning: "橡皮", example: "The eraser removes mistakes.", category: "school" },
+                    { word: "Ruler", phonetic: "/ˈruː.lər/", meaning: "尺子", example: "I measure with a ruler.", category: "school" },
+                    { word: "Backpack", phonetic: "/ˈbæk.pæk/", meaning: "书包", example: "I carry my books in my backpack.", category: "school" },
+                    { word: "Homework", phonetic: "/ˈhoʊm.wɜːrk/", meaning: "家庭作业", example: "I do my homework after school.", category: "school" },
+                    { word: "Library", phonetic: "/ˈlaɪ.brər.i/", meaning: "图书馆", example: "We read books in the library.", category: "school" },
+                    { word: "Playground", phonetic: "/ˈpleɪ.graʊnd/", meaning: "操场", example: "We play on the playground.", category: "school" },
+                    { word: "Recess", phonetic: "/ˈriː.ses/", meaning: "课间休息", example: "We have recess after lunch.", category: "school" },
+                    { word: "Principal", phonetic: "/ˈprɪn.sə.pəl/", meaning: "校长", example: "The principal leads the school.", category: "school" },
+                    { word: "Bell", phonetic: "/bel/", meaning: "铃声", example: "The bell rings for class.", category: "school" },
+                    { word: "Clock", phonetic: "/klɒk/", meaning: "时钟", example: "The clock shows the time.", category: "school" },
+                    { word: "Map", phonetic: "/mæp/", meaning: "地图", example: "The map shows countries.", category: "school" },
+                    { word: "Globe", phonetic: "/ɡloʊb/", meaning: "地球仪", example: "The globe shows the world.", category: "school" },
+
+                    // 家庭类（20+家庭相关词汇）
+                    { word: "Family", phonetic: "/ˈfæm.əl.i/", meaning: "家庭", example: "I love my family.", category: "family" },
+                    { word: "Mother", phonetic: "/ˈmʌð.ər/", meaning: "妈妈", example: "My mother is kind.", category: "family" },
+                    { word: "Father", phonetic: "/ˈfɑː.ðər/", meaning: "爸爸", example: "My father is strong.", category: "family" },
+                    { word: "Sister", phonetic: "/ˈsɪs.tər/", meaning: "姐姐/妹妹", example: "My sister plays with me.", category: "family" },
+                    { word: "Brother", phonetic: "/ˈbrʌ.ðər/", meaning: "哥哥/弟弟", example: "My brother helps me.", category: "family" },
+                    { word: "Grandmother", phonetic: "/ˈɡræn.dˌmʌð.ər/", meaning: "奶奶/外婆", example: "My grandmother tells stories.", category: "family" },
+                    { word: "Grandfather", phonetic: "/ˈɡræn.dˌfɑː.ðər/", meaning: "爷爷/外公", example: "My grandfather walks slowly.", category: "family" },
+                    { word: "House", phonetic: "/haʊs/", meaning: "房子", example: "I live in a house.", category: "family" },
+                    { word: "Room", phonetic: "/ruːm/", meaning: "房间", example: "My room is tidy.", category: "family" },
+                    { word: "Bed", phonetic: "/bed/", meaning: "床", example: "I sleep in bed.", category: "family" },
+                    { word: "Table", phonetic: "/ˈteɪ.bəl/", meaning: "桌子", example: "We eat at the table.", category: "family" },
+                    { word: "Chair", phonetic: "/tʃeər/", meaning: "椅子", example: "I sit on the chair.", category: "family" },
+                    { word: "Kitchen", phonetic: "/ˈkɪtʃ.ən/", meaning: "厨房", example: "Mom cooks in the kitchen.", category: "family" },
+                    { word: "Bathroom", phonetic: "/ˈbɑːθ.ruːm/", meaning: "浴室", example: "I brush teeth in bathroom.", category: "family" },
+                    { word: "Door", phonetic: "/dɔːr/", meaning: "门", example: "I open the door.", category: "family" },
+                    { word: "Window", phonetic: "/ˈwɪndoʊ/", meaning: "窗户", example: "The window lets in light.", category: "family" },
+                    { word: "TV", phonetic: "/ˌtiːˈviː/", meaning: "电视", example: "We watch TV together.", category: "family" },
+                    { word: "Phone", phonetic: "/foʊn/", meaning: "电话", example: "I call grandma on phone.", category: "family" },
+                    { word: "Car", phonetic: "/kɑːr/", meaning: "汽车", example: "Dad drives the car.", category: "family" },
+                    { word: "Food", phonetic: "/fuːd/", meaning: "食物", example: "I eat food for energy.", category: "family" },
+
+                    // 身体部位类（20+身体部位）
+                    { word: "Head", phonetic: "/hed/", meaning: "头", example: "I have a head.", category: "body" },
+                    { word: "Eye", phonetic: "/aɪ/", meaning: "眼睛", example: "I see with my eyes.", category: "body" },
+                    { word: "Ear", phonetic: "/ɪr/", meaning: "耳朵", example: "I hear with my ears.", category: "body" },
+                    { word: "Nose", phonetic: "/noʊz/", meaning: "鼻子", example: "I smell with my nose.", category: "body" },
+                    { word: "Mouth", phonetic: "/maʊθ/", meaning: "嘴巴", example: "I eat with my mouth.", category: "body" },
+                    { word: "Tooth", phonetic: "/tuːθ/", meaning: "牙齿", example: "I brush my teeth.", category: "body" },
+                    { word: "Tongue", phonetic: "/tʌŋ/", meaning: "舌头", example: "My tongue helps me taste.", category: "body" },
+                    { word: "Neck", phonetic: "/nek/", meaning: "脖子", example: "My neck holds my head.", category: "body" },
+                    { word: "Arm", phonetic: "/ɑːrm/", meaning: "手臂", example: "I wave with my arm.", category: "body" },
+                    { word: "Hand", phonetic: "/hænd/", meaning: "手", example: "I clap with my hands.", category: "body" },
+                    { word: "Finger", phonetic: "/ˈfɪŋ.ɡər/", meaning: "手指", example: "I have five fingers.", category: "body" },
+                    { word: "Leg", phonetic: "/leɡ/", meaning: "腿", example: "I walk with my legs.", category: "body" },
+                    { word: "Foot", phonetic: "/fʊt/", meaning: "脚", example: "I wear shoes on my feet.", category: "body" },
+                    { word: "Knee", phonetic: "/niː/", meaning: "膝盖", example: "I bend my knee.", category: "body" },
+                    { word: "Elbow", phonetic: "/ˈel.boʊ/", meaning: "肘部", example: "I rest my elbow.", category: "body" },
+                    { word: "Shoulder", phonetic: "/ˈʃoʊl.dər/", meaning: "肩膀", example: "I carry bags on shoulders.", category: "body" },
+                    { word: "Hair", phonetic: "/heər/", meaning: "头发", example: "My hair is brown.", category: "body" },
+                    { word: "Skin", phonetic: "/skɪn/", meaning: "皮肤", example: "My skin is soft.", category: "body" },
+                    { word: "Heart", phonetic: "/hɑːrt/", meaning: "心脏", example: "My heart beats.", category: "body" },
+                    { word: "Stomach", phonetic: "/ˈstʌm.ək/", meaning: "胃", example: "My stomach growls.", category: "body" },
+                    { word: "Back", phonetic: "/bæk/", meaning: "背部", example: "I sit up straight with back.", category: "body" }
+                ],
+                colors: [
+                    { word: "Red", phonetic: "/red/", meaning: "红色", example: "The apple is red.", category: "colors" },
+                    { word: "Blue", phonetic: "/bluː/", meaning: "蓝色", example: "The sky is blue.", category: "colors" },
+                    { word: "Green", phonetic: "/ɡriːn/", meaning: "绿色", example: "Grass is green.", category: "colors" },
+                    { word: "Yellow", phonetic: "/ˈjel.əʊ/", meaning: "黄色", example: "The sun is yellow.", category: "colors" },
+                    { word: "Black", phonetic: "/blæk/", meaning: "黑色", example: "My shoes are black.", category: "colors" },
+                    { word: "White", phonetic: "/waɪt/", meaning: "白色", example: "Snow is white.", category: "colors" },
+                    { word: "Pink", phonetic: "/pɪŋk/", meaning: "粉色", example: "She likes pink dresses.", category: "colors" },
+                    { word: "Purple", phonetic: "/ˈpɜː.pəl/", meaning: "紫色", example: "Grapes are purple.", category: "colors" },
+                    { word: "Orange", phonetic: "/ˈɒr.ɪndʒ/", meaning: "橙色", example: "The orange fruit is orange.", category: "colors" },
+                    { word: "Brown", phonetic: "/braʊn/", meaning: "棕色", example: "The bear is brown.", category: "colors" },
+                    { word: "Gray", phonetic: "/ɡreɪ/", meaning: "灰色", example: "The elephant is gray.", category: "colors" },
+                    { word: "Gold", phonetic: "/ɡəʊld/", meaning: "金色", example: "The medal is gold.", category: "colors" },
+                    { word: "Silver", phonetic: "/ˈsɪl.vər/", meaning: "银色", example: "The spoon is silver.", category: "colors" },
+                    { word: "Aqua", phonetic: "/ˈɑː.kwə/", meaning: "水绿色", example: "The pool water is aqua.", category: "colors" },
+                    { word: "Magenta", phonetic: "/məˈdʒent.ə/", meaning: "洋红色", example: "Her dress is magenta.", category: "colors" },
+                    { word: "Turquoise", phonetic: "/ˈtɜː.kwɔɪz/", meaning: "青绿色", example: "The gemstone is turquoise.", category: "colors" },
+                    { word: "Lime", phonetic: "/laɪm/", meaning: "酸橙绿", example: "The lime fruit is lime green.", category: "colors" },
+                    { word: "Coral", phonetic: "/ˈkɔː.rəl/", meaning: "珊瑚色", example: "The fish has coral scales.", category: "colors" },
+                    { word: "Violet", phonetic: "/ˈvaɪ.ə.lət/", meaning: "紫罗兰色", example: "The flower is violet.", category: "colors" },
+                    { word: "Indigo", phonetic: "/ˈɪn.dɪ.ɡəʊ/", meaning: "靛蓝色", example: "The night sky turns indigo.", category: "colors" },
+                    { word: "Beige", phonetic: "/beɪʒ/", meaning: "米色", example: "The sofa is beige.", category: "colors" },
+
+                ],
+                numbers: [
+                    { word: "One", phonetic: "/wʌn/", meaning: "一", example: "I have one apple.", category: "numbers" },
+                    { word: "Two", phonetic: "/tuː/", meaning: "二", example: "Two cats are playing.", category: "numbers" },
+                    { word: "Three", phonetic: "/θriː/", meaning: "三", example: "Three little pigs.", category: "numbers" },
+                    { word: "Four", phonetic: "/fɔːr/", meaning: "四", example: "Four seasons in a year.", category: "numbers" },
+                    { word: "Five", phonetic: "/faɪv/", meaning: "五", example: "I have five fingers.", category: "numbers" },
+                    { word: "Six", phonetic: "/sɪks/", meaning: "六", example: "Six days in a week.", category: "numbers" },
+                    { word: "Seven", phonetic: "/ˈsev.ən/", meaning: "七", example: "Seven colors in rainbow.", category: "numbers" },
+                    { word: "Eight", phonetic: "/eɪt/", meaning: "八", example: "Eight legs of spider.", category: "numbers" },
+                    { word: "Nine", phonetic: "/naɪn/", meaning: "九", example: "Nine planets (before Pluto).", category: "numbers" },
+                    { word: "Ten", phonetic: "/ten/", meaning: "十", example: "Ten toes on my feet.", category: "numbers" },
+                    { word: "Eleven", phonetic: "/ɪˈlev.ən/", meaning: "十一", example: "My birthday is on eleven.", category: "numbers" },
+                    { word: "Twelve", phonetic: "/twelv/", meaning: "十二", example: "Twelve months in a year.", category: "numbers" },
+                    { word: "Thirteen", phonetic: "/ˌθɜːˈtiːn/", meaning: "十三", example: "A baker's dozen is thirteen.", category: "numbers" },
+                    { word: "Fourteen", phonetic: "/ˌfɔːˈtiːn/", meaning: "十四", example: "Fourteen students in class.", category: "numbers" },
+                    { word: "Fifteen", phonetic: "/ˌfɪfˈtiːn/", meaning: "十五", example: "Fifteen minutes past three.", category: "numbers" },
+                    { word: "Sixteen", phonetic: "/ˌsɪksˈtiːn/", meaning: "十六", example: "Sixteen ounces in a pound.", category: "numbers" },
+                    { word: "Seventeen", phonetic: "/ˌsev.ənˈtiːn/", meaning: "十七", example: "Seventeen cents in change.", category: "numbers" },
+                    { word: "Eighteen", phonetic: "/ˌeɪˈtiːn/", meaning: "十八", example: "Eighteen holes in golf.", category: "numbers" },
+                    { word: "Nineteen", phonetic: "/ˌnaɪnˈtiːn/", meaning: "十九", example: "Nineteen keys on keyboard.", category: "numbers" },
+                    { word: "Twenty", phonetic: "/ˈtwen.ti/", meaning: "二十", example: "Twenty questions game.", category: "numbers" },
+                    { word: "Thirty", phonetic: "/ˈθɜː.ti/", meaning: "三十", example: "Thirty days has September.", category: "numbers" },
+                    { word: "Forty", phonetic: "/ˈfɔː.ti/", meaning: "四十", example: "Forty winks nap.", category: "numbers" },
+                    { word: "Fifty", phonetic: "/ˈfɪf.ti/", meaning: "五十", example: "Fifty states in USA.", category: "numbers" },
+                    { word: "Sixty", phonetic: "/ˈsɪk.sti/", meaning: "六十", example: "Sixty seconds in minute.", category: "numbers" },
+                    { word: "Seventy", phonetic: "/ˈsev.ən.ti/", meaning: "七十", example: "Seventy years old.", category: "numbers" },
+                    { word: "Eighty", phonetic: "/ˈeɪ.ti/", meaning: "八十", example: "Eighty miles per hour.", category: "numbers" },
+                    { word: "Ninety", phonetic: "/ˈnaɪn.ti/", meaning: "九十", example: "Ninety degrees hot.", category: "numbers" },
+                    { word: "One Hundred", phonetic: "/wʌn ˈhʌn.drəd/", meaning: "一百", example: "One hundred years ago.", category: "numbers" },
+                    { word: "First", phonetic: "/fɜːst/", meaning: "第一", example: "I came first in race.", category: "numbers" },
+                    { word: "Second", phonetic: "/ˈsek.ənd/", meaning: "第二", example: "Second place ribbon.", category: "numbers" },
+                    { word: "Third", phonetic: "/θɜːd/", meaning: "第三", example: "Third time lucky.", category: "numbers" },
+
+                ],
+                animals: [
+                    { word: "Dog", phonetic: "/dɒɡ/", meaning: "狗", example: "The dog is cute.", category: "animals" },
+                    { word: "Cat", phonetic: "/kæt/", meaning: "猫", example: "The cat is sleeping.", category: "animals" },
+                    { word: "Bird", phonetic: "/bɜːd/", meaning: "鸟", example: "The bird can fly.", category: "animals" },
+                    { word: "Fish", phonetic: "/fɪʃ/", meaning: "鱼", example: "The fish swims in water.", category: "animals" },
+                    { word: "Cow", phonetic: "/kaʊ/", meaning: "牛", example: "The cow gives milk.", category: "animals" },
+                    { word: "Pig", phonetic: "/pɪɡ/", meaning: "猪", example: "The pig likes mud.", category: "animals" },
+                    { word: "Sheep", phonetic: "/ʃiːp/", meaning: "羊", example: "The sheep has wool.", category: "animals" },
+                    { word: "Horse", phonetic: "/hɔːrs/", meaning: "马", example: "The horse runs fast.", category: "animals" },
+                    { word: "Rabbit", phonetic: "/ˈræb.ɪt/", meaning: "兔子", example: "The rabbit has long ears.", category: "animals" },
+                    { word: "Mouse", phonetic: "/maʊs/", meaning: "老鼠", example: "The mouse is small.", category: "animals" },
+                    { word: "Monkey", phonetic: "/ˈmʌŋ.ki/", meaning: "猴子", example: "The monkey eats bananas.", category: "animals" },
+                    { word: "Elephant", phonetic: "/ˈel.ɪ.fənt/", meaning: "大象", example: "The elephant has a trunk.", category: "animals" },
+                    { word: "Lion", phonetic: "/ˈlaɪ.ən/", meaning: "狮子", example: "The lion is the king.", category: "animals" },
+                    { word: "Tiger", phonetic: "/ˈtaɪ.ɡər/", meaning: "老虎", example: "The tiger has stripes.", category: "animals" },
+                    { word: "Bear", phonetic: "/beər/", meaning: "熊", example: "The bear hibernates.", category: "animals" },
+                    { word: "Zebra", phonetic: "/ˈzeb.rə/", meaning: "斑马", example: "The zebra has stripes.", category: "animals" },
+                    { word: "Giraffe", phonetic: "/dʒɪˈrɑːf/", meaning: "长颈鹿", example: "The giraffe is tall.", category: "animals" },
+                    { word: "Kangaroo", phonetic: "/ˌkæŋ.ɡəˈruː/", meaning: "袋鼠", example: "The kangaroo has a pouch.", category: "animals" },
+                    { word: "Penguin", phonetic: "/ˈpeŋ.ɡwɪn/", meaning: "企鹅", example: "The penguin lives in cold places.", category: "animals" },
+                    { word: "Dolphin", phonetic: "/ˈdɒl.fɪn/", meaning: "海豚", example: "The dolphin is smart.", category: "animals" },
+                    { word: "Whale", phonetic: "/weɪl/", meaning: "鲸鱼", example: "The whale is huge.", category: "animals" },
+                    { word: "Butterfly", phonetic: "/ˈbʌt.ə.flaɪ/", meaning: "蝴蝶", example: "The butterfly is colorful.", category: "animals" },
+                    { word: "Frog", phonetic: "/frɒɡ/", meaning: "青蛙", example: "The frog jumps high.", category: "animals" },
+
+                ],
+                fruits: [
+                    { word: "Apple", phonetic: "/ˈæp.əl/", meaning: "苹果", example: "I like to eat apples.", category: "fruits" },
+                    { word: "Banana", phonetic: "/bəˈnɑː.nə/", meaning: "香蕉", example: "Bananas are yellow.", category: "fruits" },
+                    { word: "Orange", phonetic: "/ˈɒr.ɪndʒ/", meaning: "橙子", example: "Oranges are sweet.", category: "fruits" },
+                    { word: "Pear", phonetic: "/peər/", meaning: "梨", example: "The pear is juicy.", category: "fruits" },
+                    { word: "Grape", phonetic: "/ɡreɪp/", meaning: "葡萄", example: "Grapes grow in bunches.", category: "fruits" },
+                    { word: "Strawberry", phonetic: "/ˈstrɔː.bər.i/", meaning: "草莓", example: "Strawberries are red.", category: "fruits" },
+                    { word: "Watermelon", phonetic: "/ˈwɔː.təˌmel.ən/", meaning: "西瓜", example: "Watermelon is refreshing.", category: "fruits" },
+                    { word: "Pineapple", phonetic: "/ˈpaɪn.æp.əl/", meaning: "菠萝", example: "Pineapple is spiky.", category: "fruits" },
+                    { word: "Mango", phonetic: "/ˈmæŋ.ɡəʊ/", meaning: "芒果", example: "Mangoes are tropical.", category: "fruits" },
+                    { word: "Peach", phonetic: "/piːtʃ/", meaning: "桃子", example: "The peach is fuzzy.", category: "fruits" },
+                    { word: "Cherry", phonetic: "/ˈtʃer.i/", meaning: "樱桃", example: "Cherries are small.", category: "fruits" },
+                    { word: "Kiwi", phonetic: "/ˈkiː.wiː/", meaning: "猕猴桃", example: "Kiwi has green inside.", category: "fruits" },
+                    { word: "Lemon", phonetic: "/ˈlem.ən/", meaning: "柠檬", example: "Lemons are sour.", category: "fruits" },
+                    { word: "Lime", phonetic: "/laɪm/", meaning: "酸橙", example: "Lime makes drinks sour.", category: "fruits" },
+                    { word: "Blueberry", phonetic: "/ˈbluː.bər.i/", meaning: "蓝莓", example: "Blueberries are tiny.", category: "fruits" },
+                    { word: "Raspberry", phonetic: "/ˈræz.bər.i/", meaning: "覆盆子", example: "Raspberries are fragile.", category: "fruits" },
+                    { word: "Plum", phonetic: "/plʌm/", meaning: "李子", example: "Plums come in colors.", category: "fruits" },
+                    { word: "Apricot", phonetic: "/ˈeɪ.prɪ.kɒt/", meaning: "杏子", example: "Apricots are golden.", category: "fruits" },
+                    { word: "Coconut", phonetic: "/ˈkoʊ.kə.nʌt/", meaning: "椰子", example: "Coconut grows on trees.", category: "fruits" },
+                    { word: "Avocado", phonetic: "/ˌæv.əˈkɑː.doʊ/", meaning: "牛油果", example: "Avocado is creamy.", category: "fruits" },
+                    { word: "Pomegranate", phonetic: "/ˈpɒm.ɪˌɡræn.ɪt/", meaning: "石榴", example: "Pomegranate has many seeds.", category: "fruits" },
+
+                ],
+                school: [
+                    { word: "School", phonetic: "/skuːl/", meaning: "学校", example: "I go to school every day.", category: "school" },
+                    { word: "Teacher", phonetic: "/ˈtiː.tʃər/", meaning: "老师", example: "The teacher helps us learn.", category: "school" },
+                    { word: "Student", phonetic: "/ˈstuː.dənt/", meaning: "学生", example: "I am a student.", category: "school" },
+                    { word: "Classroom", phonetic: "/ˈklɑː.sruːm/", meaning: "教室", example: "We study in the classroom.", category: "school" },
+                    { word: "Desk", phonetic: "/desk/", meaning: "课桌", example: "My book is on the desk.", category: "school" },
+                    { word: "Chair", phonetic: "/tʃeər/", meaning: "椅子", example: "I sit on the chair.", category: "school" },
+                    { word: "Book", phonetic: "/bʊk/", meaning: "书", example: "I read a book.", category: "school" },
+                    { word: "Pen", phonetic: "/pen/", meaning: "钢笔", example: "I write with a pen.", category: "school" },
+                    { word: "Pencil", phonetic: "/ˈpen.səl/", meaning: "铅笔", example: "I use a pencil for drawing.", category: "school" },
+                    { word: "Eraser", phonetic: "/ɪˈreɪ.sər/", meaning: "橡皮", example: "The eraser removes mistakes.", category: "school" },
+                    { word: "Ruler", phonetic: "/ˈruː.lər/", meaning: "尺子", example: "I measure with a ruler.", category: "school" },
+                    { word: "Backpack", phonetic: "/ˈbæk.pæk/", meaning: "书包", example: "I carry my books in my backpack.", category: "school" },
+                    { word: "Homework", phonetic: "/ˈhoʊm.wɜːrk/", meaning: "家庭作业", example: "I do my homework after school.", category: "school" },
+                    { word: "Library", phonetic: "/ˈlaɪ.brər.i/", meaning: "图书馆", example: "We read books in the library.", category: "school" },
+                    { word: "Playground", phonetic: "/ˈpleɪ.graʊnd/", meaning: "操场", example: "We play on the playground.", category: "school" },
+                    { word: "Recess", phonetic: "/ˈriː.ses/", meaning: "课间休息", example: "We have recess after lunch.", category: "school" },
+                    { word: "Principal", phonetic: "/ˈprɪn.sə.pəl/", meaning: "校长", example: "The principal leads the school.", category: "school" },
+                    { word: "Bell", phonetic: "/bel/", meaning: "铃声", example: "The bell rings for class.", category: "school" },
+                    { word: "Clock", phonetic: "/klɒk/", meaning: "时钟", example: "The clock shows the time.", category: "school" },
+                    { word: "Map", phonetic: "/mæp/", meaning: "地图", example: "The map shows countries.", category: "school" },
+                    { word: "Globe", phonetic: "/ɡloʊb/", meaning: "地球仪", example: "The globe shows the world.", category: "school" },
+
+                ],
+                family: [
+                    { word: "Family", phonetic: "/ˈfæm.əl.i/", meaning: "家庭", example: "I love my family.", category: "family" },
+                    { word: "Mother", phonetic: "/ˈmʌð.ər/", meaning: "妈妈", example: "My mother is kind.", category: "family" },
+                    { word: "Father", phonetic: "/ˈfɑː.ðər/", meaning: "爸爸", example: "My father is strong.", category: "family" },
+                    { word: "Sister", phonetic: "/ˈsɪs.tər/", meaning: "姐姐/妹妹", example: "My sister plays with me.", category: "family" },
+                    { word: "Brother", phonetic: "/ˈbrʌ.ðər/", meaning: "哥哥/弟弟", example: "My brother helps me.", category: "family" },
+                    { word: "Grandmother", phonetic: "/ˈɡræn.dˌmʌð.ər/", meaning: "奶奶/外婆", example: "My grandmother tells stories.", category: "family" },
+                    { word: "Grandfather", phonetic: "/ˈɡræn.dˌfɑː.ðər/", meaning: "爷爷/外公", example: "My grandfather walks slowly.", category: "family" },
+                    { word: "House", phonetic: "/haʊs/", meaning: "房子", example: "I live in a house.", category: "family" },
+                    { word: "Room", phonetic: "/ruːm/", meaning: "房间", example: "My room is tidy.", category: "family" },
+                    { word: "Bed", phonetic: "/bed/", meaning: "床", example: "I sleep in bed.", category: "family" },
+                    { word: "Table", phonetic: "/ˈteɪ.bəl/", meaning: "桌子", example: "We eat at the table.", category: "family" },
+                    { word: "Chair", phonetic: "/tʃeər/", meaning: "椅子", example: "I sit on the chair.", category: "family" },
+                    { word: "Kitchen", phonetic: "/ˈkɪtʃ.ən/", meaning: "厨房", example: "Mom cooks in the kitchen.", category: "family" },
+                    { word: "Bathroom", phonetic: "/ˈbɑːθ.ruːm/", meaning: "浴室", example: "I brush teeth in bathroom.", category: "family" },
+                    { word: "Door", phonetic: "/dɔːr/", meaning: "门", example: "I open the door.", category: "family" },
+                    { word: "Window", phonetic: "/ˈwɪndoʊ/", meaning: "窗户", example: "The window lets in light.", category: "family" },
+                    { word: "TV", phonetic: "/ˌtiːˈviː/", meaning: "电视", example: "We watch TV together.", category: "family" },
+                    { word: "Phone", phonetic: "/foʊn/", meaning: "电话", example: "I call grandma on phone.", category: "family" },
+                    { word: "Car", phonetic: "/kɑːr/", meaning: "汽车", example: "Dad drives the car.", category: "family" },
+                    { word: "Food", phonetic: "/fuːd/", meaning: "食物", example: "I eat food for energy.", category: "family" },
+
+                ],
+                body: [
+                    { word: "Head", phonetic: "/hed/", meaning: "头", example: "I have a head.", category: "body" },
+                    { word: "Eye", phonetic: "/aɪ/", meaning: "眼睛", example: "I see with my eyes.", category: "body" },
+                    { word: "Ear", phonetic: "/ɪr/", meaning: "耳朵", example: "I hear with my ears.", category: "body" },
+                    { word: "Nose", phonetic: "/noʊz/", meaning: "鼻子", example: "I smell with my nose.", category: "body" },
+                    { word: "Mouth", phonetic: "/maʊθ/", meaning: "嘴巴", example: "I eat with my mouth.", category: "body" },
+                    { word: "Tooth", phonetic: "/tuːθ/", meaning: "牙齿", example: "I brush my teeth.", category: "body" },
+                    { word: "Tongue", phonetic: "/tʌŋ/", meaning: "舌头", example: "My tongue helps me taste.", category: "body" },
+                    { word: "Neck", phonetic: "/nek/", meaning: "脖子", example: "My neck holds my head.", category: "body" },
+                    { word: "Arm", phonetic: "/ɑːrm/", meaning: "手臂", example: "I wave with my arm.", category: "body" },
+                    { word: "Hand", phonetic: "/hænd/", meaning: "手", example: "I clap with my hands.", category: "body" },
+                    { word: "Finger", phonetic: "/ˈfɪŋ.ɡər/", meaning: "手指", example: "I have five fingers.", category: "body" },
+                    { word: "Leg", phonetic: "/leɡ/", meaning: "腿", example: "I walk with my legs.", category: "body" },
+                    { word: "Foot", phonetic: "/fʊt/", meaning: "脚", example: "I wear shoes on my feet.", category: "body" },
+                    { word: "Knee", phonetic: "/niː/", meaning: "膝盖", example: "I bend my knee.", category: "body" },
+                    { word: "Elbow", phonetic: "/ˈel.boʊ/", meaning: "肘部", example: "I rest my elbow.", category: "body" },
+                    { word: "Shoulder", phonetic: "/ˈʃoʊl.dər/", meaning: "肩膀", example: "I carry bags on shoulders.", category: "body" },
+                    { word: "Hair", phonetic: "/heər/", meaning: "头发", example: "My hair is brown.", category: "body" },
+                    { word: "Skin", phonetic: "/skɪn/", meaning: "皮肤", example: "My skin is soft.", category: "body" },
+                    { word: "Heart", phonetic: "/hɑːrt/", meaning: "心脏", example: "My heart beats.", category: "body" },
+                    { word: "Stomach", phonetic: "/ˈstʌm.ək/", meaning: "胃", example: "My stomach growls.", category: "body" },
+                    { word: "Back", phonetic: "/bæk/", meaning: "背部", example: "I sit up straight with back.", category: "body" }
+
+                ]
+            };
+
+            // 渲染单词卡片
+            function renderWordCards(category = 'all') {
+                const container = document.getElementById('wordCardsContainer');
+                container.innerHTML = '';
+                
+                const words = wordsData[category];
+                
+                words.forEach(word => {
+                    const card = document.createElement('div');
+                    card.className = 'flip-card word-card';
+                    card.innerHTML = `
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front flex flex-col items-center justify-center">
+                                <h3 class="text-2xl font-bold mb-2">${word.word}</h3>
+                                <p class="text-sm opacity-80">点击翻转查看详情</p>
+                            </div>
+                            <div class="flip-card-back">
+                                <h3 class="text-xl font-bold mb-1">${word.word}</h3>
+                                <p class="text-sm text-gray-600 mb-2">${word.phonetic}</p>
+                                <p class="text-base mb-2">中文: ${word.meaning}</p>
+                                <p class="text-sm text-gray-700 italic">例句: ${word.example}</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // 添加点击事件
+                    card.addEventListener('click', function() {
+                        this.classList.toggle('flipped');
+                    });
+                    
+                    container.appendChild(card);
+                });
+            }
+            
+            // 初始渲染
+            renderWordCards();
+            
+            // 分类按钮点击事件
+            document.querySelectorAll('.category-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const category = this.getAttribute('data-category');
+                    
+                    // 更新按钮状态
+                    document.querySelectorAll('.category-btn').forEach(btn => {
+                        btn.classList.remove('bg-indigo-500', 'text-white');
+                        btn.classList.add(btn.getAttribute('data-category') === 'all' ? 'bg-indigo-100' : 
+                                         btn.getAttribute('data-category') === 'colors' ? 'bg-red-100' :
+                                         btn.getAttribute('data-category') === 'numbers' ? 'bg-blue-100' :
+                                         btn.getAttribute('data-category') === 'animals' ? 'bg-green-100' : 'bg-yellow-100');
+                        btn.classList.add(btn.getAttribute('data-category') === 'all' ? 'text-indigo-700' : 
+                                         btn.getAttribute('data-category') === 'colors' ? 'text-red-700' :
+                                         btn.getAttribute('data-category') === 'numbers' ? 'text-blue-700' :
+                                         btn.getAttribute('data-category') === 'animals' ? 'text-green-700' : 'text-yellow-700');
+                    });
+                    
+                    this.classList.remove(this.getAttribute('data-category') === 'all' ? 'bg-indigo-100' : 
+                                         this.getAttribute('data-category') === 'colors' ? 'bg-red-100' :
+                                         this.getAttribute('data-category') === 'numbers' ? 'bg-blue-100' :
+                                         this.getAttribute('data-category') === 'animals' ? 'bg-green-100' : 'bg-yellow-100');
+                    this.classList.remove(this.getAttribute('data-category') === 'all' ? 'text-indigo-700' : 
+                                         this.getAttribute('data-category') === 'colors' ? 'text-red-700' :
+                                         this.getAttribute('data-category') === 'numbers' ? 'text-blue-700' :
+                                         this.getAttribute('data-category') === 'animals' ? 'text-green-700' : 'text-yellow-700');
+                    this.classList.add('bg-indigo-500', 'text-white');
+                    
+                    // 渲染对应分类的卡片
+                    renderWordCards(category);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -7,5 +7,5 @@ export interface Agent {
     coverUrl: string;
     type: UseType;
     link: string;
-    tag: string;
+    tag: string[];
 }

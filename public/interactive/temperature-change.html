@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>温度变化实验数据可视化（10分钟）</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .description {
+            color: #7f8c8d;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .table-section {
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            min-width: 800px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        td:first-child {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+        }
+
+        .chart-section {
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            height: 400px;
+            position: relative;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        #resetBtn {
+            background-color: #e74c3c;
+        }
+
+        #resetBtn:hover {
+            background-color: #c0392b;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            th, td {
+                padding: 8px 5px;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        .instructions {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 14px;
+            border-left: 4px solid #3498db;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>温度变化实验数据可视化（10分钟）</h1>
+        <p class="description">在下方表格中输入温度数据，图表将自动更新显示温度变化趋势</p>
+    </header>
+
+    <div class="table-section">
+        <table id="dataTable">
+            <thead>
+            <tr>
+                <th>时间/分钟</th>
+                <th>0</th>
+                <th>1</th>
+                <th>2</th>
+                <th>3</th>
+                <th>4</th>
+                <th>5</th>
+                <th>6</th>
+                <th>7</th>
+                <th>8</th>
+                <th>9</th>
+                <th>10</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>热水/℃</td>
+                <td><input type="number" min="0" max="100" class="hot-water" data-time="0"></td>
+                <td><input type="number" min="0" max="100" class="hot-water" data-time="1"></td>
+                <td><input type="number" min="0" max="100" class="hot-water" data-time="2"></td>
+                <td><input type="number" min="0" max="100" class="hot-water" data-time="3"></td>
+                <td><input type="number" min="0" max="100" class="hot-water" data-time="4"></td>
+                <td><input type="number" min="0" max="100" class="hot-water" data-time="5"></td>
+                <td><input type="number" min="0" max="100" class="hot-water" data-time="6"></td>
+                <td><input type="number" min="0" max="100" class="hot-water" data-time="7"></td>
+                <td><input type="number" min="0" max="100" class="hot-water" data-time="8"></td>
+                <td><input type="number" min="0" max="100" class="hot-water" data-time="9"></td>
+                <td><input type="number" min="0" max="100" class="hot-water" data-time="10"></td>
+            </tr>
+            <tr>
+                <td>冷水/℃</td>
+                <td><input type="number" min="0" max="100" class="cold-water" data-time="0"></td>
+                <td><input type="number" min="0" max="100" class="cold-water" data-time="1"></td>
+                <td><input type="number" min="0" max="100" class="cold-water" data-time="2"></td>
+                <td><input type="number" min="0" max="100" class="cold-water" data-time="3"></td>
+                <td><input type="number" min="0" max="100" class="cold-water" data-time="4"></td>
+                <td><input type="number" min="0" max="100" class="cold-water" data-time="5"></td>
+                <td><input type="number" min="0" max="100" class="cold-water" data-time="6"></td>
+                <td><input type="number" min="0" max="100" class="cold-water" data-time="7"></td>
+                <td><input type="number" min="0" max="100" class="cold-water" data-time="8"></td>
+                <td><input type="number" min="0" max="100" class="cold-water" data-time="9"></td>
+                <td><input type="number" min="0" max="100" class="cold-water" data-time="10"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="chart-section">
+        <div class="chart-container">
+            <canvas id="temperatureChart"></canvas>
+        </div>
+    </div>
+
+    <div class="buttons">
+        <button id="updateBtn">更新图表</button>
+        <button id="resetBtn">重置数据</button>
+    </div>
+
+    <div class="instructions">
+        <p><strong>使用说明：</strong> 在表格中输入热水和冷水在0-10分钟内的温度数据（0-100℃），图表将自动更新。您也可以点击"更新图表"按钮手动更新，或点击"重置数据"按钮清空所有输入。</p>
+    </div>
+
+    <footer>
+        <p>温度变化实验数据可视化工具 &copy; 2023</p>
+    </footer>
+</div>
+
+<script>
+    // 获取DOM元素
+    const hotWaterInputs = document.querySelectorAll('.hot-water');
+    const coldWaterInputs = document.querySelectorAll('.cold-water');
+    const updateBtn = document.getElementById('updateBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // 初始化图表
+    const ctx = document.getElementById('temperatureChart').getContext('2d');
+    const temperatureChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+            datasets: [
+                {
+                    label: '热水温度/℃',
+                    data: [],
+                    borderColor: '#e74c3c', // 红色线条
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#e74c3c',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    tension: 0, // 不使用平滑曲线，使用折线
+                    fill: false
+                },
+                {
+                    label: '冷水温度/℃',
+                    data: [],
+                    borderColor: '#3498db', // 蓝色线条
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#3498db',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    tension: 0, // 不使用平滑曲线，使用折线
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 65, // 修改为65°C
+                    min: 0,
+                    ticks: {
+                        stepSize: 5, // 修改为5°C跨度
+                        font: {
+                            size: 14
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: '温度/℃',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        padding: {top: 10, bottom: 10}
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: '时间/分钟',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        padding: {top: 10, bottom: 10}
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: '温度变化折线图',
+                    font: {
+                        size: 20,
+                        weight: 'bold'
+                    },
+                    padding: {
+                        top: 10,
+                        bottom: 30
+                    }
+                },
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 14
+                        },
+                        padding: 20
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    titleFont: {
+                        size: 14
+                    },
+                    bodyFont: {
+                        size: 14
+                    },
+                    padding: 10
+                }
+            }
+        }
+    });
+
+    // 更新图表函数
+    function updateChart() {
+        const hotWaterData = [];
+        const coldWaterData = [];
+
+        // 收集热水数据
+        hotWaterInputs.forEach(input => {
+            hotWaterData.push(input.value ? parseFloat(input.value) : null);
+        });
+
+        // 收集冷水数据
+        coldWaterInputs.forEach(input => {
+            coldWaterData.push(input.value ? parseFloat(input.value) : null);
+        });
+
+        // 更新图表数据
+        temperatureChart.data.datasets[0].data = hotWaterData;
+        temperatureChart.data.datasets[1].data = coldWaterData;
+
+        // 更新图表
+        temperatureChart.update();
+    }
+
+    // 重置数据函数
+    function resetData() {
+        hotWaterInputs.forEach(input => {
+            input.value = '';
+        });
+
+        coldWaterInputs.forEach(input => {
+            input.value = '';
+        });
+
+        updateChart();
+    }
+
+    // 添加示例数据
+    function addSampleData() {
+        // 添加一些示例数据以便演示
+        const hotWaterSample = [60, 55, 50, 46, 42, 39, 36, 33, 30, 28, 26];
+        const coldWaterSample = [20, 25, 29, 32, 35, 37, 39, 41, 42, 43, 44];
+
+        hotWaterInputs.forEach((input, index) => {
+            input.value = hotWaterSample[index];
+        });
+
+        coldWaterInputs.forEach((input, index) => {
+            input.value = coldWaterSample[index];
+        });
+
+        updateChart();
+    }
+
+    // 添加事件监听器
+    updateBtn.addEventListener('click', updateChart);
+    resetBtn.addEventListener('click', resetData);
+
+    // 为输入框添加实时更新功能
+    hotWaterInputs.forEach(input => {
+        input.addEventListener('input', updateChart);
+    });
+
+    coldWaterInputs.forEach(input => {
+        input.addEventListener('input', updateChart);
+    });
+
+    // 页面加载后添加示例数据
+    window.addEventListener('load', addSampleData);
+</script>
+</body>
+</html>

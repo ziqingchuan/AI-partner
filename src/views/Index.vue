@@ -34,6 +34,7 @@
     <!-- 搜索区域 -->
     <section class="search-section">
       <div class="search-container">
+        <svg t="1760794863634" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="11992" width="32" height="32"><path d="M830.691776 28.50234a264.084578 264.084578 0 0 0 52.467534 113.54914 280.830818 280.830818 0 0 0 115.416526 64.45495 38.371778 38.371778 0 0 1 0 72.285924 282.276536 282.276536 0 0 0-115.476765 64.45495 265.048391 265.048391 0 0 0-52.467533 113.488902 37.167013 37.167013 0 0 1-72.285925 0 264.566484 264.566484 0 0 0-52.527772-113.488902A282.397013 282.397013 0 0 0 590.401315 278.792354a38.371778 38.371778 0 0 1 0-72.285924 281.252485 281.252485 0 0 0 115.416526-64.45495 265.048391 265.048391 0 0 0 52.467534-113.54914 37.167013 37.167013 0 0 1 72.285924 0zM760.273238 290.840009a259.024564 259.024564 0 0 0-63.310423-48.190617 257.699322 257.699322 0 0 0 63.250184-48.190616 234.929255 234.929255 0 0 0 34.215338-49.274906 237.519501 237.519501 0 0 0 34.275576 49.274906 259.024564 259.024564 0 0 0 63.250184 48.190616 256.313841 256.313841 0 0 0-63.250184 48.190617 237.519501 237.519501 0 0 0-34.275576 49.274905 234.929255 234.929255 0 0 0-34.215338-49.274905zM378.001172 219.819088a37.468204 37.468204 0 0 1 36.142963 28.613178 499.977646 499.977646 0 0 0 99.875052 214.93015 526.000579 526.000579 0 0 0 216.436107 122.404165 38.432017 38.432017 0 0 1 0 72.285925 525.27772 525.27772 0 0 0-216.436107 122.404166 499.977646 499.977646 0 0 0-99.995529 214.930149 37.167013 37.167013 0 0 1-72.285924 0 500.88122 500.88122 0 0 0-99.99553-214.930149 527.446297 527.446297 0 0 0-216.436106-122.404166 38.432017 38.432017 0 0 1 0-72.285925 526.723438 526.723438 0 0 0 216.436106-122.404165 500.399314 500.399314 0 0 0 99.99553-215.050626 37.528443 37.528443 0 0 1 36.263438-28.552941z" p-id="11993" fill="#ffffff"></path></svg>
         <input
             type="text"
             v-model="searchQuery"
@@ -69,8 +70,10 @@
             <!-- 移除高亮组件，直接显示文本 -->
             <h3 class="agent-name">{{ agent.name }}</h3>
             <p class="agent-intro">{{ agent.intro }}</p>
-            <div class="agent-tag">
-              <span>#</span>{{ agent.tag }}
+            <div class="agent-tags">
+              <div class="tag-item" v-for="tag in agent.tag">
+                {{ tag }}
+              </div>
             </div>
           </div>
         </div>
@@ -83,7 +86,8 @@
 
     <!-- 页脚区域 -->
     <footer class="app-footer">
-      <p>@2025 AI 伴学平台</p>
+      <span>© 2025 AI 伴学平台</span>
+      <span>徐州市中山外国语实验学校</span>
     </footer>
   </div>
 </template>
@@ -126,9 +130,9 @@ const goToAgentLink = (link: string) => {
   // 验证link有效性，避免空链接跳转
   if (link && link.trim()) {
     // 方式1：当前窗口跳转（常用）
-    window.location.href = link;
+    // window.location.href = link;
     // 方式2：新窗口跳转（如需新窗口打开，替换上面代码为下面这行）
-    // window.open(link, '_blank');
+    window.open(link, '_blank');
   }
 };
 
@@ -143,7 +147,7 @@ watch(searchQuery, () => {
 });
 
 // 筛选 agents（保持不变，搜索逻辑正常保留）
-const filteredAgents = computed<Agent[]>(() => {
+const filteredAgents = computed(() => {
   return agents.filter(agent => {
     const typeMatch = agent.type === activeType.value;
     if (!currentSearch.value) return typeMatch;
@@ -151,8 +155,7 @@ const filteredAgents = computed<Agent[]>(() => {
     const searchLower = currentSearch.value.toLowerCase();
     const nameMatch = agent.name.toLowerCase().includes(searchLower);
     const introMatch = agent.intro.toLowerCase().includes(searchLower);
-    const tagMatch = agent.tag.toLowerCase().includes(searchLower);
-
+    const tagMatch = agent.tag.some(tag => tag.toLowerCase().includes(searchLower));
     return typeMatch && (nameMatch || introMatch || tagMatch);
   });
 });
@@ -196,7 +199,7 @@ const filteredAgents = computed<Agent[]>(() => {
   font-size: 1.6rem;
   margin: 0;
   font-weight: 700;
-  color: #13227a; /* 标题改为主题色 */
+  color: rgba(12, 67, 255, 0.6); /* 标题改为主题色 */
 }
 
 /* 按钮容器：增大间距 */
@@ -222,7 +225,7 @@ const filteredAgents = computed<Agent[]>(() => {
 
 /* 选中按钮样式：主题色背景 */
 .active-btn {
-  background-color: #13227a; /* 选中背景为主题色 */
+  background-color: rgba(12, 67, 255, 0.6); /* 选中背景为主题色 */
   border: none;
   padding: 10px 15px;
   border-radius: 8px;
@@ -243,8 +246,6 @@ const filteredAgents = computed<Agent[]>(() => {
   width: 24px;
   height: 24px;
   object-fit: contain;
-  /* 选中时图标变白色，未选中时为主题色 */
-  filter: invert(var(--icon-invert, 0)) brightness(0) saturate(100%) var(--icon-color, #13227a);
 }
 
 
@@ -257,13 +258,13 @@ const filteredAgents = computed<Agent[]>(() => {
 /* 未选中按钮hover效果 */
 .header-btn:hover {
   background-color: #eef1ff; /* 浅主题色背景 */
-  color: #13227a; /* hover文字色改为主题色 */
+  color: rgba(12, 67, 255, 0.6); /* hover文字色改为主题色 */
 }
 
 /* 搜索区域样式（保持不变） */
 .search-section {
   padding: 30px 20px;
-  background: linear-gradient(180deg, #13227a, #283685);
+  background: rgba(12, 67, 255, 0.6);
 }
 
 .search-container {
@@ -271,6 +272,9 @@ const filteredAgents = computed<Agent[]>(() => {
   margin: 0 auto;
   display: flex;
   position: relative;
+  .icon {
+    margin-right: 10px;
+  }
 }
 
 .search-input {
@@ -285,7 +289,7 @@ const filteredAgents = computed<Agent[]>(() => {
 
 .search-btn {
   background-color: white;
-  color: #13227a;
+  color: rgba(12, 67, 255, 0.6);
   border: none;
   border-radius: 0 30px 30px 0;
   padding: 0 20px;
@@ -349,7 +353,7 @@ const filteredAgents = computed<Agent[]>(() => {
 
 .agent-name {
   margin: 0 0 10px 0;
-  color: #13227a;
+  color: rgba(12, 67, 255, 0.75);
   font-size: 1.2rem;
 }
 
@@ -360,16 +364,22 @@ const filteredAgents = computed<Agent[]>(() => {
   line-height: 1.5;
 }
 
-.agent-tag {
-  font-size: 0.8rem;
-  color: #13227a;
+.agent-tags {
   display: flex;
-  align-items: center;
-  gap: 5px;
+  flex-direction: row;
+  gap: 10px;
 }
 
-.agent-tag span {
-  color: #13227a;
+.tag-item {
+  font-size: 0.7rem;
+  color: rgba(12, 67, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  padding: 3px 5px;
+  background-color: rgba(112, 175, 225, 0.15);
+  width: 40px;
 }
 
 .no-results {
@@ -381,11 +391,16 @@ const filteredAgents = computed<Agent[]>(() => {
 
 /* 页脚样式（保持不变） */
 .app-footer {
-  background-color: #13227a;
+  background: rgba(12, 67, 255, 0.6);
   color: white;
   text-align: center;
   padding: 20px;
+  gap: 10px;
   font-size: 0.9rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }
 
 /* 动画（保持不变） */
