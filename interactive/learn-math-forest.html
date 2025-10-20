@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>数学连线魔法森林</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" />
+    <!-- 引入React -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- 引入Framer Motion -->
+    <script src="https://cdn.jsdelivr.net/npm/framer-motion@10.16.16/dist/framer-motion.min.js"></script>
+
+    <!-- 配置Tailwind CSS -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#16a34a', // 绿色作为主色调
+                        secondary: '#3b82f6', // 蓝色作为辅助色
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Noto Sans', 'Helvetica', 'Arial', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .bg-magic-gradient {
+                background-image: linear-gradient(to bottom, #ecfdf5, #dbeafe);
+            }
+            .text-shadow-sm {
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            }
+        }
+    </style>
+
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            font-weight: 400;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* 动画效果 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/javascript">
+    // 使用React.createElement创建组件
+    const { useState, useEffect, useRef } = React;
+
+    // 数学问题类型定义
+    const generateProblems = () => {
+        const operations = [
+            { op: '+', min: 1, max: 10 },
+            { op: '-', min: 5, max: 20 },
+            { op: '*', min: 2, max: 5 }
+        ];
+
+        const problems = [];
+
+        for (let i = 0; i < 6; i++) {
+            const operation = operations[Math.floor(Math.random() * operations.length)];
+            let a, b, answer;
+
+            if (operation.op === '+') {
+                a = Math.floor(Math.random() * (operation.max - operation.min + 1)) + operation.min;
+                b = Math.floor(Math.random() * (operation.max - operation.min + 1)) + operation.min;
+                answer = a + b;
+            } else if (operation.op === '-') {
+                a = Math.floor(Math.random() * (operation.max - operation.min + 1)) + operation.min;
+                b = Math.floor(Math.random() * a) + 1; // 确保结果为正
+                answer = a - b;
+            } else { // *
+                a = Math.floor(Math.random() * (operation.max - operation.min + 1)) + operation.min;
+                b = Math.floor(Math.random() * (operation.max - operation.min + 1)) + operation.min;
+                answer = a * b;
+            }
+
+            problems.push({
+                expression: `${a}${operation.op}${b}=?`,
+                answer
+            });
+        }
+
+        return problems;
+    };
+
+    // 生成水果
+    const generateFruits = (problems) => {
+        const fruitTypes = ['apple', 'orange', 'banana', 'grape', 'strawberry'];
+        const answers = [...problems].map(p => p.answer);
+
+        // 随机排序答案
+        for (let i = answers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [answers[i], answers[j]] = [answers[j], answers[i]];
+        }
+
+        return answers.map((num, index) => ({
+            number: num,
+            type: fruitTypes[index % fruitTypes.length]
+        }));
+    };
+
+    // 自定义Hook - 数学游戏逻辑
+    const useMathGame = () => {
+        const [problems, setProblems] = useState([]);
+        const [fruits, setFruits] = useState([]);
+        const [selectedProblem, setSelectedProblem] = useState(null);
+        const [selectedFruit, setSelectedFruit] = useState(null);
+        const [matchedPairs, setMatchedPairs] = useState([]);
+        const [connections, setConnections] = useState([]);
+
+        // 初始化游戏
+        useEffect(() => {
+            resetGame();
+        }, []);
+
+        // 重置游戏
+        const resetGame = () => {
+            const newProblems = generateProblems();
+            const newFruits = generateFruits(newProblems);
+
+            setProblems(newProblems);
+            setFruits(newFruits);
+            setSelectedProblem(null);
+            setSelectedFruit(null);
+            setMatchedPairs([]);
+            setConnections([]);
+        };
+
+        // 选择问题卡片
+        const selectProblem = (index) => {
+            // 如果已经匹配，则不能再选择
+            if (matchedPairs.includes(index)) {
+                return;
+            }
+
+            // 如果已经选择了问题，则取消选择
+            if (selectedProblem === index) {
+                setSelectedProblem(null);
+                return;
+            }
+
+            // 设置选中的问题
+            setSelectedProblem(index);
+
+            // 如果已经选择了水果，则检查是否匹配
+            if (selectedFruit !== null) {
+                checkMatch(index, selectedFruit);
+            }
+        };
+
+        // 选择水果卡片
+        const selectFruit = (index) => {
+            // 如果已经匹配，则不能再选择
+            if (matchedPairs.includes(problems.findIndex(p => p.answer === fruits[index].number))) {
+                return;
+            }
+
+            // 如果已经选择了水果，则取消选择
+            if (selectedFruit === index) {
+                setSelectedFruit(null);
+                return;
+            }
+
+            // 设置选中的水果
+            setSelectedFruit(index);
+
+            // 如果已经选择了问题，则检查是否匹配
+            if (selectedProblem !== null) {
+                checkMatch(selectedProblem, index);
+            }
+        };
+
+        // 检查是否匹配
+        const checkMatch = (problemIndex, fruitIndex) => {
+            const problem = problems[problemIndex];
+            const fruit = fruits[fruitIndex];
+
+            if (problem.answer === fruit.number) {
+                // 匹配成功
+                setMatchedPairs(prev => [...prev, problemIndex]);
+
+                // 添加连线
+                const newConnection = {
+                    problemIndex,
+                    fruitIndex,
+                    isNew: true
+                };
+
+                setConnections(prev => [...prev, newConnection]);
+
+                // 显示成功提示
+                showToast('匹配成功！树木正在庆祝 🎉', 'success');
+
+                // 1秒后移除新连线标记
+                setTimeout(() => {
+                    setConnections(prev =>
+                        prev.map(conn =>
+                            conn.problemIndex === problemIndex && conn.fruitIndex === fruitIndex
+                                ? { ...conn, isNew: false }
+                                : conn
+                        )
+                    );
+                }, 1000);
+
+                // 检查是否所有问题都已解决
+                setTimeout(() => {
+                    if (matchedPairs.length + 1 === problems.length) {
+                        showToast('恭喜你完成了所有题目！魔法森林恢复了生机！', 'success', 3000);
+                    }
+                }, 500);
+            } else {
+                // 匹配失败
+                showToast('再试一次吧！', 'error', 1500);
+            }
+
+            // 重置选择
+            setSelectedProblem(null);
+            setSelectedFruit(null);
+        };
+
+        return {
+            problems,
+            fruits,
+            selectedProblem,
+            selectedFruit,
+            matchedPairs,
+            connections,
+            selectProblem,
+            selectFruit,
+            resetGame
+        };
+    };
+
+    // Toast通知组件
+    const Toast = ({ message, type, duration = 2000, onClose }) => {
+        useEffect(() => {
+            const timer = setTimeout(() => {
+                onClose();
+            }, duration);
+
+            return () => clearTimeout(timer);
+        }, [duration, onClose]);
+
+        const bgColor = type === 'success' ? 'bg-green-100' : 'bg-red-100';
+        const textColor = type === 'success' ? 'text-green-800' : 'text-red-800';
+        const borderColor = type === 'success' ? 'border-green-200' : 'border-red-200';
+
+        return (
+            React.createElement('div', {
+                className: `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 border ${bgColor} ${textColor} ${borderColor} transform transition-all duration-300 ease-in-out`
+            }, message)
+        );
+    };
+
+    // Toast管理器
+    let toastId = 0;
+    const toasts = [];
+    let ToastContainer = null;
+
+    const showToast = (message, type = 'info', duration = 2000) => {
+        const id = toastId++;
+        toasts.push({ id, message, type, duration });
+
+        if (!ToastContainer) {
+            const container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+            ToastContainer = container;
+        }
+
+        renderToasts();
+    };
+
+    const removeToast = (id) => {
+        const index = toasts.findIndex(toast => toast.id === id);
+        if (index !== -1) {
+            toasts.splice(index, 1);
+            renderToasts();
+        }
+    };
+
+    const renderToasts = () => {
+        if (ToastContainer) {
+            ReactDOM.render(
+                React.createElement('div', { className: 'fixed top-0 right-0 z-50' },
+                    toasts.map(toast =>
+                        React.createElement(Toast, {
+                            key: toast.id,
+                            message: toast.message,
+                            type: toast.type,
+                            duration: toast.duration,
+                            onClose: () => removeToast(toast.id)
+                        })
+                    )
+                ),
+                ToastContainer
+            );
+        }
+    };
+
+    // 连线组件
+    const ConnectionLine = ({ startIndex, endIndex, startPosition, endPosition, isNew }) => {
+        const [controls] = useState(() => {
+            if (window.motion) {
+                return window.motion.useAnimation();
+            }
+            return null;
+        });
+        const containerRef = useRef(null);
+
+        useEffect(() => {
+            // 计算连线的起始和结束位置
+            if (containerRef.current) {
+                if (controls) {
+                    controls.start({
+                        pathLength: 1,
+                        opacity: 1,
+                        transition: { duration: 0.8, ease: "easeInOut" }
+                    });
+
+                    // 新连线的特殊动画
+                    if (isNew) {
+                        controls.start({
+                            scale: [1, 1.1, 1],
+                            transition: {
+                                duration: 0.5,
+                                ease: "easeInOut",
+                                delay: 0.3
+                            }
+                        });
+                    }
+                }
+            }
+        }, [controls, startIndex, endIndex, isNew]);
+
+        const MotionPath = window.motion ? window.motion.motion('path') : 'path';
+        const MotionCircle = window.motion ? window.motion.motion('circle') : 'circle';
+
+        return (
+            React.createElement(window.motion ? window.motion.div : 'div', {
+                    ref: containerRef,
+                    className: "fixed inset-0 pointer-events-none z-20",
+                    initial: { opacity: 0 },
+                    animate: { opacity: 1 }
+                },
+                React.createElement('svg', { className: "absolute inset-0 w-full h-full" },
+                    React.createElement(MotionPath, {
+                        d: `M${startPosition === 'left' ? '15vw' : '85vw'} ${40 + (startIndex % 3) * 20}vh Q 50vw 50vh ${endPosition === 'left' ? '15vw' : '85vw'} ${40 + (endIndex % 3) * 20}vh`,
+                        stroke: isNew ? "#4ade80" : "#94a3b8",
+                        strokeWidth: "3",
+                        fill: "none",
+                        strokeDasharray: "10000",
+                        strokeDashoffset: "10000",
+                        initial: { pathLength: 0, opacity: 0 },
+                        animate: controls,
+                        className: isNew ? 'stroke-green-500' : 'stroke-gray-400'
+                    }),
+
+                    // 连线动画效果
+                    isNew && React.createElement(MotionCircle, {
+                        cx: "50vw",
+                        cy: "50vh",
+                        r: "10",
+                        fill: "#4ade80",
+                        initial: { opacity: 0, scale: 0 },
+                        animate: { opacity: 0, scale: 1 },
+                        transition: { duration: 0.8 }
+                    })
+                )
+            )
+        );
+    };
+
+    // 水果卡片组件
+    const FruitCard = ({ number, fruitType, isSelected, isMatched, onClick }) => {
+        // 根据水果类型获取对应的图片和颜色
+        const getFruitInfo = () => {
+            switch (fruitType) {
+                case 'apple':
+                    return {
+                        color: 'bg-red-100 border-red-300',
+                        imgSrc: "https://space.coze.cn/api/coze_space/gen_image?image_size=square_hd&prompt=Red+apple+with+leaf&sign=cb4a1c042136919cba44bf381d78d8c7",
+                        icon: "fa-apple-whole",
+                        iconColor: "text-red-500"
+                    };
+                case 'orange':
+                    return {
+                        color: 'bg-orange-100 border-orange-300',
+                        imgSrc: "https://space.coze.cn/api/coze_space/gen_image?image_size=square_hd&prompt=Fresh+orange+fruit&sign=64995d4c1001ae6e37471ba4d871a4b9",
+                        icon: "fa-orange",
+                        iconColor: "text-orange-500"
+                    };
+                case 'banana':
+                    return {
+                        color: 'bg-yellow-100 border-yellow-300',
+                        imgSrc: "https://space.coze.cn/api/coze_space/gen_image?image_size=square_hd&prompt=Ripe+yellow+banana&sign=883d3fd9c96feae3ddd8e0d5d486bde6",
+                        icon: "fa-banana",
+                        iconColor: "text-yellow-500"
+                    };
+                case 'grape':
+                    return {
+                        color: 'bg-purple-100 border-purple-300',
+                        imgSrc: "https://space.coze.cn/api/coze_space/gen_image?image_size=square_hd&prompt=Bunch+of+purple+grapes&sign=24d6b12b010401f7eae78f5169abd1b8",
+                        icon: "fa-grapes",
+                        iconColor: "text-purple-500"
+                    };
+                case 'strawberry':
+                    return {
+                        color: 'bg-pink-100 border-pink-300',
+                        imgSrc: "https://space.coze.cn/api/coze_space/gen_image?image_size=square_hd&prompt=Fresh+red+strawberry&sign=6a44d8d8b98526ded3b385974edd8725",
+                        icon: "fa-strawberry",
+                        iconColor: "text-pink-500"
+                    };
+                default:
+                    return {
+                        color: 'bg-green-100 border-green-300',
+                        imgSrc: "https://space.coze.cn/api/coze_space/gen_image?image_size=square_hd&prompt=Fresh+fruit&sign=f58671ea405b6829c1bd200dba678e55",
+                        icon: "fa-apple-whole",
+                        iconColor: "text-green-500"
+                    };
+            }
+        };
+
+        const fruitInfo = getFruitInfo();
+
+        // 处理图片加载失败
+        const handleImageError = (e) => {
+            const target = e.target;
+            target.style.display = 'none';
+            const iconElement = document.createElement('i');
+            iconElement.className = `fa-solid ${fruitInfo.icon} ${fruitInfo.iconColor} text-4xl absolute inset-0 flex items-center justify-center`;
+            target.parentElement.appendChild(iconElement);
+        };
+
+        // 卡片状态样式
+        let cardClass = `${fruitInfo.color} text-${fruitInfo.iconColor.replace('text-', '')}-800 border-2 p-4 rounded-xl shadow-md cursor-pointer transition-all duration-300 overflow-hidden`;
+
+        if (isMatched) {
+            cardClass += ` border-${fruitInfo.iconColor.replace('text-', '')}-500`;
+        } else if (isSelected) {
+            cardClass += ' border-blue-400';
+        } else {
+            cardClass += ` border-${fruitInfo.iconColor.replace('text-', '')}-300`;
+        }
+
+        const MotionDiv = window.motion ? window.motion.motion.div : 'div';
+
+        return (
+            React.createElement(MotionDiv, {
+                    whileHover: { scale: 1.03 },
+                    whileTap: { scale: 0.98 },
+                    onClick: onClick,
+                    className: cardClass
+                },
+                isMatched && React.createElement(MotionDiv, {
+                        initial: { opacity: 0, scale: 0 },
+                        animate: { opacity: 1, scale: 1 },
+                        className: "absolute -top-2 -right-2 bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                    },
+                    React.createElement('i', { className: "fa-solid fa-check" })
+                ),
+
+                React.createElement('div', { className: "flex flex-col items-center justify-center" },
+                    React.createElement('div', { className: "relative w-16 h-16 mb-3" },
+                        React.createElement('img', {
+                            src: fruitInfo.imgSrc,
+                            alt: `${fruitType} ${number}`,
+                            className: "w-full h-full object-contain rounded-full",
+                            onError: handleImageError
+                        })
+                    ),
+                    React.createElement('div', { className: "text-3xl font-bold" }, number)
+                ),
+
+                // 装饰元素
+                React.createElement('div', { className: "absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-300 to-orange-300" })
+            )
+        );
+    };
+
+    // 数学卡片组件
+    const MathCard = ({ problem, isSelected, isMatched, onClick }) => {
+        // 卡片状态样式
+        let cardClass = "relative p-5 rounded-xl shadow-md cursor-pointer transition-all duration-300 overflow-hidden";
+
+        if (isMatched) {
+            cardClass += ' bg-green-100 text-green-800 border-2 border-green-400';
+        } else if (isSelected) {
+            cardClass += ' bg-blue-100 text-blue-800 border-2 border-blue-400';
+        } else {
+            cardClass += ' bg-white text-gray-800 border border-gray-200 hover:border-green-300';
+        }
+
+        const MotionDiv = window.motion ? window.motion.motion.div : 'div';
+
+        return (
+            React.createElement(MotionDiv, {
+                    whileHover: { scale: 1.03 },
+                    whileTap: { scale: 0.98 },
+                    onClick: onClick,
+                    className: cardClass
+                },
+                isMatched && React.createElement(MotionDiv, {
+                        initial: { opacity: 0, scale: 0 },
+                        animate: { opacity: 1, scale: 1 },
+                        className: "absolute -top-2 -right-2 bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center"
+                    },
+                    React.createElement('i', { className: "fa-solid fa-check" })
+                ),
+
+                React.createElement('div', { className: "flex flex-col items-center justify-center" },
+                    React.createElement('div', { className: "text-2xl font-bold mb-2" }, problem.expression),
+                    React.createElement('div', { className: "text-sm text-gray-500" }, "点击选择")
+                ),
+
+                // 装饰元素
+                React.createElement('div', { className: "absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-green-300 to-blue-300" })
+            )
+        );
+    };
+
+    // 树组件
+    const Tree = ({ isCelebrating }) => {
+        // 处理图片加载失败
+        const handleImageError = (e) => {
+            const target = e.target;
+            target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2322c55e'%3E%3Cpath d='M12 2a9 9 0 0 1 9 9c0 5-7 13-9 13s-9-8-9-13a9 9 0 0 1 9-9'/%3E%3C/svg%3E";
+            target.classList.add('bg-green-500', 'rounded-full');
+        };
+
+        const MotionDiv = window.motion ? window.motion.motion.div : 'div';
+
+        return (
+            React.createElement('div', { className: "relative w-[200px] h-[300px]" },
+                // 树干
+                React.createElement('div', { className: "absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-40 bg-gradient-to-t from-amber-700 to-amber-500 rounded-t-xl" }),
+
+                // 树叶
+                React.createElement(MotionDiv, {
+                        className: "absolute bottom-32 left-1/2 transform -translate-x-1/2 w-[180px] h-[180px] rounded-full",
+                        animate: {
+                            boxShadow: isCelebrating
+                                ? ['0 0 10px #4ade80', '0 0 20px #4ade80', '0 0 10px #4ade80']
+                                : 'none'
+                        },
+                        transition: {
+                            duration: 1.5,
+                            repeat: isCelebrating ? Infinity : 0,
+                            repeatType: 'reverse'
+                        }
+                    },
+                    React.createElement('img', {
+                        src: "https://space.coze.cn/api/coze_space/gen_image?image_size=square_hd&prompt=Green+tree+foliage+with+glowing+effect&sign=0e89cf687528b13fc13cb43c19006240",
+                        alt: "魔法树",
+                        className: "w-full h-full object-contain rounded-full",
+                        onError: handleImageError
+                    })
+                ),
+
+                // 庆祝效果
+                isCelebrating &&
+                React.createElement('div', null,
+                    Array.from({ length: 12 }).map((_, i) => (
+                        React.createElement(MotionDiv, {
+                            key: i,
+                            className: "absolute w-2 h-2 bg-yellow-300 rounded-full",
+                            initial: {
+                                x: 0,
+                                y: 0,
+                                opacity: 1,
+                                left: '50%',
+                                top: '30%'
+                            },
+                            animate: {
+                                x: Math.cos(i * Math.PI / 6) * 100,
+                                y: Math.sin(i * Math.PI / 6) * 100,
+                                opacity: 0
+                            },
+                            transition: {
+                                duration: 1.5,
+                                ease: "easeOut"
+                            }
+                        })
+                    ))
+                )
+            )
+        );
+    };
+
+    // 主应用组件
+    const App = () => {
+        const {
+            problems,
+            fruits,
+            selectedProblem,
+            selectedFruit,
+            matchedPairs,
+            connections,
+            selectProblem,
+            selectFruit,
+            resetGame
+        } = useMathGame();
+
+        // 生成背景装饰元素
+        const generateDecorations = () => {
+            const decorations = [];
+            for (let i = 0; i < 12; i++) {
+                decorations.push(
+                    React.createElement('div', {
+                        key: i,
+                        className: "absolute rounded-full bg-gradient-to-r from-green-200 to-green-100 opacity-60 animate-pulse",
+                        style: {
+                            width: `${Math.random() * 40 + 20}px`,
+                            height: `${Math.random() * 40 + 20}px`,
+                            left: `${Math.random() * 100}%`,
+                            top: `${Math.random() * 100}%`,
+                            animationDuration: `${Math.random() * 3 + 2}s`,
+                        }
+                    })
+                );
+            }
+            return decorations;
+        };
+
+        // 处理图片加载失败
+        const handleImageError = (e) => {
+            const target = e.target;
+            target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2394a3b8'%3E%3Cpath d='M12 2a5 5 0 0 1 5 5v5H7V7a5 5 0 0 1 5-5m0 16a5 5 0 0 1-5-5h10a5 5 0 0 1-5 5'/%3E%3C/svg%3E";
+        };
+
+        return (
+            React.createElement('div', { className: "relative min-h-screen bg-magic-gradient overflow-hidden font-sans" },
+                // 背景装饰
+                ...generateDecorations(),
+
+                // 顶部标题区域
+                React.createElement('header', { className: "relative pt-8 pb-4 px-4 text-center z-10" },
+                    React.createElement('h1', { className: "text-4xl md:text-5xl font-bold text-green-800 mb-2 text-shadow-sm" },
+                        "数学连线魔法森林"
+                    ),
+                    React.createElement('p', { className: "text-lg text-green-600 max-w-2xl mx-auto" },
+                        "帮助小动物找到对应数字果实，让魔法森林恢复生机！"
+                    )
+                ),
+
+                // 主游戏区域
+                React.createElement('main', { className: "relative container mx-auto px-4 py-8 z-10" },
+                    // 统计信息
+                    React.createElement('div', { className: "flex justify-between items-center mb-8 bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm" },
+                        React.createElement('div', { className: "text-green-700 font-medium" },
+                            React.createElement('i', { className: "fa-solid fa-check-circle text-green-500 mr-2" }),
+                            `已完成: ${matchedPairs.length} / ${problems.length}`
+                        ),
+                        React.createElement('button', {
+                                onClick: resetGame,
+                                className: "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full transition-all duration-300 flex items-center shadow-md hover:shadow-lg"
+                            },
+                            React.createElement('i', { className: "fa-solid fa-rotate mr-2" }),
+                            "重新开始"
+                        )
+                    ),
+
+                    React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-3 gap-8 relative" },
+                        // 左侧数学表达式区域
+                        React.createElement('div', { className: "space-y-4" },
+                            React.createElement('h2', { className: "text-2xl font-semibold text-green-700 flex items-center" },
+                                React.createElement('i', { className: "fa-solid fa-calculator mr-2 text-green-500" }),
+                                "数学表达式"
+                            ),
+                            React.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 gap-4" },
+                                problems.map((problem, index) => (
+                                    React.createElement(MathCard, {
+                                        key: index,
+                                        problem: problem,
+                                        isSelected: selectedProblem === index,
+                                        isMatched: matchedPairs.includes(index),
+                                        onClick: () => selectProblem(index)
+                                    })
+                                ))
+                            )
+                        ),
+
+                        // 中间森林区域
+                        React.createElement('div', { className: "relative h-[500px] md:h-auto rounded-xl overflow-hidden bg-gradient-to-b from-green-200 to-green-100 shadow-inner" },
+                            React.createElement('div', { className: "absolute inset-0 bg-[url('https://space.coze.cn/api/coze_space/gen_image?image_size=landscape_16_9&prompt=Enchanted+forest+background+with+trees+and+animals&sign=40b56d941c99f1961bd1cdf43781898e')] bg-cover bg-center opacity-40" }),
+
+                            // 魔法树
+                            React.createElement('div', { className: "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" },
+                                React.createElement(Tree, {
+                                    isCelebrating: connections.length > matchedPairs.length
+                                })
+                            ),
+
+                            // 小动物角色
+                            React.createElement('div', { className: "absolute bottom-10 left-1/4 transform -translate-x-1/2 flex flex-col items-center animate-bounce", style: { animationDuration: '3s' } },
+                                React.createElement('img', {
+                                    src: "https://space.coze.cn/api/coze_space/gen_image?image_size=square_hd&prompt=Cute+rabbit+in+forest&sign=e962dfd54cf9799cbf6d3f19a7c25359",
+                                    alt: "小兔子",
+                                    className: "w-16 h-16 object-contain mb-2",
+                                    onError: handleImageError
+                                }),
+                                React.createElement('span', { className: "text-sm font-medium text-green-800" }, "小兔子")
+                            ),
+
+                            React.createElement('div', { className: "absolute bottom-16 right-1/4 transform translate-x-1/2 flex flex-col items-center animate-bounce", style: { animationDuration: '2.5s' } },
+                                React.createElement('img', {
+                                    src: "https://space.coze.cn/api/coze_space/gen_image?image_size=square_hd&prompt=Cute+squirrel+in+forest&sign=5491b7500b8f261ce930656dc3949be8",
+                                    alt: "小松鼠",
+                                    className: "w-16 h-16 object-contain mb-2",
+                                    onError: handleImageError
+                                }),
+                                React.createElement('span', { className: "text-sm font-medium text-green-800" }, "小松鼠")
+                            )
+                        ),
+
+                        // 右侧数字果实区域
+                        React.createElement('div', { className: "space-y-4" },
+                            React.createElement('h2', { className: "text-2xl font-semibold text-green-700 flex items-center" },
+                                React.createElement('i', { className: "fa-solid fa-apple-whole mr-2 text-red-500" }),
+                                "数字果实"
+                            ),
+                            React.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 gap-4" },
+                                fruits.map((fruit, index) => (
+                                    React.createElement(FruitCard, {
+                                        key: index,
+                                        number: fruit.number,
+                                        fruitType: fruit.type,
+                                        isSelected: selectedFruit === index,
+                                        isMatched: matchedPairs.includes(problems.findIndex(p => p.answer === fruit.number)),
+                                        onClick: () => selectFruit(index)
+                                    })
+                                ))
+                            )
+                        )
+                    ),
+
+                    // 连线区域
+                    connections.map((conn, index) => (
+                        React.createElement(ConnectionLine, {
+                            key: index,
+                            startIndex: conn.problemIndex,
+                            endIndex: conn.fruitIndex,
+                            startPosition: "left",
+                            endPosition: "right",
+                            isNew: conn.isNew
+                        })
+                    ))
+                ),
+
+                // 页脚
+                React.createElement('footer', { className: "relative py-6 text-center text-green-600 z-10" },
+                    React.createElement('p', { className: "text-sm" }, `数学连线魔法森林 &copy; ${new Date().getFullYear()}`)
+                )
+            )
+        );
+    };
+
+    // 渲染应用
+    ReactDOM.render(
+        React.createElement(App),
+        document.getElementById('root')
+    );
+</script>
+</body>
+</html>
