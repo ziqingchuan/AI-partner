@@ -165,13 +165,22 @@ export const agents = [
     tag: ['语文', '智能体', '扩写']
   },
   {
-    id: 'coze-agent-5-forLearn',
+    id: 'coze-agent-6-forLearn',
     name: '小小科学家',
     intro: '有什么关于科学的问题，尽管问我吧，我来为你解答！',
     coverUrl: 'covers/小小科学家.png',
     type: 'forLearn',
     link: 'https://www.coze.cn/store/agent/7563258508049694754',
     tag: ['科学', '智能体', '百科']
+  },
+  {
+    id: 'coze-agent-7-forLearn',
+    name: '英语情景造句小助手',
+    intro: '根据您的需要生成相关情景的图片，帮助学生练习造句',
+    coverUrl: 'covers/英语看图说话.png',
+    type: 'forLearn',
+    link: 'https://www.coze.cn/store/agent/7563258508049694754',
+    tag: ['英语', '智能体', '造句']
   },
   {
     id: 'coze-html-1-forLearn',
@@ -201,54 +210,45 @@ export const agents = [
     tag: ['数学', '计算', '互动']
   },
   {
-    id: '20',
-    name: '英语单词配对动物园',
-    intro: '将英文单词卡片（如"elephant"）与动物图片配对',
-    coverUrl: 'covers/learn.svg',
-    type: 'forLearn',
-    link: 'interactive/learn-english-zoo.html',
-    tag: ['学生 英语 游戏']
-  },
-  {
-    id: '27',
-    name: '环保分类小管家',
-    intro: '拖拽垃圾图片（如"电池"）到正确分类桶（有害/可回收），帮助学习环保知识',
-    coverUrl: 'covers/learn.svg',
-    type: 'forLearn',
-    link: 'interactive/learn-garbage-manager.html',
-    tag: ['学生 环保 互动']
-  },
-  {
-    id: '28',
-    name: '英语句子积木搭建',
-    intro: '将打乱的单词积木（如"is/This/cat/a"）拖拽成正确句子，搭建成功播放语音朗读',
-    coverUrl: 'covers/learn.svg',
-    type: 'forLearn',
-    link: 'interactive/learn-english-builder.html',
-    tag: ['学生 英语 游戏']
-  },
-  {
-    id: '32',
+    id: 'coze-html-4-forLearn',
     name: '我的学习能量表',
     intro: '帮助学生定制自己的学习计划表，并提供页面保存功能',
-    coverUrl: 'covers/learn.svg',
+    coverUrl: 'covers/学习计划表.png',
     type: 'forLearn',
     link: 'interactive/learn-energy-meter.html',
-    tag: ['学生 习惯 激励']
+    tag: ['计划表', '学习', '成长']
   },
   {
-    id: '43',
+    id: 'coze-html-5-forLearn',
+    name: '环保分类小管家',
+    intro: '拖拽垃圾图片（如"电池"）到正确分类桶（有害/可回收），帮助学习环保知识',
+    coverUrl: 'covers/环保分类.png',
+    type: 'forLearn',
+    link: 'interactive/learn-garbage-manager.html',
+    tag: ['环保', '学习', '分类']
+  },
+  {
+    id: 'coze-html-6-forLearn',
+    name: '英语句子积木搭建',
+    intro: '将打乱的单词积木（如"is/This/cat/a"）拖拽成正确句子，搭建成功播放语音朗读',
+    coverUrl: 'covers/英语积木.png',
+    type: 'forLearn',
+    link: 'interactive/learn-english-builder.html',
+    tag: ['英语', '排序', '句子']
+  },
+  {
+    id: 'coze-html-7-forLearn',
     name: '英语语法侦探游戏',
     intro: '找出句子中的语法错误（如"He like apple"），点击错误位置并选择正确形式，破案得分',
-    coverUrl: 'covers/evaluate.svg',
+    coverUrl: 'covers/语法侦探.png',
     type: 'forLearn',
-    link: 'interactive/evaluate-english-detective.html',
-    tag: ['测评 英语 语法']
+    link: 'interactive/learn-english-detective.html',
+    tag: ['语法', '纠错', '英语']
   },
   // 三、forEvaluate
   {
     id: 'coze-agent-1-forEvaluate',
-    name: '作文评测工具',
+    name: '语文作文评测工具',
     intro: '上传或输入学生的作文内容，根据学生学段多维度进行评测',
     coverUrl: 'covers/作文评测工具.png',
     type: 'forEvaluate',
@@ -266,7 +266,7 @@ export const agents = [
   },
   {
     id: 'coze-agent-3-forEvaluate',
-    name: '小学语文随堂出题助手',
+    name: '语文随堂出题助手',
     intro: '您身边的专业语文教育专家，可为您量身定制小学语文题目。',
     coverUrl: 'covers/语文出题助手.png',
     type: 'forEvaluate',
@@ -274,30 +274,31 @@ export const agents = [
     tag: ['测试', '语文', '智能体']
   },
   {
-    id: '35',
-    name: '成绩成长轨迹图',
-    intro: '输入历次考试分数，生成动态折线图与星级评价（如"进步之星"），支持目标设定',
-    coverUrl: 'covers/evaluate.svg',
+    id: 'coze-agent-4-forEvaluate',
+    name: '英语出题助手',
+    intro: '专业的英语出题助手，根据您的需要为您生成各种类型的题目',
+    coverUrl: 'covers/英语出题助手.png',
     type: 'forEvaluate',
-    link: 'interactive/evaluate-score-growth.html',
-    tag: ['测评 成绩 轨迹']
+    link: 'https://www.coze.cn/store/agent/7563322902146301987',
+    tag: ['英语', '出题', '智能体']
   },
   {
-    id: '39',
-    name: '学情雷达扫描仪',
-    intro: '输入测试数据，生成动态雷达图（各科目分数分布），点击扇形区域查看详细分析',
-    coverUrl: 'covers/evaluate.svg',
+    id: 'coze-agent-5-forEvaluate',
+    name: '成绩分析助手',
+    intro: '快速处理学生成绩数据，为你提供可视化的分析报告。',
+    coverUrl: 'covers/成绩分析助手.png',
     type: 'forEvaluate',
-    link: 'interactive/evaluate-learning-radar.html',
-    tag: ['测评 学情 分析']
+    link: 'https://www.coze.cn/store/agent/7563336503439556651',
+    tag: ['成绩', '各学科', '智能体']
   },
   {
-    id: '42',
-    name: '错题',
-    intro: '分类统计错题类型（如"计算失误"），选择薄弱点进入专项挑战，实时显示攻克进度',
-    coverUrl: 'covers/evaluate.svg',
+    id: 'coze-agent-6-forEvaluate',
+    name: '数学课堂小测助手',
+    intro: '根据老师的具体需求生成课堂小测题目',
+    coverUrl: 'covers/数学小测.png',
     type: 'forEvaluate',
-    link: 'interactive/evaluate-error-battle.html',
-    tag: ['测评 错题 攻坚']
-  }
+    link: 'https://www.coze.cn/store/agent/7563336503439556651',
+    tag: ['小测', '数学', '智能体']
+  },
+
 ];

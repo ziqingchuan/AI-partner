@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>环保分类小管家</title>
+    <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
+            background-color: #e6f7ff;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23b3e0ff' fill-opacity='0.3' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+
+        /* 垃圾桶样式 */
+        .trash-bin {
+            transition: transform 0.3s ease, filter 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .trash-bin:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+        }
+        
+        .trash-bin.drag-over {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+        }
+        
+        /* 垃圾项样式 */
+        .trash-item {
+            cursor: grab;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            user-select: none;
+        }
+        
+        .trash-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .trash-item:active {
+            cursor: grabbing;
+        }
+        
+        /* 星星动画 */
+        .star {
+            position: absolute;
+            color: #ffcc00;
+            animation: star-fall 1s forwards;
+            opacity: 0;
+            font-size: 24px;
+        }
+        
+        @keyframes star-fall {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.5);
+            }
+        }
+        
+        /* 错误提示动画 */
+        .error-message {
+            animation: shake 0.5s;
+            background-color: rgba(255, 0, 0, 0.1);
+            border: 2px dashed #ff0000;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        
+        /* 知识卡片样式 */
+        .knowledge-card {
+            transition: all 0.3s ease;
+        }
+        
+        .knowledge-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: modal-appear 0.3s ease-out;
+        }
+        
+        @keyframes modal-appear {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+        }
+        
+        /* 计分板样式 */
+        .score-board {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 10px 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 顺口溜区域样式 */
+        .rhymes-container {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #4CAF50;
+        }
+        
+        /* 变废为宝区域样式 */
+        .recycle-ideas {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #2196F3;
+        }
+        
+        /* 时间挑战样式 */
+        .timer-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+        }
+        
+        .timer-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        
+        .timer-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .trash-bins-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .trash-bin {
+                margin-bottom: 20px;
+            }
+            
+            .trash-items-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- 页面标题 -->
+    <header class="bg-gradient-to-r from-green-400 to-blue-500 text-white py-6 px-4 shadow-lg">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+            <h1 class="text-3xl md:text-4xl font-bold mb-4 md:mb-0 flex items-center">
+                <i class="fas fa-recycle mr-3 text-yellow-300"></i>环保分类小管家
+            </h1>
+            <div class="flex items-center space-x-4">
+                <div class="score-board flex items-center" style="color: black;">
+                    <i class="fas fa-star text-yellow-400 mr-2"></i>
+                    <span class="font-bold">得分: <span id="score">0</span></span>
+                </div>
+                <button id="startChallengeBtn" class="bg-white text-green-600 px-4 py-2 rounded-full font-bold shadow-md hover:bg-green-50 transition-colors duration-300">
+                    <i class="fas fa-play mr-2"></i>开始挑战
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主游戏区域 -->
+    <main class="container mx-auto py-8 px-4">
+        <!-- 时间挑战区域 (默认隐藏) -->
+        <div id="challengeTimer" class="hidden mb-8 text-center">
+            <h2 class="text-xl font-bold mb-4">60秒挑战 - 正确投放10个垃圾</h2>
+            <div class="timer-container">
+                <svg class="timer-circle" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="#e0e0e0" stroke-width="8"></circle>
+                    <circle id="timerProgress" cx="50" cy="50" r="45" fill="none" stroke="#4CAF50" stroke-width="8" stroke-dasharray="283" stroke-dashoffset="0"></circle>
+                </svg>
+                <div class="timer-text" id="timerDisplay">60</div>
+            </div>
+            <div class="mt-4">
+                <span class="text-lg font-medium">已正确投放: <span id="correctCount">0</span>/10</span>
+            </div>
+        </div>
+        
+        <!-- 垃圾桶区域 -->
+        <div class="trash-bins-container flex justify-center space-x-8 md:space-x-16 mb-12">
+            <!-- 可回收垃圾桶 -->
+            <div class="trash-bin" id="recyclableBin" data-type="recyclable">
+                <div class="relative">
+                    <img src="https://s.coze.cn/image/jbhsvWSNIXE/" alt="可回收垃圾桶" class="w-48 h-64 object-contain">
+                    <div class="absolute bottom-0 left-0 right-0 text-center bg-blue-500 text-white py-2 rounded-b-lg font-bold">
+                        可回收垃圾
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 有害垃圾桶 -->
+            <div class="trash-bin" id="harmfulBin" data-type="harmful">
+                <div class="relative">
+                    <img src="https://s.coze.cn/image/7gwBBOJdmUw/" alt="有害垃圾桶" class="w-48 h-64 object-contain">
+                    <div class="absolute bottom-0 left-0 right-0 text-center bg-red-500 text-white py-2 rounded-b-lg font-bold">
+                        有害垃圾
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 垃圾项区域 -->
+        <div id="trashItemsContainer" class="trash-items-container grid grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 mb-12">
+            <!-- 垃圾项将通过JavaScript动态生成 -->
+        </div>
+        
+        <!-- 环保知识区域 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <!-- 垃圾分类顺口溜 -->
+            <div class="rhymes-container">
+                <h2 class="text-2xl font-bold mb-4 text-green-700 flex items-center">
+                    <i class="fas fa-book mr-2"></i>垃圾分类顺口溜
+                </h2>
+                <ul class="space-y-3 text-lg">
+                    <li class="flex items-center">
+                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                        <span>有害垃圾红桶进，可回收物蓝桶收</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                        <span>电池灯管废药品，有害垃圾要分清</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                        <span>塑料纸张易拉罐，可回收物再利用</span>
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                        <span>垃圾分类举手劳，美化环境共受益</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- 变废为宝创意 -->
+            <div class="recycle-ideas">
+                <h2 class="text-2xl font-bold mb-4 text-blue-700 flex items-center">
+                    <i class="fas fa-lightbulb mr-2"></i>变废为宝小创意
+                </h2>
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <img src="https://s.coze.cn/image/7ABQCFXi1A8/" alt="牛奶盒手工" class="w-20 h-20 object-cover rounded-lg mr-3">
+                        <div>
+                            <h3 class="font-bold text-blue-600">牛奶盒变身收纳盒</h3>
+                            <p class="text-sm">清洗空牛奶盒，裁剪成合适大小，用彩纸装饰，可作为文具收纳盒。</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <img src="https://s.coze.cn/image/a1y5qyukZqc/" alt="塑料瓶种花" class="w-20 h-20 object-cover rounded-lg mr-3">
+                        <div>
+                            <h3 class="font-bold text-blue-600">塑料瓶种花</h3>
+                            <p class="text-sm">将塑料瓶从中间剪开，底部扎几个小孔，填入土壤，种植小型植物。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 环保数据 -->
+        <div class="bg-white rounded-xl p-6 shadow-md mb-12">
+            <h2 class="text-2xl font-bold mb-4 text-green-700 text-center">环保小数据</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div class="bg-green-50 p-4 rounded-lg text-center">
+                    <i class="fas fa-tree text-4xl text-green-600 mb-2"></i>
+                    <p class="font-bold">1吨废纸 = 850公斤新纸 = 17棵树</p>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-lg text-center">
+                    <i class="fas fa-water text-4xl text-blue-600 mb-2"></i>
+                    <p class="font-bold">回收1个塑料瓶 = 节约600毫升水</p>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg text-center">
+                    <i class="fas fa-bolt text-4xl text-yellow-600 mb-2"></i>
+                    <p class="font-bold">回收1吨废铁 = 节约1.7吨标准煤</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 环保知识弹窗 -->
+    <div id="knowledgeModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modalContent">
+                <!-- 弹窗内容将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 挑战完成弹窗 -->
+    <div id="challengeCompleteModal" class="modal">
+        <div class="modal-content text-center">
+            <span class="close">&times;</span>
+            <h2 class="text-2xl font-bold mb-4 text-green-600">挑战完成！</h2>
+            <div class="mb-4">
+                <i class="fas fa-trophy text-6xl text-yellow-500"></i>
+            </div>
+            <p id="challengeResult" class="text-lg mb-6"></p>
+            <button id="playAgainBtn" class="bg-green-500 text-white px-6 py-3 rounded-full font-bold shadow-md hover:bg-green-600 transition-colors duration-300">
+                再玩一次
+            </button>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-6 px-4">
+        <div class="container mx-auto text-center">
+            <p>created by <a href="https://space.coze.cn" class="text-blue-400 hover:underline">coze space</a></p>
+            <p class="mt-2 text-sm text-gray-400">页面内容均由 AI 生成，仅供参考</p>
+        </div>
+    </footer>
+
+    <script>
+        // 垃圾分类数据
+        const trashItems = [
+            { id: 1, name: '塑料瓶', type: 'recyclable', image: 'https://s.coze.cn/image/_G1QuPISH7o/',
+                knowledge: '塑料瓶属于可回收物。回收后的塑料瓶可以通过再生技术制成新的塑料制品，减少对石油资源的依赖和对环境的污染。' },
+            { id: 2, name: '易拉罐', type: 'recyclable', image: 'https://s.coze.cn/image/3xoY2bXSL-c/',
+                knowledge: '易拉罐属于可回收物。铝制易拉罐可以100%回收再利用，而且回收再利用的过程能耗仅为原铝生产的5%左右。' },
+            { id: 3, name: '废纸', type: 'recyclable', image: 'https://s.coze.cn/image/FfsIZLraliw/',
+                knowledge: '废纸属于可回收物。回收1吨废纸可以生产850公斤新纸，节约木材300公斤，相当于保护17棵大树。' },
+            { id: 4, name: '布料', type: 'recyclable', image: 'https://s.coze.cn/image/IyWpjPsY35E/',
+                knowledge: '布料属于可回收物。旧衣物可以通过回收再加工制成新的纺织品、工业用布料或再生纤维等。' },
+            { id: 5, name: '玻璃', type: 'recyclable', image: 'https://s.coze.cn/image/GHo47oRh6C0/',
+                knowledge: '玻璃属于可回收物。玻璃可以无限次回收再利用，而且回收玻璃生产新玻璃制品可以节约大量能源。' },
+            { id: 6, name: '电池', type: 'harmful', image: 'https://s.coze.cn/image/DEJObGbh4tI/',
+                knowledge: '电池属于有害垃圾。电池中含有汞、镉、铅等重金属，随意丢弃会对土壤和水源造成严重污染，应放入有害垃圾桶。' },
+            { id: 7, name: '荧光灯管', type: 'harmful', image: 'https://s.coze.cn/image/8eYxaQgvjk4/',
+                knowledge: '荧光灯管属于有害垃圾。荧光灯管中含有汞蒸气，破碎后会释放有毒物质，对人体健康和环境造成危害。' },
+            { id: 8, name: '过期药品', type: 'harmful', image: 'https://s.coze.cn/image/Rmf1njt03UQ/',
+                knowledge: '过期药品属于有害垃圾。过期药品不仅失去药效，还可能分解产生有害物质，随意丢弃会污染土壤和水源。' },
+            { id: 9, name: '水银温度计', type: 'harmful', image: 'https://s.coze.cn/image/VIo1t4PvHBs/',
+                knowledge: '水银温度计属于有害垃圾。温度计中的水银（汞）是一种剧毒物质，一旦泄漏会对人体和环境造成严重危害。' },
+            { id: 10, name: '塑料玩具', type: 'recyclable', image: 'https://s.coze.cn/image/CHUZZeLdyWg/',
+                knowledge: '塑料玩具属于可回收物。大部分塑料玩具可以通过回收再利用制成新的塑料制品，减少资源浪费。' }
+        ];
+
+        // DOM元素
+        const trashItemsContainer = document.getElementById('trashItemsContainer');
+        const recyclableBin = document.getElementById('recyclableBin');
+        const harmfulBin = document.getElementById('harmfulBin');
+        const knowledgeModal = document.getElementById('knowledgeModal');
+        const modalContent = document.getElementById('modalContent');
+        const closeModal = document.getElementsByClassName('close');
+        const scoreDisplay = document.getElementById('score');
+        const startChallengeBtn = document.getElementById('startChallengeBtn');
+        const challengeTimer = document.getElementById('challengeTimer');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timerProgress = document.getElementById('timerProgress');
+        const correctCountDisplay = document.getElementById('correctCount');
+        const challengeCompleteModal = document.getElementById('challengeCompleteModal');
+        const challengeResult = document.getElementById('challengeResult');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        
+        // 游戏状态
+        let score = 0;
+        let timer = null;
+        let timeLeft = 60;
+        let correctCount = 0;
+        let isChallengeActive = false;
+        
+        // 初始化垃圾项
+        function initTrashItems() {
+            trashItemsContainer.innerHTML = '';
+
+            const shuffledTrashItems = [...trashItems].sort(() => Math.random() - 0.5);
+
+            shuffledTrashItems.forEach(item => {
+                const trashItem = document.createElement('div');
+                trashItem.className = 'trash-item bg-white rounded-xl p-3 shadow-md text-center overflow-hidden';
+                trashItem.draggable = true;
+                trashItem.dataset.type = item.type;
+                trashItem.dataset.id = item.id;
+
+                // 使用背景图代替img标签
+                trashItem.style.backgroundImage = `url("${item.image}")`;
+                trashItem.style.backgroundSize = 'contain';
+                trashItem.style.backgroundRepeat = 'no-repeat';
+                trashItem.style.backgroundPosition = 'center top';
+                trashItem.style.minHeight = '160px'; // 确保有足够高度显示背景图
+
+                trashItem.innerHTML = `
+            <div style="padding-top: 120px;"> <!-- 留出背景图空间 -->
+                <p class="font-bold">${item.name}</p>
+            </div>
+        `;
+
+                // 只需绑定一次拖拽事件（整个卡片）
+                trashItem.addEventListener('dragstart', handleDragStart);
+                trashItem.addEventListener('click', () => showKnowledgeModal(item));
+
+                trashItemsContainer.appendChild(trashItem);
+            });
+        }
+        // 拖拽开始事件
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', this.dataset.type);
+            e.dataTransfer.setData('id', this.dataset.id);
+
+            // 添加拖拽视觉效果
+            setTimeout(() => {
+                this.style.opacity = '0.5';
+            }, 0);
+        }
+        
+        // 设置垃圾桶的拖拽事件
+        function setupTrashBins() {
+            [recyclableBin, harmfulBin].forEach(bin => {
+                bin.addEventListener('dragover', handleDragOver);
+                bin.addEventListener('dragleave', handleDragLeave);
+                bin.addEventListener('drop', handleDrop);
+            });
+        }
+        
+        // 拖拽经过事件
+        function handleDragOver(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        }
+        
+        // 拖拽离开事件
+        function handleDragLeave() {
+            this.classList.remove('drag-over');
+        }
+        
+        // 放置事件
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+
+            const trashType = e.dataTransfer.getData('text/plain');
+            const trashId = e.dataTransfer.getData('id');
+            const binType = this.dataset.type;
+
+            // 找到被拖拽的垃圾项（无论点击的是哪个子元素，都通过id找到父元素）
+            const draggedItem = document.querySelector(`.trash-item[data-id="${trashId}"]`);
+            if (draggedItem) {
+                // 恢复整个卡片的透明度
+                draggedItem.style.opacity = '1';
+            }
+            
+            // 判断分类是否正确
+            if (trashType === binType) {
+                // 正确投放
+                showStarAnimation(this);
+                updateScore(10);
+                
+                // 如果在挑战模式中，更新正确投放数量
+                if (isChallengeActive) {
+                    correctCount++;
+                    correctCountDisplay.textContent = correctCount;
+                    
+                    // 检查是否完成挑战
+                    if (correctCount >= 10) {
+                        endChallenge(true);
+                    }
+                }
+                
+                // 移除已投放的垃圾项
+                if (draggedItem) {
+                    draggedItem.classList.add('opacity-0');
+                    setTimeout(() => {
+                        draggedItem.remove();
+                        
+                        // 如果所有垃圾都投放完毕，重新生成
+                        if (trashItemsContainer.children.length === 0) {
+                            initTrashItems();
+                        }
+                    }, 500);
+                }
+            } else {
+                // 错误投放
+                showErrorAnimation(this);
+                
+                // 提示正确的分类
+                const correctBin = trashType === 'recyclable' ? '可回收垃圾桶' : '有害垃圾桶';
+                alert(`${trashItems.find(item => item.id == trashId)?.name} 应该投放到 ${correctBin}`);
+            }
+        }
+        
+        // 显示星星动画
+        function showStarAnimation(element) {
+            const binRect = element.getBoundingClientRect();
+            const containerRect = document.body.getBoundingClientRect();
+            
+            // 创建5个星星
+            for (let i = 0; i < 5; i++) {
+                const star = document.createElement('i');
+                star.className = 'star fas fa-star';
+                
+                // 随机位置
+                const x = binRect.left - containerRect.left + binRect.width / 2 + (Math.random() * 50 - 25);
+                const y = binRect.top - containerRect.top + binRect.height / 2 + (Math.random() * 50 - 25);
+                
+                star.style.left = `${x}px`;
+                star.style.top = `${y}px`;
+                star.style.animationDelay = `${i * 0.1}s`;
+                
+                document.body.appendChild(star);
+                
+                // 动画结束后移除星星
+                setTimeout(() => {
+                    star.remove();
+                }, 1000);
+            }
+        }
+        
+        // 显示错误动画
+        function showErrorAnimation(element) {
+            element.classList.add('error-message');
+            setTimeout(() => {
+                element.classList.remove('error-message');
+            }, 500);
+        }
+        
+        // 显示环保知识弹窗
+        function showKnowledgeModal(item) {
+            modalContent.innerHTML = `
+                <h2 class="text-2xl font-bold mb-4 text-green-600">${item.name}的环保知识</h2>
+                <div class="flex flex-col md:flex-row items-center mb-4">
+                    <img src="${item.image}" alt="${item.name}" class="w-32 h-32 object-contain mb-4 md:mb-0 md:mr-4">
+                    <div>
+                        <p class="font-bold mb-2">分类：${item.type === 'recyclable' ? '可回收物' : '有害垃圾'}</p>
+                        <p>${item.knowledge}</p>
+                    </div>
+                </div>
+            `;
+            
+            knowledgeModal.style.display = 'block';
+        }
+        
+        // 更新分数
+        function updateScore(points) {
+            score += points;
+            scoreDisplay.textContent = score;
+        }
+        
+        // 开始挑战
+        function startChallenge() {
+            isChallengeActive = true;
+            timeLeft = 60;
+            correctCount = 0;
+            correctCountDisplay.textContent = correctCount;
+            timerDisplay.textContent = timeLeft;
+            challengeTimer.classList.remove('hidden');
+            
+            // 重置进度环
+            const circumference = 2 * Math.PI * 45;
+            timerProgress.style.strokeDasharray = `${circumference} ${circumference}`;
+            timerProgress.style.strokeDashoffset = '0';
+            
+            // 初始化垃圾项
+            initTrashItems();
+            
+            // 禁用开始挑战按钮
+            startChallengeBtn.disabled = true;
+            startChallengeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            // 启动计时器
+            timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+                
+                // 更新进度环
+                const offset = circumference - (timeLeft / 60) * circumference;
+                timerProgress.style.strokeDashoffset = offset;
+                
+                // 时间到，结束挑战
+                if (timeLeft <= 0) {
+                    endChallenge(false);
+                }
+            }, 1000);
+        }
+        
+        // 结束挑战
+        function endChallenge(isSuccess) {
+            clearInterval(timer);
+            isChallengeActive = false;
+            
+            // 启用开始挑战按钮
+            startChallengeBtn.disabled = false;
+            startChallengeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            // 显示挑战结果
+            if (isSuccess) {
+                challengeResult.textContent = `恭喜你！在${60 - timeLeft}秒内正确投放了10个垃圾！`;
+            } else {
+                challengeResult.textContent = `挑战失败！你正确投放了${correctCount}个垃圾。再试一次吧！`;
+            }
+            
+            challengeCompleteModal.style.display = 'block';
+        }
+        
+        // 初始化
+        function init() {
+            initTrashItems();
+            setupTrashBins();
+            
+            // 关闭弹窗事件
+            Array.from(closeModal).forEach(button => {
+                button.addEventListener('click', () => {
+                    knowledgeModal.style.display = 'none';
+                    challengeCompleteModal.style.display = 'none';
+                });
+            });
+            
+            // 点击弹窗外部关闭
+            window.addEventListener('click', (e) => {
+                if (e.target === knowledgeModal) {
+                    knowledgeModal.style.display = 'none';
+                }
+                if (e.target === challengeCompleteModal) {
+                    challengeCompleteModal.style.display = 'none';
+                }
+            });
+            
+            // 开始挑战按钮事件
+            startChallengeBtn.addEventListener('click', startChallenge);
+            
+            // 再玩一次按钮事件
+            playAgainBtn.addEventListener('click', () => {
+                challengeCompleteModal.style.display = 'none';
+                startChallenge();
+            });
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
