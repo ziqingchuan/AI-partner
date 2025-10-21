@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语句子积木 - 趣味英语学习</title>
+    <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
+            background-color: #f9f7fe;
+            background-image: url('https://api.coze_space/text2image?prompt=请帮我生成一张“明亮的卡通教室背景”&width=1200&height=800');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        
+        /* 单词积木样式 */
+        .word-block {
+            display: inline-block;
+            padding: 12px 20px;
+            margin: 8px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: grab;
+            user-select: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .word-block:active {
+            cursor: grabbing;
+        }
+        
+        .word-block:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .word-block.dragging {
+            opacity: 0.7;
+            transform: scale(1.05);
+        }
+        
+        /* 拖拽区域样式 */
+        .drop-zone {
+            min-height: 120px;
+            border: 3px dashed #9c27b0;
+            border-radius: 20px;
+            padding: 20px;
+            margin: 20px 0;
+            background-color: rgba(255, 255, 255, 0.7);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .drop-zone.highlight {
+            border-color: #4caf50;
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+        
+        .drop-zone .placeholder {
+            color: #999;
+            text-align: center;
+            font-style: italic;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        
+        /* 结果提示样式 */
+        .result-feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 30px;
+            border-radius: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .result-feedback.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .result-feedback.correct {
+            background-color: rgba(76, 175, 80, 0.95);
+            color: white;
+        }
+        
+        .result-feedback.incorrect {
+            background-color: rgba(244, 67, 54, 0.95);
+            color: white;
+        }
+        
+        /* 按钮样式 */
+        .game-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin: 0 10px;
+        }
+        
+        .game-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .game-button:active {
+            transform: translateY(0);
+        }
+        
+        /* 进度条样式 */
+        .progress-container {
+            height: 12px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+            transition: width 0.5s ease;
+        }
+        
+        /* 动画效果 */
+        @keyframes celebrate {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+            20%, 60% { transform: translate(-50%, -50%) translateX(-10px); }
+            40%, 80% { transform: translate(-50%, -50%) translateX(10px); }
+        }
+        
+        .celebrate {
+            animation: celebrate 0.6s ease-in-out;
+        }
+        
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        /* 彩虹边框效果 */
+        .rainbow-border {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        
+        .rainbow-border::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ff6b6b);
+            background-size: 400%;
+            animation: borderAnimation 8s linear infinite;
+            z-index: -1;
+            border-radius: 22px;
+        }
+        
+        @keyframes borderAnimation {
+            0% { background-position: 0 0; }
+            100% { background-position: 400% 0; }
+        }
+        
+        /* 云朵装饰 */
+        .cloud {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50px;
+            z-index: -1;
+        }
+        
+        .cloud-1 {
+            width: 100px;
+            height: 60px;
+            top: 10%;
+            left: 5%;
+            animation: float 15s ease-in-out infinite;
+        }
+        
+        .cloud-2 {
+            width: 80px;
+            height: 50px;
+            top: 15%;
+            right: 10%;
+            animation: float 18s ease-in-out infinite 2s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .word-block {
+                font-size: 16px;
+                padding: 10px 16px;
+                margin: 6px;
+            }
+            
+            .drop-zone {
+                min-height: 100px;
+                padding: 15px;
+            }
+            
+            .game-button {
+                padding: 10px 20px;
+                font-size: 14px;
+                margin: 0 5px;
+            }
+            
+            .result-feedback {
+                padding: 20px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body class="relative overflow-x-hidden">
+    <!-- 装饰云朵 -->
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    
+    <!-- 主容器 -->
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <!-- 头部 -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-purple-700 mb-4 drop-shadow-lg">
+                <i class="fas fa-puzzle-piece text-yellow-500 mr-2"></i>英语句子积木
+            </h1>
+            <p class="text-xl text-indigo-600">拖动单词，拼出正确的句子吧！</p>
+        </header>
+        
+        <!-- 游戏区域 -->
+        <main class="bg-white bg-opacity-90 rounded-3xl p-6 md:p-8 shadow-xl rainbow-border">
+            <!-- 进度显示 -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-lg font-semibold text-gray-700">
+                        <i class="fas fa-clipboard-list text-blue-500 mr-2"></i>第 <span id="current-sentence">1</span> 题 / 共 30 题
+                    </span>
+                    <span class="text-lg font-semibold text-gray-700">
+                        得分: <span id="score">0</span>
+                    </span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar" style="width: 3.33%;"></div>
+                </div>
+            </div>
+            
+            <!-- 目标拖拽区域 -->
+            <div class="drop-zone mb-8" id="drop-zone">
+                <div class="placeholder">把单词拖到这里...</div>
+            </div>
+            
+            <!-- 单词池 -->
+            <div class="word-pool mb-8 p-6 bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl" id="word-pool">
+                <h3 class="text-xl font-semibold text-center text-purple-700 mb-4">单词库</h3>
+                <div class="flex flex-wrap justify-center" id="words-container">
+                    <!-- 单词积木将在这里动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 控制按钮 -->
+            <div class="flex justify-center items-center">
+                <button class="game-button bg-blue-500 text-white" id="prev-button">
+                    <i class="fas fa-arrow-left mr-2"></i>上一题
+                </button>
+                <button class="game-button bg-yellow-500 text-white" id="reset-button">
+                    <i class="fas fa-redo mr-2"></i>重置
+                </button>
+                <button class="game-button bg-green-500 text-white" id="next-button">
+                    下一题<i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </main>
+        
+        <!-- 结果反馈弹窗 -->
+        <div class="result-feedback" id="result-feedback">
+            <i class="fas fa-check-circle text-4xl mb-2"></i>
+            <p id="feedback-message">太棒了！</p>
+        </div>
+    </div>
+    
+    <!-- 页脚 -->
+    <footer class="mt-12 py-4 text-center text-gray-600">
+        <p>created by <a href="https://space.coze.cn" class="text-indigo-600 hover:underline">coze space</a></p>
+        <p>页面内容均由 AI 生成，仅供参考</p>
+    </footer>
+    
+    <script>
+        // 句子数据
+        const sentences = [
+            { correct: "This is a cat.", shuffled: ["is", "This", "cat", "a"] },
+            { correct: "I like apples.", shuffled: ["like", "I", "apples"] },
+            { correct: "He has a dog.", shuffled: ["a", "He", "has", "dog"] },
+            { correct: "She is happy.", shuffled: ["is", "She", "happy"] },
+            { correct: "We go to school.", shuffled: ["school", "to", "go", "We"] },
+            { correct: "You are my friend.", shuffled: ["friend", "are", "You", "my"] },
+            { correct: "It is a book.", shuffled: ["is", "It", "book", "a"] },
+            { correct: "They play games.", shuffled: ["They", "games", "play"] },
+            { correct: "The sun is hot.", shuffled: ["sun", "The", "hot", "is"] },
+            { correct: "I eat rice.", shuffled: ["I", "rice", "eat"] },
+            { correct: "Birds can fly.", shuffled: ["can", "Birds", "fly"] },
+            { correct: "Fish live in water.", shuffled: ["in", "water", "Fish", "live"] },
+            { correct: "A dog barks.", shuffled: ["dog", "A", "barks"] },
+            { correct: "Cats like milk.", shuffled: ["like", "Cats", "milk"] },
+            { correct: "I have a pen.", shuffled: ["a", "have", "I", "pen"] },
+            { correct: "This is my bag.", shuffled: ["my", "is", "This", "bag"] },
+            { correct: "He runs fast.", shuffled: ["runs", "He", "fast"] },
+            { correct: "She sings songs.", shuffled: ["sings", "She", "songs"] },
+            { correct: "We read books.", shuffled: ["read", "We", "books"] },
+            { correct: "You drink water.", shuffled: ["You", "water", "drink"] },
+            { correct: "The sky is blue.", shuffled: ["sky", "The", "blue", "is"] },
+            { correct: "I see a bird.", shuffled: ["see", "I", "bird", "a"] },
+            { correct: "This is a red apple.", shuffled: ["a", "red", "is", "This", "apple"] },
+            { correct: "Dogs like bones.", shuffled: ["like", "Dogs", "bones"] },
+            { correct: "I go to park.", shuffled: ["park", "to", "go", "I"] },
+            { correct: "She has a red dress.", shuffled: ["dress", "red", "She", "a", "has"] },
+            { correct: "He plays football.", shuffled: ["plays", "He", "football"] },
+            { correct: "We watch TV.", shuffled: ["TV", "We", "watch"] },
+            { correct: "You draw pictures.", shuffled: ["pictures", "You", "draw"] },
+            { correct: "It is a sunny day.", shuffled: ["sunny", "day", "is", "a", "It"] }
+        ];
+        
+        // 颜色数组
+        const colors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', 
+            '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+            '#F8C471', '#82E0AA', '#AED6F1', '#F1948A', '#D5DBDB',
+            '#BB8FCE', '#85C1E9', '#F8C471', '#82E0AA', '#AED6F1'
+        ];
+        
+        // 当前句子索引
+        let currentIndex = 0;
+        let score = 0;
+        
+        // DOM 元素
+        const wordsContainer = document.getElementById('words-container');
+        const dropZone = document.getElementById('drop-zone');
+        const resetButton = document.getElementById('reset-button');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const resultFeedback = document.getElementById('result-feedback');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const currentSentenceElement = document.getElementById('current-sentence');
+        const progressBar = document.getElementById('progress-bar');
+        const scoreElement = document.getElementById('score');
+        const placeholder = dropZone.querySelector('.placeholder');
+        
+        // 初始化游戏
+        function initGame() {
+            renderCurrentSentence();
+            setupEventListeners();
+        }
+        
+        // 渲染当前句子的单词积木
+        function renderCurrentSentence() {
+            // 清空单词容器和拖拽区域
+            wordsContainer.innerHTML = '';
+            dropZone.innerHTML = '<div class="placeholder">把单词拖到这里...</div>';
+            
+            // 获取当前句子的打乱单词
+            const currentSentence = sentences[currentIndex];
+            const shuffledWords = [...currentSentence.shuffled];
+            
+            // 随机打乱单词顺序
+            shuffledWords.sort(() => Math.random() - 0.5);
+            
+            // 创建单词积木
+            shuffledWords.forEach((word, index) => {
+                const wordBlock = document.createElement('div');
+                wordBlock.classList.add('word-block');
+                wordBlock.setAttribute('draggable', 'true');
+                wordBlock.setAttribute('data-word', word);
+                
+                // 为每个单词分配不同的颜色
+                const colorIndex = index % colors.length;
+                wordBlock.style.backgroundColor = colors[colorIndex];
+                wordBlock.style.color = getContrastColor(colors[colorIndex]);
+                
+                wordBlock.textContent = word;
+                
+                // 添加拖拽事件监听器
+                wordBlock.addEventListener('dragstart', handleDragStart);
+                wordBlock.addEventListener('dragend', handleDragEnd);
+                
+                wordsContainer.appendChild(wordBlock);
+            });
+            
+            // 更新进度显示
+            currentSentenceElement.textContent = currentIndex + 1;
+            progressBar.style.width = `${((currentIndex + 1) / sentences.length) * 100}%`;
+            scoreElement.textContent = score;
+        }
+        
+        // 处理拖拽开始事件
+        function handleDragStart(e) {
+            this.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', this.getAttribute('data-word'));
+            
+            // 设置拖拽图像
+            setTimeout(() => {
+                this.style.opacity = '0.4';
+            }, 0);
+        }
+        
+        // 处理拖拽结束事件
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+            this.style.opacity = '1';
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 拖拽区域事件
+            dropZone.addEventListener('dragover', handleDragOver);
+            dropZone.addEventListener('dragenter', handleDragEnter);
+            dropZone.addEventListener('dragleave', handleDragLeave);
+            dropZone.addEventListener('drop', handleDrop);
+            
+            // 按钮事件
+            resetButton.addEventListener('click', resetCurrentSentence);
+            prevButton.addEventListener('click', goToPreviousSentence);
+            nextButton.addEventListener('click', goToNextSentence);
+        }
+        
+        // 处理拖拽悬停事件
+        function handleDragOver(e) {
+            e.preventDefault();
+            this.classList.add('highlight');
+        }
+        
+        // 处理拖拽进入事件
+        function handleDragEnter(e) {
+            e.preventDefault();
+            this.classList.add('highlight');
+        }
+        
+        // 处理拖拽离开事件
+        function handleDragLeave() {
+            this.classList.remove('highlight');
+        }
+        
+        // 处理放置事件
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('highlight');
+            
+            // 移除占位符
+            const placeholder = this.querySelector('.placeholder');
+            if (placeholder) {
+                this.removeChild(placeholder);
+            }
+            
+            // 获取拖拽的单词
+            const word = e.dataTransfer.getData('text/plain');
+            
+            // 查找对应的单词积木
+            const wordBlocks = document.querySelectorAll('.word-block');
+            let draggedBlock = null;
+            
+            wordBlocks.forEach(block => {
+                if (block.getAttribute('data-word') === word && !block.parentNode.classList.contains('drop-zone')) {
+                    draggedBlock = block;
+                }
+            });
+            
+            if (draggedBlock) {
+                // 克隆单词积木并添加到拖拽区域
+                const newBlock = draggedBlock.cloneNode(true);
+                
+                // 重新添加拖拽事件监听器
+                newBlock.addEventListener('dragstart', handleDragStart);
+                newBlock.addEventListener('dragend', handleDragEnd);
+                
+                // 添加点击删除功能
+                newBlock.addEventListener('click', function() {
+                    this.remove();
+                    // 如果拖拽区域为空，显示占位符
+                    if (dropZone.children.length === 0) {
+                        dropZone.innerHTML = '<div class="placeholder">把单词拖到这里...</div>';
+                    }
+                });
+                
+                this.appendChild(newBlock);
+                
+                // 检查是否所有单词都已放置
+                checkCompletion();
+            }
+        }
+        
+        // 检查是否所有单词都已放置
+        function checkCompletion() {
+            const dropZoneWords = dropZone.querySelectorAll('.word-block');
+            const totalWords = sentences[currentIndex].shuffled.length;
+            
+            if (dropZoneWords.length === totalWords) {
+                // 验证句子是否正确
+                validateSentence();
+            }
+        }
+        
+        // 验证句子是否正确
+        function validateSentence() {
+            const dropZoneWords = dropZone.querySelectorAll('.word-block');
+            let constructedSentence = '';
+            
+            // 构建句子
+            dropZoneWords.forEach((block, index) => {
+                constructedSentence += block.getAttribute('data-word');
+                if (index < dropZoneWords.length - 1) {
+                    constructedSentence += ' ';
+                }
+            });
+            
+            // 添加句号
+            constructedSentence += '.';
+            
+            // 获取正确的句子
+            const correctSentence = sentences[currentIndex].correct;
+            
+            // 验证
+            if (constructedSentence === correctSentence) {
+                showCorrectFeedback();
+            } else {
+                showIncorrectFeedback();
+            }
+        }
+        
+        // 显示正确反馈
+        function showCorrectFeedback() {
+            resultFeedback.classList.add('correct', 'show', 'celebrate');
+            resultFeedback.querySelector('i').className = 'fas fa-check-circle text-4xl mb-2';
+            feedbackMessage.textContent = '太棒了！正确！';
+            
+            // 播放语音
+            speakSentence(sentences[currentIndex].correct);
+            
+            // 增加分数
+            score++;
+            scoreElement.textContent = score;
+            
+            // 3秒后自动加载下一题
+            setTimeout(() => {
+                resultFeedback.classList.remove('show', 'celebrate');
+                goToNextSentence();
+            }, 3000);
+        }
+        
+        // 显示错误反馈
+        function showIncorrectFeedback() {
+            resultFeedback.classList.add('incorrect', 'show', 'shake');
+            resultFeedback.querySelector('i').className = 'fas fa-times-circle text-4xl mb-2';
+            feedbackMessage.textContent = '再试一次！';
+            
+            // 2秒后隐藏反馈
+            setTimeout(() => {
+                resultFeedback.classList.remove('show', 'shake');
+            }, 2000);
+        }
+        
+        // 语音朗读句子
+        function speakSentence(sentence) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(sentence);
+                utterance.lang = 'en-US';
+                speechSynthesis.speak(utterance);
+            }
+        }
+        
+        // 重置当前句子
+        function resetCurrentSentence() {
+            renderCurrentSentence();
+        }
+        
+        // 上一题
+        function goToPreviousSentence() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderCurrentSentence();
+            }
+        }
+        
+        // 下一题
+        function goToNextSentence() {
+            if (currentIndex < sentences.length - 1) {
+                currentIndex++;
+                renderCurrentSentence();
+            } else {
+                // 游戏结束
+                alert(`恭喜你完成了所有题目！你的得分是：${score}/30`);
+                currentIndex = 0;
+                score = 0;
+                renderCurrentSentence();
+            }
+        }
+        
+        // 获取对比度颜色（黑或白）
+        function getContrastColor(hexColor) {
+            // 移除 # 号
+            hexColor = hexColor.replace('#', '');
+            
+            // 转换为 RGB
+            const r = parseInt(hexColor.substr(0, 2), 16);
+            const g = parseInt(hexColor.substr(2, 2), 16);
+            const b = parseInt(hexColor.substr(4, 2), 16);
+            
+            // 计算亮度
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            
+            // 返回对比度颜色
+            return brightness > 128 ? '#000000' : '#FFFFFF';
+        }
+        
+        // 页面加载完成后初始化游戏
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>

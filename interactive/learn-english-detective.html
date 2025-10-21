@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语语法侦探 - 语法错误大破案</title>
+    <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Nunito:wght@400;600;700&display=swap');
+        
+        :root {
+            --primary-color: #4A6CF7;
+            --secondary-color: #FF6B6B;
+            --accent-color: #FFD166;
+            --success-color: #06D6A0;
+            --background-color: #F7F9FC;
+            --text-color: #2D3748;
+        }
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(74, 108, 247, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 107, 107, 0.05) 0%, transparent 20%);
+            background-attachment: fixed;
+        }
+        
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .title-font {
+            font-family: 'Bubblegum Sans', cursive;
+        }
+        
+        .detective-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .detective-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .sentence-container {
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        
+        .word {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 0 3px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .word:hover {
+            background-color: rgba(74, 108, 247, 0.1);
+            transform: scale(1.05);
+        }
+        
+        .error-word {
+            background-color: rgba(255, 107, 107, 0.1);
+            border: 2px dashed var(--secondary-color);
+        }
+        
+        .error-word:hover {
+            background-color: rgba(255, 107, 107, 0.2);
+        }
+        
+        .option-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .option-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+        
+        .option-card.selected {
+            background-color: rgba(74, 108, 247, 0.1);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-detective {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 12px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(74, 108, 247, 0.3);
+        }
+        
+        .btn-detective:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(74, 108, 247, 0.4);
+        }
+        
+        .btn-detective:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .progress-container {
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            transition: width 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .badge {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-color), #FF9F1C);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(255, 209, 102, 0.4);
+            position: relative;
+        }
+        
+        .badge::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border: 2px dashed rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: rotate 10s linear infinite;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .feedback-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .stars-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+        
+        .star {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: var(--accent-color);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            opacity: 0;
+            animation: star-fall 1s ease-out forwards;
+        }
+        
+        @keyframes star-fall {
+            0% {
+                opacity: 1;
+                transform: scale(0) translateY(-20px);
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1) translateY(100px);
+            }
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+        
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 10px;
+            }
+            
+            .sentence-container {
+                padding: 15px;
+                min-height: 100px;
+            }
+            
+            .word {
+                padding: 3px 8px;
+                margin: 0 2px;
+                font-size: 14px;
+            }
+            
+            .option-card {
+                padding: 12px 16px;
+                margin: 8px;
+            }
+            
+            .btn-detective {
+                padding: 10px 20px;
+            }
+            
+            .badge {
+                width: 50px;
+                height: 50px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="game-container py-8">
+        <!-- 游戏标题 -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold title-font text-primary-color mb-2">
+                <i class="fas fa-search text-primary-color mr-2"></i>英语语法侦探
+            </h1>
+            <p class="text-lg text-gray-600">找出并修正句子中的语法错误，成为语法小侦探！</p>
+        </header>
+        
+        <!-- 游戏主体 -->
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- 左侧信息面板 -->
+            <div class="lg:col-span-1">
+                <div class="detective-card p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-2xl font-bold title-font">侦探档案</h2>
+                        <div class="badge">
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- 侦探角色图片 -->
+                    <div class="flex justify-center mb-4">
+                        <img src="https://s.coze.cn/image/yh4tMT_RUZM/" alt="语法侦探" class="w-40 h-40 rounded-full object-cover border-4 border-primary-color">
+                    </div>
+                    
+                    <!-- 得分和徽章 -->
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold">总得分:</span>
+                            <span id="totalScore" class="text-2xl font-bold text-primary-color">0</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold">已获得徽章:</span>
+                            <div id="badgesContainer" class="flex space-x-2">
+                                <!-- 徽章会动态添加 -->
+                            </div>
+                        </div>
+                        
+                        <!-- 进度条 -->
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>破案进度</span>
+                                <span id="progressText">0/30</span>
+                            </div>
+                            <div class="progress-container">
+                                <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 游戏说明 -->
+                <div class="detective-card p-6">
+                    <h2 class="text-2xl font-bold title-font mb-4">游戏指南</h2>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <i class="fas fa-search text-primary-color mt-1 mr-2"></i>
+                            <span>仔细阅读句子，找出其中的语法错误</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-mouse-pointer text-primary-color mt-1 mr-2"></i>
+                            <span>点击你认为有错误的单词</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-primary-color mt-1 mr-2"></i>
+                            <span>从选项中选择正确的语法形式</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-star text-primary-color mt-1 mr-2"></i>
+                            <span>每答对一题获得10分，累计得分解锁徽章</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 右侧游戏区域 -->
+            <div class="lg:col-span-2">
+                <div class="detective-card p-6 mb-6">
+                    <h2 class="text-2xl font-bold title-font mb-4">
+                        <i class="fas fa-book-open text-primary-color mr-2"></i>句子 #<span id="currentSentence">1</span>
+                    </h2>
+                    
+                    <!-- 句子展示区 -->
+                    <div id="sentenceContainer" class="sentence-container mb-6 text-lg md:text-xl">
+                        <!-- 句子会动态生成 -->
+                    </div>
+                    
+                    <!-- 选项区 (初始隐藏) -->
+                    <div id="optionsContainer" class="hidden mb-6">
+                        <h3 class="text-xl font-semibold mb-3">选择正确的形式:</h3>
+                        <div id="optionsList" class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <!-- 选项会动态生成 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 反馈信息 (初始隐藏) -->
+                    <div id="feedbackContainer" class="hidden mb-6 p-4 rounded-lg text-center">
+                        <p id="feedbackMessage" class="text-lg font-semibold"></p>
+                    </div>
+                    
+                    <!-- 导航按钮 -->
+                    <div class="flex justify-between">
+                        <button id="prevButton" class="btn-detective" disabled>
+                            <i class="fas fa-arrow-left mr-2"></i>上一题
+                        </button>
+                        <button id="nextButton" class="btn-detective">
+                            下一题<i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 侦探笔记 -->
+                <div class="detective-card p-6">
+                    <h2 class="text-2xl font-bold title-font mb-4">
+                        <i class="fas fa-clipboard-list text-primary-color mr-2"></i>侦探笔记
+                    </h2>
+                    <div id="detectiveNotes" class="space-y-2 max-h-60 overflow-y-auto">
+                        <p class="text-gray-500 italic">开始你的侦探之旅，找出所有语法错误！</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 星星动画容器 -->
+        <div id="starsContainer" class="stars-container"></div>
+        
+        <!-- 反馈动画 -->
+        <div id="successAnimation" class="feedback-animation">
+            <div class="bg-success-color text-white text-3xl font-bold p-8 rounded-full shadow-lg">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+        
+        <div id="errorAnimation" class="feedback-animation">
+            <div class="bg-secondary-color text-white text-3xl font-bold p-8 rounded-full shadow-lg">
+                <i class="fas fa-times-circle"></i>
+            </div>
+        </div>
+        
+        <!-- 游戏完成模态框 -->
+        <div id="gameCompleteModal" class="modal">
+            <div class="modal-content text-center">
+                <div class="mb-4">
+                    <img src="https://s.coze.cn/image/_257k0VRZvY/" alt="庆祝胜利" class="w-48 h-48 mx-auto rounded-full object-cover">
+                </div>
+                <h2 class="text-3xl font-bold title-font mb-2">恭喜你！</h2>
+                <p class="text-xl mb-4">你成功完成了所有语法破案任务！</p>
+                <div class="mb-6">
+                    <p class="text-lg">总得分: <span id="finalScore" class="font-bold text-primary-color text-2xl">0</span></p>
+                    <p class="text-lg">获得徽章: <span id="finalBadges" class="font-bold text-primary-color">0</span></p>
+                </div>
+                <button id="restartButton" class="btn-detective">
+                    <i class="fas fa-redo mr-2"></i>重新开始
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 句子数据
+        const sentencesData = [
+            { id: 1, original: "He like apple.", corrected: "He likes apples.", errorWord: "like", correctOptions: ["like", "likes", "liking", "liked"] },
+            { id: 2, original: "She go to school yesterday.", corrected: "She went to school yesterday.", errorWord: "go", correctOptions: ["go", "goes", "went", "going"] },
+            { id: 3, original: "I have three book.", corrected: "I have three books.", errorWord: "book", correctOptions: ["book", "books", "book's", "bookes"] },
+            { id: 4, original: "They is playing.", corrected: "They are playing.", errorWord: "is", correctOptions: ["is", "are", "am", "was"] },
+            { id: 5, original: "We am happy.", corrected: "We are happy.", errorWord: "am", correctOptions: ["am", "is", "are", "were"] },
+            { id: 6, original: "He don't like milk.", corrected: "He doesn't like milk.", errorWord: "don't", correctOptions: ["don't", "doesn't", "didn't", "hasn't"] },
+            { id: 7, original: "She can swimming.", corrected: "She can swim.", errorWord: "swimming", correctOptions: ["swimming", "swim", "swims", "swam"] },
+            { id: 8, original: "This is a books.", corrected: "This is a book.", errorWord: "books", correctOptions: ["books", "book", "book's", "bookes"] },
+            { id: 9, original: "I eat an banana.", corrected: "I eat a banana.", errorWord: "an", correctOptions: ["an", "a", "the", "one"] },
+            { id: 10, original: "He is read a book.", corrected: "He is reading a book.", errorWord: "read", correctOptions: ["read", "reading", "reads", "red"] },
+            { id: 11, original: "My mother cook dinner now.", corrected: "My mother is cooking dinner now.", errorWord: "cook", correctOptions: ["cook", "cooks", "cooking", "is cooking"] },
+            { id: 12, original: "We go to park yesterday.", corrected: "We went to park yesterday.", errorWord: "go", correctOptions: ["go", "goes", "went", "going"] },
+            { id: 13, original: "They has a dog.", corrected: "They have a dog.", errorWord: "has", correctOptions: ["has", "have", "had", "having"] },
+            { id: 14, original: "You was late.", corrected: "You were late.", errorWord: "was", correctOptions: ["was", "were", "is", "are"] },
+            { id: 15, original: "I am ten year old.", corrected: "I am ten years old.", errorWord: "year", correctOptions: ["year", "years", "year's", "yeares"] },
+            { id: 16, original: "He play football every day.", corrected: "He plays football every day.", errorWord: "play", correctOptions: ["play", "plays", "playing", "played"] },
+            { id: 17, original: "She like sing.", corrected: "She likes singing.", errorWord: "sing", correctOptions: ["sing", "sings", "singing", "sang"] },
+            { id: 18, original: "We are go to school.", corrected: "We are going to school.", errorWord: "go", correctOptions: ["go", "goes", "going", "went"] },
+            { id: 19, original: "This is she pen.", corrected: "This is her pen.", errorWord: "she", correctOptions: ["she", "her", "hers", "she's"] },
+            { id: 20, original: "I no have money.", corrected: "I don't have money.", errorWord: "no", correctOptions: ["no", "not", "don't", "doesn't"] },
+            { id: 21, original: "He run fast.", corrected: "He runs fast.", errorWord: "run", correctOptions: ["run", "runs", "running", "ran"] },
+            { id: 22, original: "They are eat lunch.", corrected: "They are eating lunch.", errorWord: "eat", correctOptions: ["eat", "eats", "eating", "ate"] },
+            { id: 23, original: "She has two cat.", corrected: "She has two cats.", errorWord: "cat", correctOptions: ["cat", "cats", "cat's", "cates"] },
+            { id: 24, original: "We watch TV last night.", corrected: "We watched TV last night.", errorWord: "watch", correctOptions: ["watch", "watches", "watching", "watched"] },
+            { id: 25, original: "I am drink milk.", corrected: "I am drinking milk.", errorWord: "drink", correctOptions: ["drink", "drinks", "drinking", "drank"] },
+            { id: 26, original: "He like play basketball.", corrected: "He likes playing basketball.", errorWord: "play", correctOptions: ["play", "plays", "playing", "played"] },
+            { id: 27, original: "This is you book.", corrected: "This is your book.", errorWord: "you", correctOptions: ["you", "your", "yours", "you're"] },
+            { id: 28, original: "They is happy.", corrected: "They are happy.", errorWord: "is", correctOptions: ["is", "are", "am", "was"] },
+            { id: 29, original: "She go to the park.", corrected: "She goes to the park.", errorWord: "go", correctOptions: ["go", "goes", "went", "going"] },
+            { id: 30, original: "I has a red car.", corrected: "I have a red car.", errorWord: "has", correctOptions: ["has", "have", "had", "having"] }
+        ];
+        
+        // 游戏状态
+        let gameState = {
+            currentSentenceIndex: 0,
+            score: 0,
+            selectedWord: null,
+            selectedOption: null,
+            completedSentences: [],
+            badges: []
+        };
+        
+        // DOM 元素
+        const sentenceContainer = document.getElementById('sentenceContainer');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const optionsList = document.getElementById('optionsList');
+        const feedbackContainer = document.getElementById('feedbackContainer');
+        const feedbackMessage = document.getElementById('feedbackMessage');
+        const currentSentenceEl = document.getElementById('currentSentence');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const totalScoreEl = document.getElementById('totalScore');
+        const badgesContainer = document.getElementById('badgesContainer');
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+        const detectiveNotes = document.getElementById('detectiveNotes');
+        const successAnimation = document.getElementById('successAnimation');
+        const errorAnimation = document.getElementById('errorAnimation');
+        const gameCompleteModal = document.getElementById('gameCompleteModal');
+        const finalScoreEl = document.getElementById('finalScore');
+        const finalBadgesEl = document.getElementById('finalBadges');
+        const restartButton = document.getElementById('restartButton');
+        
+        // 初始化游戏
+        function initGame() {
+            renderCurrentSentence();
+            updateGameStats();
+            setupEventListeners();
+        }
+        
+        // 渲染当前句子
+        function renderCurrentSentence() {
+            const currentSentence = sentencesData[gameState.currentSentenceIndex];
+            currentSentenceEl.textContent = currentSentence.id;
+            
+            // 清空句子容器
+            sentenceContainer.innerHTML = '';
+            
+            // 分割句子为单词
+            const words = currentSentence.original.split(' ');
+            
+            // 创建单词元素
+            words.forEach((word, index) => {
+                // 处理标点符号
+                let punctuation = '';
+                if (/[.,!?;:]/.test(word)) {
+                    punctuation = word.match(/[.,!?;:]/)[0];
+                    word = word.replace(/[.,!?;:]/, '');
+                }
+                
+                const wordEl = document.createElement('span');
+                wordEl.className = 'word';
+                wordEl.textContent = word;
+                
+                // 标记错误单词
+                if (word.toLowerCase() === currentSentence.errorWord.toLowerCase()) {
+                    wordEl.classList.add('error-word');
+                    wordEl.dataset.isError = 'true';
+                }
+                
+                // 添加点击事件
+                wordEl.addEventListener('click', () => handleWordClick(wordEl, word));
+                
+                // 添加到容器
+                sentenceContainer.appendChild(wordEl);
+                
+                // 添加空格和标点
+                if (index < words.length - 1) {
+                    sentenceContainer.appendChild(document.createTextNode(' '));
+                }
+                
+                if (punctuation) {
+                    const punctuationEl = document.createElement('span');
+                    punctuationEl.textContent = punctuation;
+                    sentenceContainer.appendChild(punctuationEl);
+                }
+            });
+            
+            // 重置状态
+            gameState.selectedWord = null;
+            gameState.selectedOption = null;
+            optionsContainer.classList.add('hidden');
+            feedbackContainer.classList.add('hidden');
+            
+            // 更新按钮状态
+            updateButtonStates();
+        }
+        
+        // 处理单词点击
+        function handleWordClick(wordEl, word) {
+            // 如果已经选择了单词，不做处理
+            if (gameState.selectedWord) return;
+            
+            const currentSentence = sentencesData[gameState.currentSentenceIndex];
+            
+            // 检查是否点击了错误单词
+            if (wordEl.dataset.isError === 'true') {
+                gameState.selectedWord = word;
+                
+                // 高亮选中的单词
+                wordEl.classList.add('bg-primary-color', 'text-white');
+                
+                // 显示选项
+                renderOptions(currentSentence);
+            } else {
+                // 显示错误提示
+                showFeedback('请再仔细检查一下，这个单词没有语法错误！', 'error');
+            }
+        }
+        
+        // 渲染选项
+        function renderOptions(sentence) {
+            optionsList.innerHTML = '';
+            optionsContainer.classList.remove('hidden');
+            
+            sentence.correctOptions.forEach(option => {
+                const optionCard = document.createElement('div');
+                optionCard.className = 'option-card';
+                optionCard.textContent = option;
+                
+                // 添加点击事件
+                optionCard.addEventListener('click', () => handleOptionSelect(optionCard, option));
+                
+                optionsList.appendChild(optionCard);
+            });
+        }
+        
+        // 处理选项选择
+        function handleOptionSelect(optionCard, option) {
+            // 如果已经选择了选项，不做处理
+            if (gameState.selectedOption) return;
+            
+            gameState.selectedOption = option;
+            
+            // 高亮选中的选项
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            optionCard.classList.add('selected');
+            
+            // 检查答案是否正确
+            const currentSentence = sentencesData[gameState.currentSentenceIndex];
+            const correctedSentence = currentSentence.corrected;
+            const correctedWord = correctedSentence.split(' ').find(w => 
+                w.toLowerCase().includes(currentSentence.errorWord.toLowerCase())
+            );
+            
+            // 去掉标点符号进行比较
+            const cleanCorrectedWord = correctedWord.replace(/[.,!?;:]/, '');
+            const cleanSelectedOption = option.replace(/[.,!?;:]/, '');
+            
+            if (cleanSelectedOption.toLowerCase() === cleanCorrectedWord.toLowerCase()) {
+                // 答案正确
+                gameState.score += 10;
+                showFeedback('太棒了！你找到了正确的语法形式！', 'success');
+                createStarAnimation();
+                
+                // 记录完成的句子
+                if (!gameState.completedSentences.includes(gameState.currentSentenceIndex)) {
+                    gameState.completedSentences.push(gameState.currentSentenceIndex);
+                    
+                    // 检查是否解锁新徽章
+                    checkBadgeUnlock();
+                    
+                    // 添加到侦探笔记
+                    addToDetectiveNotes(`案件 #${currentSentence.id} 已解决: ${currentSentence.original} → ${currentSentence.corrected}`);
+                }
+            } else {
+                // 答案错误
+                showFeedback(`再试一次！正确的形式应该是: ${cleanCorrectedWord}`, 'error');
+            }
+            
+            // 更新游戏统计
+            updateGameStats();
+            
+            // 更新按钮状态
+            updateButtonStates();
+        }
+        
+        // 显示反馈
+        function showFeedback(message, type) {
+            feedbackMessage.textContent = message;
+            
+            // 设置反馈样式
+            if (type === 'success') {
+                feedbackContainer.className = 'p-4 rounded-lg text-center bg-success-color/10 text-success-color';
+                showAnimation(successAnimation);
+            } else {
+                feedbackContainer.className = 'p-4 rounded-lg text-center bg-secondary-color/10 text-secondary-color';
+                showAnimation(errorAnimation);
+            }
+            
+            feedbackContainer.classList.remove('hidden');
+        }
+        
+        // 显示动画
+        function showAnimation(animationEl) {
+            animationEl.style.display = 'block';
+            
+            // 添加动画效果
+            animationEl.animate([
+                { transform: 'translate(-50%, -50%) scale(0.5)', opacity: 0 },
+                { transform: 'translate(-50%, -50%) scale(1.2)', opacity: 1 },
+                { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+                { transform: 'translate(-50%, -50%) scale(0.5)', opacity: 0 }
+            ], {
+                duration: 1000,
+                easing: 'ease-out'
+            });
+            
+            // 1秒后隐藏
+            setTimeout(() => {
+                animationEl.style.display = 'none';
+            }, 1000);
+        }
+        
+        // 创建星星动画
+        function createStarAnimation() {
+            const starsContainer = document.getElementById('starsContainer');
+            
+            // 创建10个星星
+            for (let i = 0; i < 10; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // 随机位置
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                star.style.left = `${x}%`;
+                star.style.top = `${y}%`;
+                
+                // 随机大小
+                const size = Math.random() * 10 + 10;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                // 随机动画延迟
+                star.style.animationDelay = `${i * 0.1}s`;
+                
+                starsContainer.appendChild(star);
+                
+                // 动画结束后移除
+                setTimeout(() => {
+                    star.remove();
+                }, 1000);
+            }
+        }
+        
+        // 检查徽章解锁
+        function checkBadgeUnlock() {
+            const badgeThresholds = [10, 20, 30, 50, 100, 200, 300];
+            
+            badgeThresholds.forEach(threshold => {
+                if (gameState.score >= threshold && !gameState.badges.includes(threshold)) {
+                    gameState.badges.push(threshold);
+                    renderBadges();
+                    
+                    // 显示徽章解锁提示
+                    showFeedback(`恭喜你获得了 ${threshold} 分徽章！`, 'success');
+                }
+            });
+        }
+        
+        // 渲染徽章
+        function renderBadges() {
+            badgesContainer.innerHTML = '';
+            
+            gameState.badges.forEach(badge => {
+                const badgeEl = document.createElement('div');
+                badgeEl.className = 'badge';
+                badgeEl.textContent = badge;
+                badgesContainer.appendChild(badgeEl);
+            });
+        }
+        
+        // 添加到侦探笔记
+        function addToDetectiveNotes(note) {
+            const noteEl = document.createElement('p');
+            noteEl.className = 'p-2 bg-primary-color/5 rounded-lg';
+            noteEl.textContent = note;
+            
+            // 添加到笔记容器的顶部
+            if (detectiveNotes.firstChild) {
+                detectiveNotes.insertBefore(noteEl, detectiveNotes.firstChild);
+            } else {
+                detectiveNotes.appendChild(noteEl);
+            }
+        }
+        
+        // 更新游戏统计
+        function updateGameStats() {
+            // 更新分数
+            totalScoreEl.textContent = gameState.score;
+            
+            // 更新进度
+            const progressPercentage = ((gameState.currentSentenceIndex + 1) / sentencesData.length) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+            progressText.textContent = `${gameState.currentSentenceIndex + 1}/${sentencesData.length}`;
+        }
+        
+        // 更新按钮状态
+        function updateButtonStates() {
+            // 上一题按钮
+            prevButton.disabled = gameState.currentSentenceIndex === 0;
+            
+            // 下一题按钮
+            if (gameState.currentSentenceIndex === sentencesData.length - 1) {
+                nextButton.textContent = '完成游戏';
+                nextButton.innerHTML = '完成游戏<i class="fas fa-flag-checkered ml-2"></i>';
+            } else {
+                nextButton.textContent = '下一题';
+                nextButton.innerHTML = '下一题<i class="fas fa-arrow-right ml-2"></i>';
+            }
+        }
+        
+        // 切换到上一题
+        function goToPrevSentence() {
+            if (gameState.currentSentenceIndex > 0) {
+                gameState.currentSentenceIndex--;
+                renderCurrentSentence();
+                updateGameStats();
+            }
+        }
+        
+        // 切换到下一题
+        function goToNextSentence() {
+            if (gameState.currentSentenceIndex < sentencesData.length - 1) {
+                gameState.currentSentenceIndex++;
+                renderCurrentSentence();
+                updateGameStats();
+            } else {
+                // 游戏完成
+                showGameCompleteModal();
+            }
+        }
+        
+        // 显示游戏完成模态框
+        function showGameCompleteModal() {
+            finalScoreEl.textContent = gameState.score;
+            finalBadgesEl.textContent = gameState.badges.length;
+            gameCompleteModal.classList.add('active');
+        }
+        
+        // 重新开始游戏
+        function restartGame() {
+            // 重置游戏状态
+            gameState = {
+                currentSentenceIndex: 0,
+                score: 0,
+                selectedWord: null,
+                selectedOption: null,
+                completedSentences: [],
+                badges: []
+            };
+            
+            // 隐藏模态框
+            gameCompleteModal.classList.remove('active');
+            
+            // 清空侦探笔记
+            detectiveNotes.innerHTML = '<p class="text-gray-500 italic">开始你的侦探之旅，找出所有语法错误！</p>';
+            
+            // 重新渲染游戏
+            renderCurrentSentence();
+            updateGameStats();
+            renderBadges();
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 导航按钮
+            prevButton.addEventListener('click', goToPrevSentence);
+            nextButton.addEventListener('click', goToNextSentence);
+            
+            // 重新开始按钮
+            restartButton.addEventListener('click', restartGame);
+        }
+        
+        // 启动游戏
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
