@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小学生科学知识能力评估</title>
+    <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, "SimSun", sans-serif;
+            background-color: #f0f9ff;
+            background-image: 
+                radial-gradient(#b3e5fc 1px, transparent 1px),
+                radial-gradient(#b3e5fc 1px, transparent 1px);
+            background-size: 50px 50px;
+            background-position: 0 0, 25px 25px;
+            color: #333;
+            overflow: auto;
+        }
+        
+        h1, h2, h3 {
+            font-family: Arial, "SimHei", sans-serif;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .option-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .option-card:hover {
+            background-color: #f5f5f5;
+            transform: translateX(5px);
+        }
+        
+        .option-card.selected {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(33, 150, 243, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #666;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+            transform: translateY(-2px);
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4fc3f7 0%, #29b6f6 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .dimension-badge {
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .cloud {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            filter: blur(20px);
+            z-index: -1;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .floating-delay-1 {
+            animation-delay: 1s;
+        }
+        
+        .floating-delay-2 {
+            animation-delay: 2s;
+        }
+        
+        .result-card {
+            transition: all 0.5s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .result-card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .score-circle {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: conic-gradient(#29b6f6 0%, #4fc3f7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background-color: white;
+        }
+        
+        .score-text {
+            position: relative;
+            font-size: 48px;
+            font-weight: bold;
+            color: #29b6f6;
+        }
+        
+        @media (max-width: 768px) {
+            .score-circle {
+                width: 140px;
+                height: 140px;
+            }
+            
+            .score-circle::before {
+                width: 110px;
+                height: 110px;
+            }
+            
+            .score-text {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen py-8 px-4 relative">
+    <!-- 装饰元素 -->
+    <div class="cloud w-64 h-64 top-10 left-10 floating"></div>
+    <div class="cloud w-80 h-80 bottom-10 right-10 floating floating-delay-1"></div>
+    <div class="cloud w-48 h-48 top-1/3 right-1/4 floating floating-delay-2"></div>
+    
+    <div class="container mx-auto max-w-4xl">
+        <!-- 页面标题 -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-blue-600 mb-4">小学生科学知识能力评估</h1>
+            <p class="text-gray-600 text-lg mx-auto">
+                小朋友们，让我们一起来探索科学的奇妙世界吧！这个评估包含50道科学题目，
+                帮助你了解自己在不同科学领域的知识掌握情况。
+            </p>
+        </header>
+        
+        <!-- 开始页面 -->
+        <div id="startPage" class="card p-8 text-center mb-8">
+            <h2 class="text-4xl font-bold text-blue-600 mb-4">准备好开始了吗？</h2>
+            <p class="text-gray-600 mb-6">
+                <span class="text-2xl font-bold">这个评估将帮助你了解自己在五个科学领域的知识水平：<br><br></span>
+                <span class="dimension-badge bg-blue-500 text-2xl mx-1">物质科学</span>、
+                <span class="dimension-badge bg-green-500 text-2xl mx-1">生命科学</span>、
+                <span class="dimension-badge bg-yellow-500 text-2xl mx-1">地球与宇宙</span>、
+                <span class="dimension-badge bg-purple-500 text-2xl mx-1">技术与工程</span>、
+                <span class="dimension-badge bg-red-500 text-2xl mx-1">科学探究</span>
+            </p>
+            <button id="startButton" class="btn-primary">
+                <i class="fas text-2xl fa-rocket mr-2"></i>开始评估
+            </button>
+        </div>
+        
+        <!-- 答题页面 -->
+        <div id="quizPage" class="card p-6 md:p-8 mb-8 hidden">
+            <!-- 进度条 -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium text-gray-600">题目 <span id="currentQuestion">1</span>/50</span>
+                    <span class="text-sm font-medium text-gray-600">
+                        <span id="dimensionText">物质科学</span>
+                        <span class="dimension-badge bg-blue-500" id="dimensionBadge">物质科学</span>
+                    </span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 2%;"></div>
+                </div>
+            </div>
+            
+            <!-- 题目内容 -->
+            <div class="mb-8">
+                <h3 class="text-xl md:text-2xl font-bold mb-6" id="questionText">
+                    水在什么温度下会结冰？
+                </h3>
+                <div class="space-y-4" id="optionsContainer">
+                    <!-- 选项将通过JS动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 导航按钮 -->
+            <div class="flex justify-between">
+                <button id="prevButton" class="btn-secondary hidden">
+                    <i class="fas fa-arrow-left mr-2"></i>上一题
+                </button>
+                <div class="flex-1"></div>
+                <button id="nextButton" class="btn-primary" disabled>
+                    下一题<i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- 结果页面 -->
+        <div id="resultPage" class="hidden">
+            <!-- 总分卡片 -->
+            <div class="card p-6 md:p-8 mb-8 text-center result-card">
+                <h2 class="text-3xl font-bold text-blue-600 mb-6">你的科学知识评估报告</h2>
+                <div class="flex flex-col md:flex-row items-center justify-center gap-8">
+                    <div class="score-circle">
+                        <span class="score-text" id="totalScore">0</span>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="text-xl font-bold mb-2">总分</h3>
+                        <p class="text-gray-600 mb-4">满分100分</p>
+                        <div class="text-lg font-medium text-blue-600" id="overallComment">
+                            继续加油，探索科学的世界吧！
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 各维度得分 -->
+            <div class="card p-6 md:p-8 mb-8 result-card" style="transition-delay: 0.2s;">
+                <h3 class="text-2xl font-bold text-blue-600 mb-6">各维度得分情况</h3>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+                    <div class="text-center p-4 bg-blue-50 rounded-xl">
+                        <div class="text-sm text-blue-600 mb-1">物质科学</div>
+                        <div class="text-2xl font-bold text-blue-800" id="scoreMatter">0</div>
+                        <div class="text-xs text-gray-500">满分20分</div>
+                    </div>
+                    <div class="text-center p-4 bg-green-50 rounded-xl">
+                        <div class="text-sm text-green-600 mb-1">生命科学</div>
+                        <div class="text-2xl font-bold text-green-800" id="scoreLife">0</div>
+                        <div class="text-xs text-gray-500">满分20分</div>
+                    </div>
+                    <div class="text-center p-4 bg-yellow-50 rounded-xl">
+                        <div class="text-sm text-yellow-600 mb-1">地球与宇宙</div>
+                        <div class="text-2xl font-bold text-yellow-800" id="scoreEarth">0</div>
+                        <div class="text-xs text-gray-500">满分20分</div>
+                    </div>
+                    <div class="text-center p-4 bg-purple-50 rounded-xl">
+                        <div class="text-sm text-purple-600 mb-1">技术与工程</div>
+                        <div class="text-2xl font-bold text-purple-800" id="scoreTech">0</div>
+                        <div class="text-xs text-gray-500">满分20分</div>
+                    </div>
+                    <div class="text-center p-4 bg-red-50 rounded-xl">
+                        <div class="text-sm text-red-600 mb-1">科学探究</div>
+                        <div class="text-2xl font-bold text-red-800" id="scoreInquiry">0</div>
+                        <div class="text-xs text-gray-500">满分20分</div>
+                    </div>
+                </div>
+                
+                <!-- 雷达图 -->
+                <div class="w-full h-[300px] md:h-[400px] overflow-hidden">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- 针对性建议 -->
+            <div class="card p-6 md:p-8 mb-8 result-card" style="transition-delay: 0.4s;">
+                <h3 class="text-2xl font-bold text-blue-600 mb-6">学习建议</h3>
+                <div class="space-y-4" id="detailedComments">
+                    <!-- 建议将通过JS动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 重新开始按钮 -->
+            <div class="text-center result-card" style="transition-delay: 0.6s;">
+                <button id="restartButton" class="btn-primary">
+                    <i class="fas fa-redo-alt mr-2"></i>再玩一次
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 题目数据 - 修改为3个选项
+        const questions = [
+            // 物质科学 (10题)
+            {
+                id: 1,
+                dimension: "物质科学",
+                dimensionColor: "bg-blue-500",
+                question: "水在什么温度下会结冰？",
+                options: ["0℃", "10℃", "-5℃"],
+                answer: 0
+            },
+            {
+                id: 2,
+                dimension: "物质科学",
+                dimensionColor: "bg-blue-500",
+                question: "下列哪种物质能溶解在水中？",
+                options: ["沙子", "食用油", "盐"],
+                answer: 2
+            },
+            {
+                id: 3,
+                dimension: "物质科学",
+                dimensionColor: "bg-blue-500",
+                question: "磁铁的哪个部分磁力最强？",
+                options: ["中间", "两端", "整个磁铁一样强"],
+                answer: 1
+            },
+            {
+                id: 4,
+                dimension: "物质科学",
+                dimensionColor: "bg-blue-500",
+                question: "下列哪种是导体？",
+                options: ["塑料", "橡胶", "铜"],
+                answer: 2
+            },
+            {
+                id: 5,
+                dimension: "物质科学",
+                dimensionColor: "bg-blue-500",
+                question: "空气是由什么组成的？",
+                options: ["只有氧气", "只有二氧化碳", "多种气体混合"],
+                answer: 2
+            },
+            {
+                id: 6,
+                dimension: "物质科学",
+                dimensionColor: "bg-blue-500",
+                question: "下列哪种现象是蒸发？",
+                options: ["水结冰", "水沸腾", "湿衣服变干"],
+                answer: 2
+            },
+            {
+                id: 7,
+                dimension: "物质科学",
+                dimensionColor: "bg-blue-500",
+                question: "声音是如何传播的？",
+                options: ["通过空气", "不需要介质", "只能在水中"],
+                answer: 0
+            },
+            {
+                id: 8,
+                dimension: "物质科学",
+                dimensionColor: "bg-blue-500",
+                question: "下列哪种是光源？",
+                options: ["月亮", "镜子", "太阳"],
+                answer: 2
+            },
+            {
+                id: 9,
+                dimension: "物质科学",
+                dimensionColor: "bg-blue-500",
+                question: "物体的质量是指什么？",
+                options: ["物体的大小", "物体的重量", "物体所含物质的多少"],
+                answer: 2
+            },
+            {
+                id: 10,
+                dimension: "物质科学",
+                dimensionColor: "bg-blue-500",
+                question: "热是通过什么方式传递的？",
+                options: ["传导", "对流", "以上都是"],
+                answer: 2
+            },
+            
+            // 生命科学 (10题)
+            {
+                id: 11,
+                dimension: "生命科学",
+                dimensionColor: "bg-green-500",
+                question: "植物通过什么过程制造食物？",
+                options: ["呼吸作用", "光合作用", "消化作用"],
+                answer: 1
+            },
+            {
+                id: 12,
+                dimension: "生命科学",
+                dimensionColor: "bg-green-500",
+                question: "下列哪种动物是哺乳动物？",
+                options: ["鸡", "蛇", "鲸鱼"],
+                answer: 2
+            },
+            {
+                id: 13,
+                dimension: "生命科学",
+                dimensionColor: "bg-green-500",
+                question: "人体最大的器官是什么？",
+                options: ["心脏", "肝脏", "皮肤"],
+                answer: 2
+            },
+            {
+                id: 14,
+                dimension: "生命科学",
+                dimensionColor: "bg-green-500",
+                question: "种子萌发需要什么条件？",
+                options: ["水、阳光、土壤", "水、空气、适宜的温度", "阳光、空气、肥料"],
+                answer: 1
+            },
+            {
+                id: 15,
+                dimension: "生命科学",
+                dimensionColor: "bg-green-500",
+                question: "下列哪种是食物链的正确顺序？",
+                options: ["草→羊→狼", "狼→羊→草", "羊→草→狼"],
+                answer: 0
+            },
+            {
+                id: 16,
+                dimension: "生命科学",
+                dimensionColor: "bg-green-500",
+                question: "人体的血液循环系统由什么组成？",
+                options: ["心脏、血管、血液", "心脏、肺、胃", "心脏、肝脏、肾脏"],
+                answer: 0
+            },
+            {
+                id: 17,
+                dimension: "生命科学",
+                dimensionColor: "bg-green-500",
+                question: "下列哪种是昆虫？",
+                options: ["蜘蛛", "蜈蚣", "蚂蚁"],
+                answer: 2
+            },
+            {
+                id: 18,
+                dimension: "生命科学",
+                dimensionColor: "bg-green-500",
+                question: "植物的根有什么作用？",
+                options: ["制造食物", "吸收水分和养分", "进行光合作用"],
+                answer: 1
+            },
+            {
+                id: 19,
+                dimension: "生命科学",
+                dimensionColor: "bg-green-500",
+                question: "下列哪种动物是卵生动物？",
+                options: ["猫", "狗", "鸟"],
+                answer: 2
+            },
+            {
+                id: 20,
+                dimension: "生命科学",
+                dimensionColor: "bg-green-500",
+                question: "人体需要的六大营养素不包括？",
+                options: ["蛋白质", "脂肪", "氧气"],
+                answer: 2
+            },
+            
+            // 地球与宇宙科学 (10题)
+            {
+                id: 21,
+                dimension: "地球与宇宙",
+                dimensionColor: "bg-yellow-500",
+                question: "地球是什么形状的？",
+                options: ["正方形", "圆形", "球形"],
+                answer: 2
+            },
+            {
+                id: 22,
+                dimension: "地球与宇宙",
+                dimensionColor: "bg-yellow-500",
+                question: "下列哪种是可再生能源？",
+                options: ["煤炭", "石油", "太阳能"],
+                answer: 2
+            },
+            {
+                id: 23,
+                dimension: "地球与宇宙",
+                dimensionColor: "bg-yellow-500",
+                question: "月球绕地球转一圈大约需要多少天？",
+                options: ["7天", "15天", "30天"],
+                answer: 2
+            },
+            {
+                id: 24,
+                dimension: "地球与宇宙",
+                dimensionColor: "bg-yellow-500",
+                question: "下列哪种自然灾害与板块运动有关？",
+                options: ["洪水", "地震", "台风"],
+                answer: 1
+            },
+            {
+                id: 25,
+                dimension: "地球与宇宙",
+                dimensionColor: "bg-yellow-500",
+                question: "太阳系中有几颗行星？",
+                options: ["7颗", "8颗", "9颗"],
+                answer: 1
+            },
+            {
+                id: 26,
+                dimension: "地球与宇宙",
+                dimensionColor: "bg-yellow-500",
+                question: "下列哪种是岩石？",
+                options: ["玻璃", "塑料", "大理石"],
+                answer: 2
+            },
+            {
+                id: 27,
+                dimension: "地球与宇宙",
+                dimensionColor: "bg-yellow-500",
+                question: "地球上的水资源主要存在于哪里？",
+                options: ["河流", "湖泊", "海洋"],
+                answer: 2
+            },
+            {
+                id: 28,
+                dimension: "地球与宇宙",
+                dimensionColor: "bg-yellow-500",
+                question: "一年有四季是因为什么？",
+                options: ["地球自转", "地球公转", "月球绕地球转"],
+                answer: 1
+            },
+            {
+                id: 29,
+                dimension: "地球与宇宙",
+                dimensionColor: "bg-yellow-500",
+                question: "下列哪种天气现象与水的循环有关？",
+                options: ["下雨", "刮风", "闪电"],
+                answer: 0
+            },
+            {
+                id: 30,
+                dimension: "地球与宇宙",
+                dimensionColor: "bg-yellow-500",
+                question: "星座是由什么组成的？",
+                options: ["行星", "卫星", "恒星"],
+                answer: 2
+            },
+            
+            // 技术与工程 (10题)
+            {
+                id: 31,
+                dimension: "技术与工程",
+                dimensionColor: "bg-purple-500",
+                question: "下列哪种是简单机械？",
+                options: ["电脑", "手机", "杠杆"],
+                answer: 2
+            },
+            {
+                id: 32,
+                dimension: "技术与工程",
+                dimensionColor: "bg-purple-500",
+                question: "下列哪种材料是绝缘体？",
+                options: ["铁", "铜", "塑料"],
+                answer: 2
+            },
+            {
+                id: 33,
+                dimension: "技术与工程",
+                dimensionColor: "bg-purple-500",
+                question: "下列哪种工具用来测量长度？",
+                options: ["温度计", "尺子", "天平"],
+                answer: 1
+            },
+            {
+                id: 34,
+                dimension: "技术与工程",
+                dimensionColor: "bg-purple-500",
+                question: "下列哪种是环保材料？",
+                options: ["塑料袋", "一次性餐具", "可降解塑料"],
+                answer: 2
+            },
+            {
+                id: 35,
+                dimension: "技术与工程",
+                dimensionColor: "bg-purple-500",
+                question: "下列哪种发明利用了磁铁的原理？",
+                options: ["电话", "电灯", "指南针"],
+                answer: 2
+            },
+            {
+                id: 36,
+                dimension: "技术与工程",
+                dimensionColor: "bg-purple-500",
+                question: "下列哪种是人工智能的应用？",
+                options: ["智能音箱", "普通计算器", "手电筒"],
+                answer: 0
+            },
+            {
+                id: 37,
+                dimension: "技术与工程",
+                dimensionColor: "bg-purple-500",
+                question: "下列哪种是可再生材料？",
+                options: ["钢铁", "玻璃", "木材"],
+                answer: 2
+            },
+            {
+                id: 38,
+                dimension: "技术与工程",
+                dimensionColor: "bg-purple-500",
+                question: "下列哪种是3D打印的特点？",
+                options: ["只能打印塑料", "可以打印复杂形状", "打印速度非常快"],
+                answer: 1
+            },
+            {
+                id: 39,
+                dimension: "技术与工程",
+                dimensionColor: "bg-purple-500",
+                question: "下列哪种是绿色能源技术？",
+                options: ["火力发电", "核能发电", "太阳能发电"],
+                answer: 2
+            },
+            {
+                id: 40,
+                dimension: "技术与工程",
+                dimensionColor: "bg-purple-500",
+                question: "下列哪种是机器人的基本组成部分？",
+                options: ["传感器", "电池", "以上都是"],
+                answer: 2
+            },
+            
+            // 科学探究 (10题)
+            {
+                id: 41,
+                dimension: "科学探究",
+                dimensionColor: "bg-red-500",
+                question: "科学探究的第一步通常是什么？",
+                options: ["提出问题", "设计实验", "得出结论"],
+                answer: 0
+            },
+            {
+                id: 42,
+                dimension: "科学探究",
+                dimensionColor: "bg-red-500",
+                question: "在实验中，我们通常需要设置对照组，其目的是什么？",
+                options: ["增加实验次数", "比较实验结果", "使实验更复杂"],
+                answer: 1
+            },
+            {
+                id: 43,
+                dimension: "科学探究",
+                dimensionColor: "bg-red-500",
+                question: "下列哪种方法可以帮助我们观察微小的物体？",
+                options: ["放大镜", "望远镜", "显微镜"],
+                answer: 2
+            },
+            {
+                id: 44,
+                dimension: "科学探究",
+                dimensionColor: "bg-red-500",
+                question: "在记录实验数据时，我们应该怎么做？",
+                options: ["只记录自己认为正确的数据", "随意记录", "真实、准确地记录所有数据"],
+                answer: 2
+            },
+            {
+                id: 45,
+                dimension: "科学探究",
+                dimensionColor: "bg-red-500",
+                question: "下列哪种是科学假设的特点？",
+                options: ["必须正确", "可以被验证", "不需要证据"],
+                answer: 1
+            },
+            {
+                id: 46,
+                dimension: "科学探究",
+                dimensionColor: "bg-red-500",
+                question: "在进行科学实验时，我们应该注意什么？",
+                options: ["安全", "随意操作", "不按步骤进行"],
+                answer: 0
+            },
+            {
+                id: 47,
+                dimension: "科学探究",
+                dimensionColor: "bg-red-500",
+                question: "下列哪种是科学观察的方法？",
+                options: ["看", "听", "以上都是"],
+                answer: 2
+            },
+            {
+                id: 48,
+                dimension: "科学探究",
+                dimensionColor: "bg-red-500",
+                question: "在科学探究中，我们为什么要重复实验？",
+                options: ["使实验更有趣", "确保结果的可靠性", "浪费时间"],
+                answer: 1
+            },
+            {
+                id: 49,
+                dimension: "科学探究",
+                dimensionColor: "bg-red-500",
+                question: "下列哪种是科学结论的特点？",
+                options: ["基于实验证据", "个人猜测", "随意编造"],
+                answer: 0
+            },
+            {
+                id: 50,
+                dimension: "科学探究",
+                dimensionColor: "bg-red-500",
+                question: "科学探究的最后一步通常是什么？",
+                options: ["提出问题", "设计实验", "分享和交流结果"],
+                answer: 2
+            }
+        ];
+        
+        // 页面元素
+        const startPage = document.getElementById('startPage');
+        const quizPage = document.getElementById('quizPage');
+        const resultPage = document.getElementById('resultPage');
+        const startButton = document.getElementById('startButton');
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+        const restartButton = document.getElementById('restartButton');
+        const currentQuestionEl = document.getElementById('currentQuestion');
+        const questionTextEl = document.getElementById('questionText');
+        const optionsContainerEl = document.getElementById('optionsContainer');
+        const progressFillEl = document.getElementById('progressFill');
+        const dimensionTextEl = document.getElementById('dimensionText');
+        const dimensionBadgeEl = document.getElementById('dimensionBadge');
+        
+        // 结果页面元素
+        const totalScoreEl = document.getElementById('totalScore');
+        const overallCommentEl = document.getElementById('overallComment');
+        const scoreMatterEl = document.getElementById('scoreMatter');
+        const scoreLifeEl = document.getElementById('scoreLife');
+        const scoreEarthEl = document.getElementById('scoreEarth');
+        const scoreTechEl = document.getElementById('scoreTech');
+        const scoreInquiryEl = document.getElementById('scoreInquiry');
+        const detailedCommentsEl = document.getElementById('detailedComments');
+        
+        // 状态变量
+        let currentQuestionIndex = 0;
+        let selectedAnswers = [];
+        let scores = {
+            matter: 0,
+            life: 0,
+            earth: 0,
+            tech: 0,
+            inquiry: 0
+        };
+        
+        // 初始化页面
+        function init() {
+            startButton.addEventListener('click', startQuiz);
+            prevButton.addEventListener('click', goToPrevQuestion);
+            nextButton.addEventListener('click', goToNextQuestion);
+            restartButton.addEventListener('click', restartQuiz);
+        }
+        
+        // 开始测验
+        function startQuiz() {
+            startPage.classList.add('hidden');
+            quizPage.classList.remove('hidden');
+            currentQuestionIndex = 0;
+            selectedAnswers = [];
+            scores = {
+                matter: 0,
+                life: 0,
+                earth: 0,
+                tech: 0,
+                inquiry: 0
+            };
+            renderQuestion();
+        }
+        
+        // 渲染题目
+        function renderQuestion() {
+            const question = questions[currentQuestionIndex];
+            
+            // 更新题目信息
+            currentQuestionEl.textContent = question.id;
+            questionTextEl.textContent = question.question;
+            dimensionTextEl.textContent = question.dimension;
+            dimensionBadgeEl.className = `dimension-badge ${question.dimensionColor}`;
+            dimensionBadgeEl.textContent = question.dimension;
+            
+            // 更新进度条
+            const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
+            progressFillEl.style.width = `${progressPercentage}%`;
+            
+            // 清空选项容器
+            optionsContainerEl.innerHTML = '';
+            
+            // 渲染选项
+            question.options.forEach((option, index) => {
+                const optionCard = document.createElement('div');
+                optionCard.className = `option-card p-4 rounded-lg ${selectedAnswers[currentQuestionIndex] === index ? 'selected' : ''}`;
+                optionCard.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center mr-3 ${selectedAnswers[currentQuestionIndex] === index ? 'border-blue-500 bg-blue-500 text-white' : 'border-gray-300 text-gray-500'}">
+                            ${String.fromCharCode(65 + index)}
+                        </div>
+                        <span>${option}</span>
+                    </div>
+                `;
+                
+                optionCard.addEventListener('click', () => {
+                    selectedAnswers[currentQuestionIndex] = index;
+                    renderQuestion();
+                    
+                    // 启用下一题按钮
+                    nextButton.disabled = false;
+                    
+                    // 自动跳转到下一题（如果不是最后一题）
+                    if (currentQuestionIndex < questions.length - 1) {
+                        setTimeout(() => {
+                            goToNextQuestion();
+                        }, 500); // 0.5秒后自动跳转
+                    }
+                });
+                
+                optionsContainerEl.appendChild(optionCard);
+            });
+            
+            // 更新导航按钮状态
+            prevButton.classList.toggle('hidden', currentQuestionIndex === 0);
+            nextButton.disabled = selectedAnswers[currentQuestionIndex] === undefined;
+            
+            // 如果是最后一题，更改按钮文本
+            if (currentQuestionIndex === questions.length - 1) {
+                nextButton.innerHTML = '完成评估<i class="fas fa-check ml-2"></i>';
+            } else {
+                nextButton.innerHTML = '下一题<i class="fas fa-arrow-right ml-2"></i>';
+            }
+        }
+        
+        // 上一题
+        function goToPrevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        }
+        
+        // 下一题
+        function goToNextQuestion() {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            } else {
+                // 完成测验，显示结果
+                calculateScores();
+                showResults();
+            }
+        }
+        
+        // 计算分数
+        function calculateScores() {
+            questions.forEach((question, index) => {
+                if (selectedAnswers[index] === question.answer) {
+                    // 根据维度增加分数
+                    switch (question.dimension) {
+                        case '物质科学':
+                            scores.matter += 2;
+                            break;
+                        case '生命科学':
+                            scores.life += 2;
+                            break;
+                        case '地球与宇宙':
+                            scores.earth += 2;
+                            break;
+                        case '技术与工程':
+                            scores.tech += 2;
+                            break;
+                        case '科学探究':
+                            scores.inquiry += 2;
+                            break;
+                    }
+                }
+            });
+        }
+        
+        // 显示结果
+        function showResults() {
+            quizPage.classList.add('hidden');
+            resultPage.classList.remove('hidden');
+            
+            // 计算总分
+            const totalScore = scores.matter + scores.life + scores.earth + scores.tech + scores.inquiry;
+            
+            // 更新分数显示
+            totalScoreEl.textContent = totalScore;
+            scoreMatterEl.textContent = scores.matter;
+            scoreLifeEl.textContent = scores.life;
+            scoreEarthEl.textContent = scores.earth;
+            scoreTechEl.textContent = scores.tech;
+            scoreInquiryEl.textContent = scores.inquiry;
+            
+            // 生成总体评语
+            let overallComment = '';
+            if (totalScore >= 90) {
+                overallComment = '太棒了！你是一个科学小博士！继续保持对科学的热爱和探索吧！';
+            } else if (totalScore >= 80) {
+                overallComment = '非常好！你已经掌握了很多科学知识，继续努力，你会更棒的！';
+            } else if (totalScore >= 70) {
+                overallComment = '不错！你对科学有一定的了解，多观察、多思考，你会学到更多！';
+            } else if (totalScore >= 60) {
+                overallComment = '还可以！科学世界很有趣，只要你愿意探索，一定会有更多收获！';
+            } else {
+                overallComment = '加油！科学知识需要一点点积累，多读书、多提问，你会进步的！';
+            }
+            overallCommentEl.textContent = overallComment;
+            
+            // 生成各维度建议
+            detailedCommentsEl.innerHTML = '';
+            
+            // 物质科学建议
+            addDimensionComment('物质科学', scores.matter, 'bg-blue-50', 'text-blue-700', 
+                scores.matter >= 16 ? '你对物质科学的知识掌握得很好！继续探索物质的奥秘吧！' : 
+                scores.matter >= 12 ? '你对物质科学有一定了解，但还有提升空间。可以多做一些小实验来加深理解。' : 
+                '物质科学是基础科学，平时可以多观察身边的物质变化，比如水的三态变化、溶解现象等。');
+            
+            // 生命科学建议
+            addDimensionComment('生命科学', scores.life, 'bg-green-50', 'text-green-700', 
+                scores.life >= 16 ? '你对生命科学的知识掌握得很好！继续探索生命的奥秘吧！' : 
+                scores.life >= 12 ? '你对生命科学有一定了解，但还有提升空间。可以多观察植物和动物的生长过程。' : 
+                '生命科学很有趣，你可以养一些小植物或观察身边的小动物，了解它们的生活习性。');
+            
+            // 地球与宇宙科学建议
+            addDimensionComment('地球与宇宙', scores.earth, 'bg-yellow-50', 'text-yellow-700', 
+                scores.earth >= 16 ? '你对地球与宇宙科学的知识掌握得很好！继续探索我们的星球和宇宙吧！' : 
+                scores.earth >= 12 ? '你对地球与宇宙科学有一定了解，但还有提升空间。可以多观察天气变化和星空。' : 
+                '地球是我们的家园，宇宙充满奥秘。你可以通过天文望远镜观察星空，了解更多宇宙知识。');
+            
+            // 技术与工程建议
+            addDimensionComment('技术与工程', scores.tech, 'bg-purple-50', 'text-purple-700', 
+                scores.tech >= 16 ? '你对技术与工程的知识掌握得很好！继续发挥你的创造力吧！' : 
+                scores.tech >= 12 ? '你对技术与工程有一定了解，但还有提升空间。可以多动手做一些小制作。' : 
+                '技术与工程改变了我们的生活。你可以尝试用简单的材料做一些小发明，培养动手能力。');
+            
+            // 科学探究建议
+            addDimensionComment('科学探究', scores.inquiry, 'bg-red-50', 'text-red-700', 
+                scores.inquiry >= 16 ? '你对科学探究的方法掌握得很好！继续保持科学的思维方式吧！' : 
+                scores.inquiry >= 12 ? '你对科学探究有一定了解，但还有提升空间。可以多做一些科学小实验。' : 
+                '科学探究是学习科学的重要方法。遇到问题时，试着像科学家一样提出问题、设计实验、寻找答案。');
+            
+            // 显示结果卡片动画
+            setTimeout(() => {
+                document.querySelectorAll('.result-card').forEach(card => {
+                    card.classList.add('show');
+                });
+            }, 100);
+            drawRadarChart();
+        }
+        
+        // 添加维度建议
+        function addDimensionComment(dimension, score, bgClass, textClass, comment) {
+            const commentCard = document.createElement('div');
+            commentCard.className = `p-4 rounded-lg ${bgClass} mb-4`;
+            commentCard.innerHTML = `
+                <h4 class="font-bold ${textClass} mb-2">${dimension} (${score}/20)</h4>
+                <p class="text-gray-700">${comment}</p>
+            `;
+            detailedCommentsEl.appendChild(commentCard);
+        }
+        
+        // 绘制雷达图
+        function drawRadarChart() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['物质科学', '生命科学', '地球与宇宙', '技术与工程', '科学探究'],
+                    datasets: [{
+                        label: '你的得分',
+                        data: [scores.matter, scores.life, scores.earth, scores.tech, scores.inquiry],
+                        backgroundColor: 'rgba(41, 182, 246, 0.2)',
+                        borderColor: 'rgba(41, 182, 246, 1)',
+                        pointBackgroundColor: 'rgba(41, 182, 246, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(41, 182, 246, 1)'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 20
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `得分: ${context.raw}/20`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 重新开始测验
+        function restartQuiz() {
+            resultPage.classList.add('hidden');
+            startPage.classList.remove('hidden');
+        }
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
