@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生综合评估系统</title>
+    <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: #2d3748;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4299e1 0%, #63b3ed 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .question-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .option-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .option-card:hover {
+            background-color: #f7fafc;
+            border-color: #4299e1;
+        }
+
+        .option-card.selected {
+            background-color: #ebf8ff;
+            border-color: #4299e1;
+        }
+
+        .dimension-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .dimension-academic { background-color: #e6fffa; color: #0d9488; }
+        .dimension-life { background-color: #fef3c7; color: #d97706; }
+        .dimension-etiquette { background-color: #f3e8ff; color: #7e22ce; }
+        .dimension-personality { background-color: #dbeafe; color: #2563eb; }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            outline: none;
+        }
+
+        .btn-primary {
+            background-color: #4299e1;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #3182ce;
+        }
+
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background-color: #cbd5e0;
+        }
+
+        .btn-disabled {
+            background-color: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .btn-disabled:hover {
+            background-color: #a0aec0;
+        }
+
+        .progress-container {
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background-color: #e2e8f0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4299e1 0%, #63b3ed 100%);
+            transition: width 0.3s ease;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .score-display {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
+            margin-bottom: 30px;
+        }
+
+        .total-score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #2f855a;
+        }
+
+        .dimension-scores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .dimension-score-card {
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        /* 图表容器样式修改 */
+        .chart-container {
+            height: 300px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .question-number {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .number-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #e2e8f0;
+            margin: 0 3px;
+            transition: all 0.3s ease;
+        }
+
+        .number-dot.active {
+            background-color: #4299e1;
+            transform: scale(1.5);
+        }
+
+        .number-dot.completed {
+            background-color: #48bb78;
+        }
+
+        .retry-button {
+            display: block;
+            margin: 30px auto;
+            padding: 15px 40px;
+            background-color: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .retry-button:hover {
+            background-color: #38a169;
+            transform: translateY(-2px);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .question-card {
+                padding: 20px;
+            }
+
+            .dimension-scores {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .total-score {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1 class="text-3xl font-bold text-center">学生综合评估系统</h1>
+        <p class="text-center mt-2">为小学老师设计的学生综合素质评估工具</p>
+    </div>
+
+    <!-- 评估问卷部分 -->
+    <div id="assessment-section">
+        <div class="progress-container">
+            <div class="flex justify-between mb-2">
+                <span>进度</span>
+                <span id="progress-text">1/40</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 2.5%;"></div>
+            </div>
+        </div>
+
+        <div class="question-number" id="question-numbers">
+            <!-- 这里会通过JavaScript动态生成题目导航点 -->
+        </div>
+
+        <div class="question-card" id="question-card">
+            <div id="dimension-badge" class="dimension-badge dimension-academic">学业维度</div>
+            <h2 class="text-2xl font-bold mb-6" id="question-text">1. 能够按时完成老师布置的作业</h2>
+
+            <div class="options">
+                <div class="option-card" data-score="3">
+                    <div class="flex items-center">
+                        <div class="w-6 h-6 rounded-full border-2 border-gray-300 mr-3 flex items-center justify-center option-radio"></div>
+                        <span>非常符合 (3分)</span>
+                    </div>
+                </div>
+                <div class="option-card" data-score="2">
+                    <div class="flex items-center">
+                        <div class="w-6 h-6 rounded-full border-2 border-gray-300 mr-3 flex items-center justify-center option-radio"></div>
+                        <span>较符合 (2分)</span>
+                    </div>
+                </div>
+                <div class="option-card" data-score="1">
+                    <div class="flex items-center">
+                        <div class="w-6 h-6 rounded-full border-2 border-gray-300 mr-3 flex items-center justify-center option-radio"></div>
+                        <span>较不符合 (1分)</span>
+                    </div>
+                </div>
+                <div class="option-card" data-score="0">
+                    <div class="flex items-center">
+                        <div class="w-6 h-6 rounded-full border-2 border-gray-300 mr-3 flex items-center justify-center option-radio"></div>
+                        <span>非常不符合 (0分)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <button id="prev-btn" class="btn btn-secondary btn-disabled">
+                <i class="fas fa-arrow-left mr-2"></i>上一题
+            </button>
+            <button id="next-btn" class="btn btn-primary btn-disabled">
+                下一题<i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 评估报告部分 (初始隐藏) -->
+    <div id="report-section" style="display: none;">
+        <div class="report-card">
+            <h2 class="text-2xl font-bold mb-6 text-center">学生综合素质评估报告</h2>
+
+            <div class="score-display">
+                <p class="text-lg mb-2">总得分</p>
+                <div class="total-score" id="total-score">0</div>
+                <p class="text-gray-600 mt-2" id="score-remark">请完成评估以查看结果</p>
+            </div>
+
+            <div class="dimension-scores">
+                <div class="dimension-score-card bg-gradient-to-br from-blue-50 to-cyan-50">
+                    <p class="text-blue-800 font-medium mb-2">学业维度</p>
+                    <div class="text-3xl font-bold text-blue-600" id="academic-score">0</div>
+                    <p class="text-sm text-blue-600 mt-1">满分30分</p>
+                </div>
+                <div class="dimension-score-card bg-gradient-to-br from-yellow-50 to-amber-50">
+                    <p class="text-amber-800 font-medium mb-2">生活维度</p>
+                    <div class="text-3xl font-bold text-amber-600" id="life-score">0</div>
+                    <p class="text-sm text-amber-600 mt-1">满分30分</p>
+                </div>
+                <div class="dimension-score-card bg-gradient-to-br from-purple-50 to-violet-50">
+                    <p class="text-purple-800 font-medium mb-2">礼仪维度</p>
+                    <div class="text-3xl font-bold text-purple-600" id="etiquette-score">0</div>
+                    <p class="text-sm text-purple-600 mt-1">满分30分</p>
+                </div>
+                <div class="dimension-score-card bg-gradient-to-br from-indigo-50 to-blue-50">
+                    <p class="text-indigo-800 font-medium mb-2">性格维度</p>
+                    <div class="text-3xl font-bold text-indigo-600" id="personality-score">0</div>
+                    <p class="text-sm text-indigo-600 mt-1">满分30分</p>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4">维度得分雷达图</h3>
+            <div class="chart-container">
+                <canvas id="radar-chart"></canvas>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4">题目得分分布图</h3>
+            <div class="chart-container">
+                <canvas id="scatter-chart"></canvas>
+            </div>
+        </div>
+
+        <button id="retry-btn" class="retry-button">
+            <i class="fas fa-redo-alt mr-2"></i>重新评估
+        </button>
+    </div>
+</div>
+
+<script>
+    // 评估题目数据
+    const questions = [
+        // 学业维度
+        { id: 1, text: "能够按时完成老师布置的作业", dimension: "academic", dimensionText: "学业维度" },
+        { id: 2, text: "上课认真听讲，积极参与课堂讨论", dimension: "academic", dimensionText: "学业维度" },
+        { id: 3, text: "遇到不懂的问题会主动向老师或同学请教", dimension: "academic", dimensionText: "学业维度" },
+        { id: 4, text: "能够独立完成学习任务，不需要他人催促", dimension: "academic", dimensionText: "学业维度" },
+        { id: 5, text: "对学习有浓厚的兴趣，主动探索新知识", dimension: "academic", dimensionText: "学业维度" },
+        { id: 6, text: "考试成绩稳定，能够达到预期目标", dimension: "academic", dimensionText: "学业维度" },
+        { id: 7, text: "能够合理安排学习时间，有良好的学习计划", dimension: "academic", dimensionText: "学业维度" },
+        { id: 8, text: "认真对待每一次作业和考试", dimension: "academic", dimensionText: "学业维度" },
+        { id: 9, text: "善于总结学习经验，不断改进学习方法", dimension: "academic", dimensionText: "学业维度" },
+        { id: 10, text: "能够积极参与课外学习活动", dimension: "academic", dimensionText: "学业维度" },
+
+        // 生活维度
+        { id: 11, text: "能够自己整理书包和学习用品", dimension: "life", dimensionText: "生活维度" },
+        { id: 12, text: "讲究个人卫生，保持整洁", dimension: "life", dimensionText: "生活维度" },
+        { id: 13, text: "能够自己穿衣、系鞋带等基本生活技能", dimension: "life", dimensionText: "生活维度" },
+        { id: 14, text: "主动帮助家长做一些力所能及的家务", dimension: "life", dimensionText: "生活维度" },
+        { id: 15, text: "有良好的饮食习惯，不挑食", dimension: "life", dimensionText: "生活维度" },
+        { id: 16, text: "按时作息，有规律的生活习惯", dimension: "life", dimensionText: "生活维度" },
+        { id: 17, text: "能够独立处理简单的生活问题", dimension: "life", dimensionText: "生活维度" },
+        { id: 18, text: "懂得节约水电等资源", dimension: "life", dimensionText: "生活维度" },
+        { id: 19, text: "能够安全使用各种生活用品", dimension: "life", dimensionText: "生活维度" },
+        { id: 20, text: "有良好的运动习惯，身体健康", dimension: "life", dimensionText: "生活维度" },
+
+        // 礼仪维度
+        { id: 21, text: "见到老师和长辈能够主动问好", dimension: "etiquette", dimensionText: "礼仪维度" },
+        { id: 22, text: "在公共场合保持安静，不大声喧哗", dimension: "etiquette", dimensionText: "礼仪维度" },
+        { id: 23, text: "懂得使用礼貌用语，如“请”、“谢谢”、“对不起”等", dimension: "etiquette", dimensionText: "礼仪维度" },
+        { id: 24, text: "尊重他人的意见和感受", dimension: "etiquette", dimensionText: "礼仪维度" },
+        { id: 25, text: "不随意打断别人说话", dimension: "etiquette", dimensionText: "礼仪维度" },
+        { id: 26, text: "遵守课堂纪律，不影响他人学习", dimension: "etiquette", dimensionText: "礼仪维度" },
+        { id: 27, text: "能够与同学友好相处，不打架、不骂人", dimension: "etiquette", dimensionText: "礼仪维度" },
+        { id: 28, text: "懂得分享，愿意帮助有困难的同学", dimension: "etiquette", dimensionText: "礼仪维度" },
+        { id: 29, text: "尊重公共财物，不随意损坏", dimension: "etiquette", dimensionText: "礼仪维度" },
+        { id: 30, text: "在餐厅用餐时保持安静，不浪费食物", dimension: "etiquette", dimensionText: "礼仪维度" },
+
+        // 性格维度
+        { id: 31, text: "乐观开朗，很少因为小事而烦恼", dimension: "personality", dimensionText: "性格维度" },
+        { id: 32, text: "自信大方，愿意在众人面前表现自己", dimension: "personality", dimensionText: "性格维度" },
+        { id: 33, text: "遇到困难时能够勇敢面对，不轻易放弃", dimension: "personality", dimensionText: "性格维度" },
+        { id: 34, text: "能够控制自己的情绪，不乱发脾气", dimension: "personality", dimensionText: "性格维度" },
+        { id: 35, text: "有较强的好奇心，喜欢探索新事物", dimension: "personality", dimensionText: "性格维度" },
+        { id: 36, text: "善于与人沟通，能够表达自己的想法", dimension: "personality", dimensionText: "性格维度" },
+        { id: 37, text: "有责任心，能够认真完成自己的任务", dimension: "personality", dimensionText: "性格维度" },
+        { id: 38, text: "宽容大度，能够原谅他人的过错", dimension: "personality", dimensionText: "性格维度" },
+        { id: 39, text: "有同情心，愿意帮助他人", dimension: "personality", dimensionText: "性格维度" },
+        { id: 40, text: "有较强的适应能力，能够快速适应新环境", dimension: "personality", dimensionText: "性格维度" }
+    ];
+
+    // 存储用户的答案
+    const answers = {};
+
+    // 当前题目索引
+    let currentQuestionIndex = 0;
+
+    // DOM元素
+    const assessmentSection = document.getElementById('assessment-section');
+    const reportSection = document.getElementById('report-section');
+    const questionCard = document.getElementById('question-card');
+    const dimensionBadge = document.getElementById('dimension-badge');
+    const questionText = document.getElementById('question-text');
+    const progressText = document.getElementById('progress-text');
+    const progressFill = document.querySelector('.progress-fill');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const retryBtn = document.getElementById('retry-btn');
+    const questionNumbers = document.getElementById('question-numbers');
+
+    // 初始化题目导航点
+    function initQuestionNumbers() {
+        questionNumbers.innerHTML = '';
+        questions.forEach((_, index) => {
+            const dot = document.createElement('div');
+            dot.classList.add('number-dot');
+            if (index === currentQuestionIndex) {
+                dot.classList.add('active');
+            }
+            questionNumbers.appendChild(dot);
+        });
+    }
+
+    // 更新题目显示
+    function updateQuestionDisplay() {
+        const question = questions[currentQuestionIndex];
+        questionText.textContent = `${question.id}. ${question.text}`;
+
+        // 更新维度徽章
+        dimensionBadge.textContent = question.dimensionText;
+        dimensionBadge.className = 'dimension-badge';
+
+        // 设置不同维度的样式
+        switch (question.dimension) {
+            case 'academic':
+                dimensionBadge.classList.add('dimension-academic');
+                break;
+            case 'life':
+                dimensionBadge.classList.add('dimension-life');
+                break;
+            case 'etiquette':
+                dimensionBadge.classList.add('dimension-etiquette');
+                break;
+            case 'personality':
+                dimensionBadge.classList.add('dimension-personality');
+                break;
+        }
+
+        // 更新进度条
+        const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
+        progressFill.style.width = `${progressPercentage}%`;
+        progressText.textContent = `${currentQuestionIndex + 1}/${questions.length}`;
+
+        // 更新导航点
+        const dots = document.querySelectorAll('.number-dot');
+        dots.forEach((dot, index) => {
+            dot.classList.remove('active', 'completed');
+            if (index === currentQuestionIndex) {
+                dot.classList.add('active');
+            } else if (index < currentQuestionIndex) {
+                dot.classList.add('completed');
+            }
+        });
+
+        // 清除之前的选择
+        const optionCards = document.querySelectorAll('.option-card');
+        optionCards.forEach(card => {
+            card.classList.remove('selected');
+            const radio = card.querySelector('.option-radio');
+            radio.innerHTML = '';
+            radio.style.backgroundColor = 'transparent';
+        });
+
+        // 如果已有答案，显示选择
+        if (answers[currentQuestionIndex] !== undefined) {
+            const selectedOption = document.querySelector(`.option-card[data-score="${answers[currentQuestionIndex]}"]`);
+            if (selectedOption) {
+                selectedOption.classList.add('selected');
+                const radio = selectedOption.querySelector('.option-radio');
+                radio.innerHTML = '<i class="fas fa-check"></i>';
+                radio.style.backgroundColor = '#4299e1';
+                radio.style.color = 'white';
+            }
+            nextBtn.classList.remove('btn-disabled');
+        } else {
+            nextBtn.classList.add('btn-disabled');
+        }
+
+        // 更新上一题按钮状态
+        if (currentQuestionIndex === 0) {
+            prevBtn.classList.add('btn-disabled');
+        } else {
+            prevBtn.classList.remove('btn-disabled');
+        }
+    }
+
+    // 处理选项选择
+    function handleOptionSelection() {
+        const optionCards = document.querySelectorAll('.option-card');
+        optionCards.forEach(card => {
+            card.addEventListener('click', () => {
+                // 清除之前的选择
+                optionCards.forEach(c => {
+                    c.classList.remove('selected');
+                    const radio = c.querySelector('.option-radio');
+                    radio.innerHTML = '';
+                    radio.style.backgroundColor = 'transparent';
+                });
+
+                // 设置新选择
+                card.classList.add('selected');
+                const radio = card.querySelector('.option-radio');
+                radio.innerHTML = '<i class="fas fa-check"></i>';
+                radio.style.backgroundColor = '#4299e1';
+                radio.style.color = 'white';
+
+                // 保存答案
+                const score = parseInt(card.getAttribute('data-score'));
+                answers[currentQuestionIndex] = score;
+
+                // 启用下一题按钮
+                nextBtn.classList.remove('btn-disabled');
+
+                // 如果不是最后一题，自动跳转到下一题
+                if (currentQuestionIndex < questions.length - 1) {
+                    setTimeout(() => {
+                        goToNextQuestion();
+                    }, 500);
+                }
+            });
+        });
+    }
+
+    // 上一题
+    function goToPrevQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            updateQuestionDisplay();
+        }
+    }
+
+    // 下一题
+    function goToNextQuestion() {
+        if (currentQuestionIndex < questions.length - 1 && answers[currentQuestionIndex] !== undefined) {
+            currentQuestionIndex++;
+            updateQuestionDisplay();
+        } else if (currentQuestionIndex === questions.length - 1 && answers[currentQuestionIndex] !== undefined) {
+            // 完成评估，显示报告
+            showReport();
+        }
+    }
+
+    // 计算得分
+    function calculateScores() {
+        const scores = {
+            academic: 0,
+            life: 0,
+            etiquette: 0,
+            personality: 0,
+            total: 0
+        };
+
+        questions.forEach((question, index) => {
+            const score = answers[index] || 0;
+            scores[question.dimension] += score;
+            scores.total += score;
+        });
+
+        return scores;
+    }
+
+    // 获取得分评价
+    function getScoreRemark(totalScore) {
+        if (totalScore >= 108) return "优秀：该生综合素质表现出色，各方面都有很好的发展";
+        if (totalScore >= 84) return "良好：该生综合素质表现良好，有较大的发展潜力";
+        if (totalScore >= 60) return "一般：该生综合素质表现一般，需要在某些方面加强";
+        return "待提高：该生需要在多个方面努力改进，老师和家长应给予更多关注和指导";
+    }
+
+    // 显示评估报告
+    function showReport() {
+        // 计算得分
+        const scores = calculateScores();
+
+        // 更新报告数据
+        document.getElementById('total-score').textContent = scores.total;
+        document.getElementById('academic-score').textContent = scores.academic;
+        document.getElementById('life-score').textContent = scores.life;
+        document.getElementById('etiquette-score').textContent = scores.etiquette;
+        document.getElementById('personality-score').textContent = scores.personality;
+        document.getElementById('score-remark').textContent = getScoreRemark(scores.total);
+
+        // 显示雷达图
+        showRadarChart(scores);
+
+        // 显示散点图
+        showScatterChart();
+
+        // 切换显示
+        assessmentSection.style.display = 'none';
+        reportSection.style.display = 'block';
+    }
+
+    // 显示雷达图
+    function showRadarChart(scores) {
+        const ctx = document.getElementById('radar-chart').getContext('2d');
+
+        // 销毁已存在的图表
+        if (window.radarChart) {
+            window.radarChart.destroy();
+        }
+
+        window.radarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['学业维度', '生活维度', '礼仪维度', '性格维度'],
+                datasets: [{
+                    label: '得分',
+                    data: [scores.academic, scores.life, scores.etiquette, scores.personality],
+                    backgroundColor: 'rgba(66, 153, 225, 0.2)',
+                    borderColor: 'rgba(66, 153, 225, 1)',
+                    pointBackgroundColor: 'rgba(66, 153, 225, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(66, 153, 225, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 30
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: '学生各维度综合素质得分'
+                    }
+                }
+            }
+        });
+    }
+
+    // 显示散点图
+    function showScatterChart() {
+        const ctx = document.getElementById('scatter-chart').getContext('2d');
+
+        // 准备数据 - 按维度分组以正确应用颜色
+        const datasets = [
+            { label: '学业维度', data: [], backgroundColor: 'rgba(66, 153, 225, 0.8)' },
+            { label: '生活维度', data: [], backgroundColor: 'rgba(217, 119, 6, 0.8)' },
+            { label: '礼仪维度', data: [], backgroundColor: 'rgba(126, 34, 206, 0.8)' },
+            { label: '性格维度', data: [], backgroundColor: 'rgba(37, 99, 235, 0.8)' }
+        ];
+
+        // 将数据分配到对应的维度组
+        questions.forEach((question, index) => {
+            let datasetIndex;
+            switch (question.dimension) {
+                case 'academic':
+                    datasetIndex = 0;
+                    break;
+                case 'life':
+                    datasetIndex = 1;
+                    break;
+                case 'etiquette':
+                    datasetIndex = 2;
+                    break;
+                case 'personality':
+                    datasetIndex = 3;
+                    break;
+            }
+
+            datasets[datasetIndex].data.push({
+                x: index + 1,
+                y: answers[index] || 0,
+                r: 8
+            });
+        });
+
+        // 销毁已存在的图表
+        if (window.scatterChart) {
+            window.scatterChart.destroy();
+        }
+
+        window.scatterChart = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: '题目编号'
+                        },
+                        min: 0,
+                        max: 41
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: '得分'
+                        },
+                        min: -0.5,
+                        max: 3.5,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        title: {
+                            display: true,
+                            text: '维度'
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: '40道题目得分分布'
+                    }
+                }
+            }
+        });
+    }
+
+    // 重新开始评估
+    function restartAssessment() {
+        // 重置数据
+        currentQuestionIndex = 0;
+        Object.keys(answers).forEach(key => delete answers[key]);
+
+        // 更新显示
+        updateQuestionDisplay();
+
+        // 切换显示
+        reportSection.style.display = 'none';
+        assessmentSection.style.display = 'block';
+    }
+
+    // 事件监听
+    prevBtn.addEventListener('click', goToPrevQuestion);
+    nextBtn.addEventListener('click', goToNextQuestion);
+    retryBtn.addEventListener('click', restartAssessment);
+
+    // 初始化
+    function init() {
+        initQuestionNumbers();
+        updateQuestionDisplay();
+        handleOptionSelection();
+    }
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

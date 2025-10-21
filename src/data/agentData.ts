@@ -179,7 +179,7 @@ export const agents = [
     intro: '根据您的需要生成相关情景的图片，帮助学生练习造句',
     coverUrl: 'covers/英语看图说话.png',
     type: 'forLearn',
-    link: 'https://www.coze.cn/store/agent/7563258508049694754',
+    link: 'https://www.coze.cn/store/agent/7563651302304055330',
     tag: ['英语', '智能体', '造句']
   },
   {
@@ -297,8 +297,34 @@ export const agents = [
     intro: '根据老师的具体需求生成课堂小测题目',
     coverUrl: 'covers/数学小测.png',
     type: 'forEvaluate',
-    link: 'https://www.coze.cn/store/agent/7563336503439556651',
+    link: 'https://www.coze.cn/store/agent/7563658791636467755',
     tag: ['小测', '数学', '智能体']
   },
-
+  {
+    id: 'coze-agent-7-forEvaluate',
+    name: '期末评语助手',
+    intro: '为您一键生成期末评语，并提供评语模板，助力学生提升',
+    coverUrl: 'covers/期末评语.png',
+    type: 'forEvaluate',
+    link: 'https://www.coze.cn/store/agent/7563678090799464490',
+    tag: ['模板', '评语', '智能体']
+  },
+  {
+    id: 'coze-html-1-forEvaluate',
+    name: '学生综合素质评估工具',
+    intro: '从学业、生活、礼仪、性格四个维度对学生进行评价，并最终生成评价报告与可视化图表',
+    coverUrl: 'covers/综合评估.png',
+    type: 'forEvaluate',
+    link: 'interactive/evaluate-student-quality.html',
+    tag: ['评估', '报告', '可视化']
+  },
+  {
+    id: 'coze-html-2-forEvaluate',
+    name: '科学知识能力评估',
+    intro: '帮助教师评估小朋友们的科学知识掌握能力，提供五个维度的知识评价以及可视化图表',
+    coverUrl: 'covers/科学知识评估.png',
+    type: 'forEvaluate',
+    link: 'interactive/evaluate-student-science.html',
+    tag: ['知识', '科学', '能力']
+  },
 ];
