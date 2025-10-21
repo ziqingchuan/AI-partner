@@ -3,7 +3,7 @@
     <!-- 头部区域 - 优化为白色背景+图标按钮 -->
     <header class="app-header">
       <div class="logo-container" @click="clearSearch">
-        <img src="../assets/logo.svg" alt="AI伴学平台logo" class="logo-icon" />
+        <img src="../assets/logo.png" alt="AI伴学平台logo" class="logo-icon" />
         <h1 class="logo-text">AI伴学平台</h1>
       </div>
       <div class="header-buttons">
