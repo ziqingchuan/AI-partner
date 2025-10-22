@@ -272,6 +272,15 @@ export const agents = [
     link: 'interactive/learn-english-detective.html',
     tag: ['语法', '纠错', '英语']
   },
+  {
+    id: 'coze-html-8-forLearn',
+    name: 'for循环小测',
+    intro: '学习for循环后帮助学生巩固课堂学习内容与易错点',
+    coverUrl: 'covers/compressed_编程.png',
+    type: 'forLearn',
+    link: 'interactive/learn-computer-loop.html',
+    tag: ['编程', '复习', '小测']
+  },
   // 三、forEvaluate
   {
     id: 'coze-agent-1-forEvaluate',
@@ -337,6 +346,15 @@ export const agents = [
     tag: ['模板', '评语', '智能体']
   },
   {
+    id: 'coze-agent-8-forEvaluate',
+    name: '英语作文评价与润色',
+    intro: '帮助老师评价学生的英语作文，并提供评语以及润色建议',
+    coverUrl: 'covers/compressed_英语作文评价.png',
+    type: 'forEvaluate',
+    link: 'https://www.coze.cn/store/agent/7564027350073999375',
+    tag: ['英语', '作文', '智能体']
+  },
+  {
     id: 'coze-html-1-forEvaluate',
     name: '学生综合素质评估工具',
     intro: '从学业、生活、礼仪、性格四个维度对学生进行评价，并最终生成评价报告与可视化图表',
@@ -353,5 +371,14 @@ export const agents = [
     type: 'forEvaluate',
     link: 'interactive/evaluate-student-science.html',
     tag: ['知识', '科学', '能力']
+  },
+  {
+    id: 'coze-html-3-forEvaluate',
+    name: '心理健康评估工具',
+    intro: '从五个维度帮助教师评估小朋友们的心理健康状况，并给出相应建议',
+    coverUrl: 'covers/compressed_心理健康.png',
+    type: 'forEvaluate',
+    link: 'interactive/evaluate-student-mindhealth.html',
+    tag: ['心理', '评价', '可视化']
   },
 ];

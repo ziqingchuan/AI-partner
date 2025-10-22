@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>找一个数的因数 - C++课堂小测</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 引入Google字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4361EE',
+                        secondary: '#3F37C9',
+                        accent: '#4CC9F0',
+                        success: '#4CC9F0',
+                        warning: '#F72585',
+                        info: '#4895EF',
+                        light: '#F8F9FA',
+                        dark: '#212529',
+                        'primary-light': '#7209B7',
+                        'primary-dark': '#560BAD',
+                        'secondary-light': '#4895EF',
+                        'secondary-dark': '#4361EE',
+                    },
+                    fontFamily: {
+                        sans: ['Nunito', 'Arial', 'sans-serif'],
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'wiggle': 'wiggle 1s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(-3deg)' },
+                            '50%': { transform: 'rotate(3deg)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .text-shadow-lg {
+                text-shadow: 0 4px 8px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.08);
+            }
+            .option-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            }
+            .progress-bar {
+                transition: width 0.5s ease-in-out;
+            }
+            .correct-option {
+                animation: correct-pulse 0.8s ease-in-out;
+            }
+            .wrong-option {
+                animation: wrong-shake 0.8s ease-in-out;
+            }
+            .question-card {
+                background: linear-gradient(135deg, #fff 0%, #f9f9f9 100%);
+                border-radius: 20px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                overflow: hidden;
+                transition: all 0.3s ease;
+            }
+            .question-card:hover {
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+            .option-card {
+                border-radius: 15px;
+                transition: all 0.3s ease;
+                border: 3px solid #e2e8f0;
+            }
+            .option-card:hover {
+                border-color: #4361EE;
+            }
+            .option-card.selected {
+                border-color: #4361EE;
+                background-color: rgba(67, 97, 238, 0.1);
+            }
+            .option-card.correct {
+                border-color: #4CC9F0;
+                background-color: rgba(76, 201, 240, 0.1);
+            }
+            .option-card.incorrect {
+                border-color: #F72585;
+                background-color: rgba(247, 37, 133, 0.1);
+            }
+            .btn-primary {
+                background: linear-gradient(135deg, #4361EE 0%, #3F37C9 100%);
+                transition: all 0.3s ease;
+            }
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 15px -3px rgba(67, 97, 238, 0.3);
+            }
+            .btn-secondary {
+                background: linear-gradient(135deg, #4895EF 0%, #4361EE 100%);
+                transition: all 0.3s ease;
+            }
+            .btn-secondary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 15px -3px rgba(72, 149, 239, 0.3);
+            }
+            .btn-outline {
+                transition: all 0.3s ease;
+            }
+            .btn-outline:hover {
+                transform: translateY(-2px);
+            }
+            .explanation-card {
+                border-radius: 20px;
+                transition: all 0.3s ease;
+                overflow: hidden;
+            }
+            .explanation-card.correct {
+                border-left: 8px solid #4CC9F0;
+            }
+            .explanation-card.incorrect {
+                border-left: 8px solid #F72585;
+            }
+            @keyframes correct-pulse {
+                0% { background-color: rgba(76, 201, 240, 0.1); }
+                50% { background-color: rgba(76, 201, 240, 0.3); }
+                100% { background-color: rgba(76, 201, 240, 0.1); }
+            }
+            @keyframes wrong-shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                50% { transform: translateX(5px); }
+                75% { transform: translateX(-5px); }
+            }
+            .bg-pattern {
+                background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%234361ee' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+            }
+        }
+    </style>
+</head>
+<body class="bg-neutral bg-pattern min-h-screen font-sans">
+<div class="container mx-auto px-4 py-8 max-w-3xl relative">
+    <!-- 装饰元素 -->
+    <div class="absolute -top-10 -left-10 w-20 h-20 bg-accent rounded-full opacity-20 animate-pulse-slow"></div>
+    <div class="absolute top-20 -right-10 w-16 h-16 bg-primary rounded-full opacity-20 animate-pulse-slow" style="animation-delay: 0.5s"></div>
+    <div class="absolute bottom-20 -left-10 w-12 h-12 bg-secondary rounded-full opacity-20 animate-pulse-slow" style="animation-delay: 1s"></div>
+    <div class="absolute -bottom-10 -right-10 w-18 h-18 bg-warning rounded-full opacity-20 animate-pulse-slow" style="animation-delay: 1.5s"></div>
+    <!-- 标题区域 -->
+    <header class="text-center mb-8 relative">
+        <div class="inline-block relative">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-primary mb-2 text-shadow-lg">
+                <span class="relative z-10">找一个数的因数</span>
+                <div class="absolute -bottom-2 left-0 w-full h-3 bg-accent rounded-full opacity-50 z-0"></div>
+            </h1>
+        </div>
+        <p class="text-xl text-gray-600 mt-4">C++课堂小测 <span class="text-primary">📝</span></p>
+        <div class="mt-6 flex justify-center">
+            <div class="bg-white rounded-full px-6 py-2 shadow-md flex items-center">
+                <i class="fa fa-lightbulb-o text-yellow-500 text-2xl mr-2 animate-pulse-slow"></i>
+                <span class="text-gray-700">测试你对因数查找程序的理解！</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 进度条 -->
+    <div class="bg-white rounded-full h-6 mb-8 shadow-md overflow-hidden">
+        <div id="progress-bar" class="bg-gradient-to-r from-primary to-secondary h-6 rounded-full progress-bar flex items-center justify-center text-white font-bold text-sm" style="width: 0%">
+            <span id="progress-text">1/5</span>
+        </div>
+    </div>
+
+    <!-- 题目区域 -->
+    <div id="question-container" class="bg-white rounded-xl shadow-lg p-6 mb-6 transition-all duration-300">
+        <!-- 题目将通过JavaScript动态加载 -->
+    </div>
+
+    <!-- 选项区域 -->
+    <div id="options-container" class="grid grid-cols-1 gap-4 mb-8">
+        <!-- 选项将通过JavaScript动态加载 -->
+    </div>
+
+    <!-- 确认按钮 -->
+    <div class="text-center mb-8">
+        <button id="confirm-btn" class="btn-primary text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center mx-auto">
+            <i class="fa fa-check-circle mr-2"></i>确认答案
+        </button>
+    </div>
+
+    <!-- 解析区域 -->
+    <div id="explanation-container" class="explanation-card bg-white shadow-lg p-6 mb-8 hidden">
+        <div class="flex items-start">
+            <div id="explanation-icon-container" class="mr-4 mt-1">
+                <i id="explanation-icon" class="fa fa-info-circle text-2xl"></i>
+            </div>
+            <div>
+                <h3 id="explanation-title" class="text-xl font-bold mb-3">解析</h3>
+                <div id="explanation-content" class="text-gray-700 leading-relaxed">
+                    <!-- 解析内容将通过JavaScript动态加载 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导航按钮 -->
+    <div class="flex justify-between mb-8 hidden" id="nav-buttons-container">
+        <button id="prev-btn" class="bg-secondary hover:bg-teal-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fa fa-arrow-left mr-2"></i>上一题
+        </button>
+        <button id="next-btn" class="bg-secondary hover:bg-teal-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105">
+            下一题<i class="fa fa-arrow-right ml-2"></i>
+        </button>
+    </div>
+
+
+</div>
+
+<script>
+    // 题目数据
+    const questions = [
+        {
+            id: 1,
+            question: "for循环的结构是什么样的？",
+            options: [
+                "for (初始值; 循环体; 变量变化）｛ 循环条件 ｝;",
+                "for (初始值; 循环条件; 变量变化）｛ 循环体 ｝;",
+                "for (循环体; 循环条件; 变量变化）｛ 初始值 ｝;",
+                "for (初始值; 循环条件; 循环体）｛ 变量变化 ｝;",
+            ],
+            correctAnswer: 1,
+            explanation: `for循环的标准结构是：<code style="background-color: rgba(179,220,255,0.18); padding: 5px 10px; border-radius: 8px;">for (初始值; 循环条件; 变量变化) { 循环体 };</code>
+<br> 首先执行初始值，然后检查循环条件，<b>如果条件为真则执行循环体</b>，最后执行变量变化，重复这个过程直到循环条件为假。`
+        },
+        {
+            id: 2,
+            question:
+                `<pre style="background-color: rgba(179,220,255,0.18); padding: 10px 25px; border-radius: 8px;"><code>for (int i = 1; i <= 6; i++) {
+   cout << i << endl;
+} </code></pre>这个程序执行了几次？`,
+            options: [
+                "5次",
+                "6次",
+                "7次",
+                "0次"
+            ],
+            correctAnswer: 1,
+            explanation: `这个循环从<code style="background-color: rgba(179,220,255,0.18); padding: 5px 10px; border-radius: 8px;">i = 1</code>开始，每次增加1，直到<code style="background-color: rgba(179,220,255,0.18); padding: 5px 10px; border-radius: 8px;">i = 6</code>为止。当 i = 1、2、3、4、5、6 时都会执行循环体，所以总共执行了6次。`
+        },
+        {
+            id: 3,
+            question: "对于寻找因数这道题，for循环的循环条件应该是什么？",
+            options: [
+                "i < n;",
+                "i <= n;",
+                "i > n;",
+                "i >= n;"
+            ],
+            correctAnswer: 1,
+            explanation: `寻找因数时，我们需要检查从 1 到 n 的所有数是否能整除 n。<br></br>因此循环条件应该是<code style="background-color: rgba(179,220,255,0.18); padding: 5px 10px; border-radius: 8px;">i <= n</code>，这样 i 会取到 n 的值，<b>确保我们不会遗漏n本身这个因数</b>。`
+        },
+        {
+            id: 4,
+            question: "如何判断a是不是b的因数？",
+            options: [
+                "a % b == 0;",
+                "b % a == 0;",
+                "a / b == 0;",
+                "b / a == 0;"
+            ],
+            correctAnswer: 1,
+            explanation: "如果 a 是 b 的因数，那么 b 除以 a 的余数应该是0。在C++中，“%” 运算符表示取余操作，所以<code style=\"background-color: rgba(179,220,255,0.18); padding: 5px 10px; border-radius: 8px;\">b % a == 0</code>表示 b 除以 a 没有余数，即 a 是 b 的因数。"
+        },
+        {
+            id: 5,
+            question: "对于寻找因数这道题，for循环的循环体应该是什么？",
+            options: [
+                "cout << i << endl;",
+                "if (a % i == 0) { cout << i << endl; }",
+                "if (a % i != 0) { cout << i << endl; }",
+                "cin >> i;"
+            ],
+            correctAnswer: 1,
+            explanation: "循环体应该检查当前的 i 是否是 a 的因数。如果是（即<code style=\"background-color: rgba(179,220,255,0.18); padding: 5px 10px; border-radius: 8px;\">a % i == 0</code>），就输出 i。这样就能找出所有能整除 a 的数，也就是 a 的所有因数。"
+        }
+    ];
+
+    // 当前问题索引
+    let currentQuestionIndex = 0;
+    // 用户选择的答案
+    let selectedAnswer = -1;
+    // 是否已回答当前问题
+    let answered = false;
+
+    // DOM元素
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const questionContainer = document.getElementById('question-container');
+    const optionsContainer = document.getElementById('options-container');
+    const confirmBtn = document.getElementById('confirm-btn');
+    const explanationContainer = document.getElementById('explanation-container');
+    const explanationIcon = document.getElementById('explanation-icon');
+    const explanationTitle = document.getElementById('explanation-title');
+    const explanationContent = document.getElementById('explanation-content');
+    const navButtonsContainer = document.getElementById('nav-buttons-container');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    // 初始化页面
+    function init() {
+        loadQuestion(currentQuestionIndex);
+        setupEventListeners();
+    }
+
+    // 加载问题
+    function loadQuestion(index) {
+        const question = questions[index];
+
+        // 更新进度条
+        const progress = ((index + 1) / questions.length) * 100;
+        progressBar.style.width = `${progress}%`;
+        progressText.textContent = `问题 ${index + 1}/${questions.length}`;
+
+        // 更新问题内容
+        questionContainer.innerHTML = `
+                <div class="flex items-center mb-4">
+                    <div class="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-6">${question.id}</div>
+                    <h2 class="text-2xl font-bold">${question.question}</h2>
+                </div>
+            `;
+
+        // 更新选项
+        optionsContainer.innerHTML = '';
+        question.options.forEach((option, i) => {
+            const optionElement = document.createElement('div');
+            optionElement.className = 'option-card bg-white p-5 cursor-pointer transition-all duration-300 option-hover';
+            optionElement.dataset.index = i;
+            optionElement.innerHTML = `
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="answer" value="${i}" class="hidden">
+                        <span class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center mr-3 bg-gray-100 font-bold text-gray-700">
+                            ${String.fromCharCode(65 + i)}
+                        </span>
+                        <span class="option-text text-lg">${option}</span>
+                    </label>
+                `;
+            optionsContainer.appendChild(optionElement);
+        });
+
+        // 重置状态
+        selectedAnswer = -1;
+        answered = false;
+        confirmBtn.disabled = true;
+        explanationContainer.classList.add('hidden');
+        navButtonsContainer.classList.add('hidden');
+
+        // 控制上一题按钮状态
+        prevBtn.disabled = (index === 0);
+    }
+
+    // 设置事件监听器
+    function setupEventListeners() {
+        // 选项点击事件
+        optionsContainer.addEventListener('click', (e) => {
+            const optionElement = e.target.closest('.option-card');
+            if (optionElement && !answered) {
+                // 移除其他选项的选中状态
+                document.querySelectorAll('.option-card').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+
+                // 添加当前选项的选中状态
+                optionElement.classList.add('selected');
+
+                // 记录选中的答案
+                selectedAnswer = parseInt(optionElement.dataset.index);
+
+                // 启用确认按钮
+                confirmBtn.disabled = false;
+            }
+        });
+
+        // 确认按钮点击事件
+        confirmBtn.addEventListener('click', () => {
+            if (selectedAnswer === -1) return;
+
+            const question = questions[currentQuestionIndex];
+            const isCorrect = selectedAnswer === question.correctAnswer;
+
+            // 标记为已回答
+            answered = true;
+
+            // 禁用确认按钮
+            confirmBtn.disabled = true;
+
+            // 显示正确/错误反馈
+            const options = document.querySelectorAll('.option-card');
+            options.forEach((option, i) => {
+                option.classList.remove('selected');
+
+                if (i === question.correctAnswer) {
+                    option.classList.add('correct', 'correct-option');
+                    // 更新选项字母样式
+                    const letterSpan = option.querySelector('.w-8');
+                    letterSpan.classList.remove('bg-gray-100', 'text-gray-700', 'border-gray-300');
+                    letterSpan.classList.add('bg-success', 'text-white', 'border-success');
+                } else if (i === selectedAnswer && !isCorrect) {
+                    option.classList.add('incorrect', 'wrong-option');
+                    // 更新选项字母样式
+                    const letterSpan = option.querySelector('.w-8');
+                    letterSpan.classList.remove('bg-gray-100', 'text-gray-700', 'border-gray-300');
+                    letterSpan.classList.add('bg-warning', 'text-white', 'border-warning');
+                }
+            });
+
+
+
+            // 显示解析
+            showExplanation(isCorrect, question.explanation);
+
+            // 显示导航按钮
+            navButtonsContainer.classList.remove('hidden');
+
+            // 控制下一题按钮显示
+            if (currentQuestionIndex === questions.length - 1) {
+                nextBtn.classList.add('hidden');
+            } else {
+                nextBtn.classList.remove('hidden');
+            }
+        });
+
+        // 上一题按钮点击事件
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion(currentQuestionIndex);
+            }
+        });
+
+        // 下一题按钮点击事件
+        nextBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            loadQuestion(currentQuestionIndex);
+        });
+    }
+
+    // 显示解析
+    function showExplanation(isCorrect, explanation) {
+        explanationContainer.classList.remove('hidden');
+
+        if (isCorrect) {
+            explanationContainer.classList.add('correct');
+            explanationContainer.classList.remove('incorrect');
+            explanationIcon.className = 'fa fa-check-circle text-success';
+            explanationTitle.textContent = '回答正确，你太棒了！';
+            explanationTitle.className = 'text-xl font-bold mb-3 text-success';
+        } else {
+            explanationContainer.classList.add('incorrect');
+            explanationContainer.classList.remove('correct');
+            explanationIcon.className = 'fa fa-times-circle text-warning';
+            explanationTitle.textContent = '要继续加油哦！';
+            explanationTitle.className = 'text-xl font-bold mb-3 text-warning';
+        }
+
+        explanationContent.innerHTML = explanation;
+    }
+
+
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

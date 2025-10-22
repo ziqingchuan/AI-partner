@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小学生心理健康状况评估系统</title>
+    <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%);
+            color: #2d3748;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #38b2ac 0%, #48bb78 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .question-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .option-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-card:hover {
+            background-color: #f7fafc;
+            border-color: #38b2ac;
+            transform: translateX(5px);
+        }
+
+        .option-card.selected {
+            background-color: #e6fffa;
+            border-color: #38b2ac;
+        }
+
+        .dimension-badge {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .dimension-emotion { background-color: #4299e1; }
+        .dimension-social { background-color: #9f7aea; }
+        .dimension-self { background-color: #ed8936; }
+        .dimension-learning { background-color: #48bb78; }
+        .dimension-family { background-color: #f6ad55; }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn i {
+            margin-right: 8px;
+        }
+
+        .btn-primary {
+            background-color: #38b2ac;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2c7a7b;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background-color: #cbd5e0;
+        }
+
+        .btn-disabled {
+            background-color: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .btn-disabled:hover {
+            background-color: #a0aec0;
+            transform: none;
+        }
+
+        .progress-container {
+            margin-bottom: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .progress-bar {
+            height: 10px;
+            background-color: #e2e8f0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #38b2ac 0%, #48bb78 100%);
+            transition: width 0.3s ease;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .score-display {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
+            margin-bottom: 30px;
+        }
+
+        .total-score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #2f855a;
+        }
+
+        .dimension-scores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .dimension-score-card {
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            color: white;
+            transition: transform 0.3s ease;
+        }
+
+        .dimension-score-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .dimension-score-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .dimension-score-card .score {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .dimension-score-card .max-score {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* 图表容器样式 */
+        .chart-container {
+            height: 350px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .question-number {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .number-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #e2e8f0;
+            margin: 0 3px;
+            transition: all 0.3s ease;
+        }
+
+        .number-dot.active {
+            background-color: #38b2ac;
+            transform: scale(1.5);
+        }
+
+        .number-dot.completed {
+            background-color: #48bb78;
+        }
+
+        .retry-button {
+            display: block;
+            margin: 30px auto;
+            padding: 15px 40px;
+            background-color: #38b2ac;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .retry-button i {
+            margin-right: 10px;
+        }
+
+        .retry-button:hover {
+            background-color: #2c7a7b;
+            transform: translateY(-2px);
+        }
+
+        /* 评估报告样式 */
+        .assessment-report {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .assessment-report h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #2c7a7b;
+            display: flex;
+            align-items: center;
+        }
+
+        .assessment-report h3 i {
+            margin-right: 10px;
+        }
+
+        .assessment-report p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: #4a5568;
+        }
+
+        .dimension-analysis {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .dimension-analysis:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .dimension-analysis h4 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .dimension-analysis h4 i {
+            margin-right: 8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        .emotion-icon { background-color: #4299e1; }
+        .social-icon { background-color: #9f7aea; }
+        .self-icon { background-color: #ed8936; }
+        .learning-icon { background-color: #48bb78; }
+        .family-icon { background-color: #f6ad55; }
+
+        .dimension-analysis p {
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .suggestion-list {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+
+        .suggestion-list li {
+            margin-bottom: 8px;
+            list-style-type: disc;
+            color: #4a5568;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .question-card {
+                padding: 20px;
+            }
+
+            .dimension-scores {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .total-score {
+                font-size: 36px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        /* 选项样式 */
+        .option-radio {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .option-card.selected .option-radio {
+            background-color: #38b2ac;
+            border-color: #38b2ac;
+        }
+
+        .option-radio i {
+            color: white;
+            font-size: 12px;
+            display: none;
+        }
+
+        .option-card.selected .option-radio i {
+            display: block;
+        }
+
+        /* 题目文本样式 */
+        #question-text {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #2d3748;
+        }
+
+        /* 卡通元素 */
+        .cartoon-character {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 100px;
+            height: 100px;
+            z-index: 100;
+            display: none;
+        }
+
+        .cartoon-character img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* 报告装饰元素 */
+        .report-decoration {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .report-decoration img {
+            max-width: 150px;
+            height: auto;
+        }
+
+        /* 成就徽章 */
+        .achievement-badge {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+        }
+
+        .badge {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #38b2ac 0%, #48bb78 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .badge i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .badge-text {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        /* 进度文本 */
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>小学生心理健康状况评估</h1>
+        <p>了解自己，健康成长</p>
+    </div>
+
+    <!-- 评估问卷部分 -->
+    <div id="assessment-section">
+        <div class="progress-container">
+            <div class="progress-text">
+                <span>评估进度</span>
+                <span id="progress-text">1/50</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 2%;"></div>
+            </div>
+        </div>
+
+        <div class="question-number" id="question-numbers">
+            <!-- 这里会通过JavaScript动态生成题目导航点 -->
+        </div>
+
+        <div class="question-card" id="question-card">
+            <div id="dimension-badge" class="dimension-badge dimension-emotion">情绪管理</div>
+            <h2 class="text-2xl font-bold mb-6" id="question-text">1. 我能表达自己的喜怒哀乐</h2>
+
+            <div class="options">
+                <div class="option-card" data-score="2">
+                    <div class="option-radio">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <span>一直符合 (2分)</span>
+                </div>
+                <div class="option-card" data-score="1">
+                    <div class="option-radio">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <span>有时符合 (1分)</span>
+                </div>
+                <div class="option-card" data-score="0">
+                    <div class="option-radio">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <span>不符合 (0分)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <button id="prev-btn" class="btn btn-secondary btn-disabled">
+                <i class="fas fa-arrow-left"></i>上一题
+            </button>
+            <button id="next-btn" class="btn btn-primary btn-disabled">
+                下一题<i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 评估报告部分 (初始隐藏) -->
+    <div id="report-section" style="display: none;">
+        <div class="report-card">
+            <h2 class="text-2xl font-bold mb-6 text-center">心理健康状况评估报告</h2>
+
+            <div class="achievement-badge">
+                <div class="badge">
+                    <i class="fas fa-award"></i>
+                    <div class="badge-text text-center">成长小明星</div>
+                </div>
+            </div>
+
+            <div class="score-display">
+                <p class="text-lg mb-2">心理健康总分</p>
+                <div class="total-score" id="total-score">0</div>
+                <p class="text-gray-600 mt-2" id="score-remark">请完成评估以查看结果</p>
+            </div>
+
+            <div class="dimension-scores">
+                <div class="dimension-score-card bg-gradient-to-br from-blue-500 to-blue-600">
+                    <h3>情绪管理</h3>
+                    <div class="score" id="emotion-score">0</div>
+                    <div class="max-score">满分20分</div>
+                </div>
+                <div class="dimension-score-card bg-gradient-to-br from-purple-500 to-purple-600">
+                    <h3>社交能力</h3>
+                    <div class="score" id="social-score">0</div>
+                    <div class="max-score">满分20分</div>
+                </div>
+                <div class="dimension-score-card bg-gradient-to-br from-orange-500 to-orange-600">
+                    <h3>自我认知</h3>
+                    <div class="score" id="self-score">0</div>
+                    <div class="max-score">满分20分</div>
+                </div>
+                <div class="dimension-score-card bg-gradient-to-br from-green-500 to-green-600">
+                    <h3>学习适应</h3>
+                    <div class="score" id="learning-score">0</div>
+                    <div class="max-score">满分20分</div>
+                </div>
+                <div class="dimension-score-card bg-gradient-to-br from-yellow-500 to-yellow-600">
+                    <h3>家庭关系</h3>
+                    <div class="score" id="family-score">0</div>
+                    <div class="max-score">满分20分</div>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-bold mb-4">心理健康状况雷达图</h3>
+            <div class="chart-container">
+                <canvas id="radar-chart"></canvas>
+            </div>
+
+            <div class="assessment-report">
+                <h3><i class="fas fa-heart"></i> 心理健康总体评价</h3>
+                <p id="overall-assessment">完成评估后，这里将显示你的心理健康总体评价。</p>
+
+                <div class="dimension-analysis">
+                    <h4><i class="fas fa-smile emotion-icon"></i> 情绪管理</h4>
+                    <p id="emotion-analysis">完成评估后，这里将显示你的情绪管理能力分析。</p>
+                    <div class="suggestion-list" id="emotion-suggestions">
+                        <!-- 建议列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <div class="dimension-analysis">
+                    <h4><i class="fas fa-users social-icon"></i> 社交能力</h4>
+                    <p id="social-analysis">完成评估后，这里将显示你的社交能力分析。</p>
+                    <div class="suggestion-list" id="social-suggestions">
+                        <!-- 建议列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <div class="dimension-analysis">
+                    <h4><i class="fas fa-user self-icon"></i> 自我认知</h4>
+                    <p id="self-analysis">完成评估后，这里将显示你的自我认知分析。</p>
+                    <div class="suggestion-list" id="self-suggestions">
+                        <!-- 建议列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <div class="dimension-analysis">
+                    <h4><i class="fas fa-book learning-icon"></i> 学习适应</h4>
+                    <p id="learning-analysis">完成评估后，这里将显示你的学习适应能力分析。</p>
+                    <div class="suggestion-list" id="learning-suggestions">
+                        <!-- 建议列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <div class="dimension-analysis">
+                    <h4><i class="fas fa-home family-icon"></i> 家庭关系</h4>
+                    <p id="family-analysis">完成评估后，这里将显示你的家庭关系分析。</p>
+                    <div class="suggestion-list" id="family-suggestions">
+                        <!-- 建议列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button id="retry-btn" class="retry-button">
+            <i class="fas fa-redo-alt"></i>重新评估
+        </button>
+    </div>
+</div>
+
+<!-- 卡通角色 -->
+<div class="cartoon-character" id="cartoon-character"></div>
+
+<script>
+    // 评估题目数据
+    const questions = [
+        // 情绪管理维度
+        { id: 1, text: "我能表达自己的喜怒哀乐", dimension: "emotion", dimensionText: "情绪管理" },
+        { id: 2, text: "当我感到难过时，我知道如何让自己开心起来", dimension: "emotion", dimensionText: "情绪管理" },
+        { id: 3, text: "我不会因为小事而长时间生气", dimension: "emotion", dimensionText: "情绪管理" },
+        { id: 4, text: "我能理解别人的感受", dimension: "emotion", dimensionText: "情绪管理" },
+        { id: 5, text: "当我感到害怕时，我知道如何寻求帮助", dimension: "emotion", dimensionText: "情绪管理" },
+        { id: 6, text: "我能控制自己的情绪，不随便发脾气", dimension: "emotion", dimensionText: "情绪管理" },
+        { id: 7, text: "我知道自己为什么会感到开心或难过", dimension: "emotion", dimensionText: "情绪管理" },
+        { id: 8, text: "我能接受批评，并从中学习", dimension: "emotion", dimensionText: "情绪管理" },
+        { id: 9, text: "我不会因为失败而灰心丧气", dimension: "emotion", dimensionText: "情绪管理" },
+        { id: 10, text: "我能保持积极乐观的心态", dimension: "emotion", dimensionText: "情绪管理" },
+
+        // 社交能力维度
+        { id: 11, text: "我有好朋友可以一起玩耍", dimension: "social", dimensionText: "社交能力" },
+        { id: 12, text: "我能与同学友好相处，不打架", dimension: "social", dimensionText: "社交能力" },
+        { id: 13, text: "我知道如何与陌生人交流", dimension: "social", dimensionText: "社交能力" },
+        { id: 14, text: "我能在团队中发挥自己的作用", dimension: "social", dimensionText: "社交能力" },
+        { id: 15, text: "我懂得分享，愿意帮助有困难的同学", dimension: "social", dimensionText: "社交能力" },
+        { id: 16, text: "我能遵守游戏规则，即使自己不喜欢", dimension: "social", dimensionText: "社交能力" },
+        { id: 17, text: "我能理解并尊重他人的意见", dimension: "social", dimensionText: "社交能力" },
+        { id: 18, text: "我能主动与他人打招呼", dimension: "social", dimensionText: "社交能力" },
+        { id: 19, text: "我能解决与朋友之间的矛盾", dimension: "social", dimensionText: "社交能力" },
+        { id: 20, text: "我喜欢参加集体活动", dimension: "social", dimensionText: "社交能力" },
+
+        // 自我认知维度
+        { id: 21, text: "我知道自己的优点和缺点", dimension: "self", dimensionText: "自我认知" },
+        { id: 22, text: "我相信自己能做好很多事情", dimension: "self", dimensionText: "自我认知" },
+        { id: 23, text: "我能接受自己的不完美", dimension: "self", dimensionText: "自我认知" },
+        { id: 24, text: "我知道自己喜欢什么，不喜欢什么", dimension: "self", dimensionText: "自我认知" },
+        { id: 25, text: "我能独立完成自己的事情", dimension: "self", dimensionText: "自我认知" },
+        { id: 26, text: "我对自己有信心", dimension: "self", dimensionText: "自我认知" },
+        { id: 27, text: "我知道自己的兴趣爱好", dimension: "self", dimensionText: "自我认知" },
+        { id: 28, text: "我能认识到自己的错误并改正", dimension: "self", dimensionText: "自我认知" },
+        { id: 29, text: "我知道自己的性格特点", dimension: "self", dimensionText: "自我认知" },
+        { id: 30, text: "我喜欢现在的自己", dimension: "self", dimensionText: "自我认知" },
+
+        // 学习适应维度
+        { id: 31, text: "我能按时完成老师布置的作业", dimension: "learning", dimensionText: "学习适应" },
+        { id: 32, text: "我对学习新知识有兴趣", dimension: "learning", dimensionText: "学习适应" },
+        { id: 33, text: "我能在课堂上认真听讲", dimension: "learning", dimensionText: "学习适应" },
+        { id: 34, text: "我能独立思考问题", dimension: "learning", dimensionText: "学习适应" },
+        { id: 35, text: "我不会因为学习困难而放弃", dimension: "learning", dimensionText: "学习适应" },
+        { id: 36, text: "我能合理安排自己的学习时间", dimension: "learning", dimensionText: "学习适应" },
+        { id: 37, text: "我能从错误中学习", dimension: "learning", dimensionText: "学习适应" },
+        { id: 38, text: "我能在考试前做好准备", dimension: "learning", dimensionText: "学习适应" },
+        { id: 39, text: "我能接受自己的学习成绩", dimension: "learning", dimensionText: "学习适应" },
+        { id: 40, text: "我喜欢上学，期待每天的学习生活", dimension: "learning", dimensionText: "学习适应" },
+
+        // 家庭关系维度
+        { id: 41, text: "我能与家人和睦相处", dimension: "family", dimensionText: "家庭关系" },
+        { id: 42, text: "我能与父母分享自己的想法和感受", dimension: "family", dimensionText: "家庭关系" },
+        { id: 43, text: "我能理解父母的辛苦", dimension: "family", dimensionText: "家庭关系" },
+        { id: 44, text: "我能帮助家人做一些力所能及的家务", dimension: "family", dimensionText: "家庭关系" },
+        { id: 45, text: "我能遵守家庭规则", dimension: "family", dimensionText: "家庭关系" },
+        { id: 46, text: "我能与兄弟姐妹友好相处", dimension: "family", dimensionText: "家庭关系" },
+        { id: 47, text: "我喜欢和家人一起度过时光", dimension: "family", dimensionText: "家庭关系" },
+        { id: 48, text: "我能向家人寻求帮助", dimension: "family", dimensionText: "家庭关系" },
+        { id: 49, text: "我能表达对家人的爱和感谢", dimension: "family", dimensionText: "家庭关系" },
+        { id: 50, text: "我觉得自己的家庭很温暖", dimension: "family", dimensionText: "家庭关系" }
+    ];
+
+    // 存储用户的答案
+    const answers = {};
+
+    // 当前题目索引
+    let currentQuestionIndex = 0;
+
+    // DOM元素
+    const assessmentSection = document.getElementById('assessment-section');
+    const reportSection = document.getElementById('report-section');
+    const questionCard = document.getElementById('question-card');
+    const dimensionBadge = document.getElementById('dimension-badge');
+    const questionText = document.getElementById('question-text');
+    const progressText = document.getElementById('progress-text');
+    const progressFill = document.querySelector('.progress-fill');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const retryBtn = document.getElementById('retry-btn');
+    const questionNumbers = document.getElementById('question-numbers');
+    const cartoonCharacter = document.getElementById('cartoon-character');
+
+    // 初始化题目导航点
+    function initQuestionNumbers() {
+        questionNumbers.innerHTML = '';
+        questions.forEach((_, index) => {
+            const dot = document.createElement('div');
+            dot.classList.add('number-dot');
+            if (index === currentQuestionIndex) {
+                dot.classList.add('active');
+            }
+            questionNumbers.appendChild(dot);
+        });
+    }
+
+    // 更新题目显示
+    function updateQuestionDisplay() {
+        const question = questions[currentQuestionIndex];
+        questionText.textContent = `${question.id}. ${question.text}`;
+
+        // 更新维度徽章
+        dimensionBadge.textContent = question.dimensionText;
+        dimensionBadge.className = 'dimension-badge';
+
+        // 设置不同维度的样式
+        switch (question.dimension) {
+            case 'emotion':
+                dimensionBadge.classList.add('dimension-emotion');
+                break;
+            case 'social':
+                dimensionBadge.classList.add('dimension-social');
+                break;
+            case 'self':
+                dimensionBadge.classList.add('dimension-self');
+                break;
+            case 'learning':
+                dimensionBadge.classList.add('dimension-learning');
+                break;
+            case 'family':
+                dimensionBadge.classList.add('dimension-family');
+                break;
+        }
+
+        // 更新进度条
+        const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
+        progressFill.style.width = `${progressPercentage}%`;
+        progressText.textContent = `${currentQuestionIndex + 1}/${questions.length}`;
+
+        // 更新导航点
+        const dots = document.querySelectorAll('.number-dot');
+        dots.forEach((dot, index) => {
+            dot.classList.remove('active', 'completed');
+            if (index === currentQuestionIndex) {
+                dot.classList.add('active');
+            } else if (index < currentQuestionIndex) {
+                dot.classList.add('completed');
+            }
+        });
+
+        // 清除之前的选择
+        const optionCards = document.querySelectorAll('.option-card');
+        optionCards.forEach(card => {
+            card.classList.remove('selected');
+            const radio = card.querySelector('.option-radio');
+            radio.innerHTML = '<i class="fas fa-check"></i>';
+            radio.style.backgroundColor = 'transparent';
+            radio.querySelector('i').style.display = 'none';
+        });
+
+        // 如果已有答案，显示选择
+        if (answers[currentQuestionIndex] !== undefined) {
+            const selectedOption = document.querySelector(`.option-card[data-score="${answers[currentQuestionIndex]}"]`);
+            if (selectedOption) {
+                selectedOption.classList.add('selected');
+                const radio = selectedOption.querySelector('.option-radio');
+                radio.style.backgroundColor = '#38b2ac';
+                radio.querySelector('i').style.display = 'block';
+            }
+            nextBtn.classList.remove('btn-disabled');
+        } else {
+            nextBtn.classList.add('btn-disabled');
+        }
+
+        // 更新上一题按钮状态
+        if (currentQuestionIndex === 0) {
+            prevBtn.classList.add('btn-disabled');
+        } else {
+            prevBtn.classList.remove('btn-disabled');
+        }
+
+        // 显示卡通角色
+        if (currentQuestionIndex % 10 === 9) {
+            showCartoonCharacter();
+        } else {
+            hideCartoonCharacter();
+        }
+    }
+
+    // 显示卡通角色
+    function showCartoonCharacter() {
+        cartoonCharacter.style.display = 'block';
+
+        // 添加动画效果
+        cartoonCharacter.style.transform = 'scale(0)';
+        setTimeout(() => {
+            cartoonCharacter.style.transform = 'scale(1)';
+        }, 100);
+
+        // 3秒后隐藏
+        setTimeout(() => {
+            hideCartoonCharacter();
+        }, 3000);
+    }
+
+    // 隐藏卡通角色
+    function hideCartoonCharacter() {
+        cartoonCharacter.style.transform = 'scale(0)';
+        setTimeout(() => {
+            cartoonCharacter.style.display = 'none';
+        }, 300);
+    }
+
+    // 处理选项选择
+    function handleOptionSelection() {
+        const optionCards = document.querySelectorAll('.option-card');
+        optionCards.forEach(card => {
+            card.addEventListener('click', () => {
+                // 清除之前的选择
+                optionCards.forEach(c => {
+                    c.classList.remove('selected');
+                    const radio = c.querySelector('.option-radio');
+                    radio.style.backgroundColor = 'transparent';
+                    radio.querySelector('i').style.display = 'none';
+                });
+
+                // 设置新选择
+                card.classList.add('selected');
+                const radio = card.querySelector('.option-radio');
+                radio.style.backgroundColor = '#38b2ac';
+                radio.querySelector('i').style.display = 'block';
+
+                // 保存答案
+                const score = parseInt(card.getAttribute('data-score'));
+                answers[currentQuestionIndex] = score;
+
+                // 启用下一题按钮
+                nextBtn.classList.remove('btn-disabled');
+
+                // 如果不是最后一题，自动跳转到下一题
+                if (currentQuestionIndex < questions.length - 1) {
+                    setTimeout(() => {
+                        goToNextQuestion();
+                    }, 500);
+                }
+            });
+        });
+    }
+
+    // 上一题
+    function goToPrevQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            updateQuestionDisplay();
+        }
+    }
+
+    // 下一题
+    function goToNextQuestion() {
+        if (currentQuestionIndex < questions.length - 1 && answers[currentQuestionIndex] !== undefined) {
+            currentQuestionIndex++;
+            updateQuestionDisplay();
+        } else if (currentQuestionIndex === questions.length - 1 && answers[currentQuestionIndex] !== undefined) {
+            // 完成评估，显示报告
+            showReport();
+        }
+    }
+
+    // 计算得分
+    function calculateScores() {
+        const scores = {
+            emotion: 0,
+            social: 0,
+            self: 0,
+            learning: 0,
+            family: 0,
+            total: 0
+        };
+
+        questions.forEach((question, index) => {
+            const score = answers[index] || 0;
+            scores[question.dimension] += score;
+            scores.total += score;
+        });
+
+        return scores;
+    }
+
+    // 获取得分评价
+    function getScoreRemark(totalScore) {
+        if (totalScore >= 85) return "太棒了！你拥有非常健康的心理状态，继续保持哦！";
+        if (totalScore >= 70) return "很好！你的心理健康状况良好，继续努力！";
+        if (totalScore >= 55) return "不错！你的心理健康状况一般，有些方面可以加强。";
+        if (totalScore >= 40) return "注意！你的心理健康状况有待提高，建议寻求帮助。";
+        return "警告！你的心理健康状况较差，需要及时关注和帮助。";
+    }
+
+    // 获取维度评价
+    function getDimensionRemark(dimension, score) {
+        const maxScore = 20;
+        const percentage = (score / maxScore) * 100;
+
+        let highRemark, mediumRemark, lowRemark;
+
+        switch(dimension) {
+            case 'emotion':
+                highRemark = "太棒了！你有很强的情绪管理能力，能够很好地表达和控制自己的情绪。";
+                mediumRemark = "不错！你有一定的情绪管理能力，但还有提升空间。";
+                lowRemark = "需要注意！你在情绪管理方面还需要加强，学习如何更好地表达和控制情绪。";
+                break;
+            case 'social':
+                highRemark = "太棒了！你有很强的社交能力，能够与他人友好相处，善于合作。";
+                mediumRemark = "不错！你有一定的社交能力，但还有提升空间。";
+                lowRemark = "需要注意！你在社交方面还需要加强，学习如何更好地与他人沟通和合作。";
+                break;
+            case 'self':
+                highRemark = "太棒了！你有很强的自我认知能力，了解自己的优点和缺点，对自己有信心。";
+                mediumRemark = "不错！你有一定的自我认知能力，但还有提升空间。";
+                lowRemark = "需要注意！你在自我认知方面还需要加强，学习更多地了解自己，建立自信。";
+                break;
+            case 'learning':
+                highRemark = "太棒了！你有很强的学习适应能力，对学习有兴趣，能够很好地完成学习任务。";
+                mediumRemark = "不错！你有一定的学习适应能力，但还有提升空间。";
+                lowRemark = "需要注意！你在学习适应方面还需要加强，培养学习兴趣，提高学习能力。";
+                break;
+            case 'family':
+                highRemark = "太棒了！你有良好的家庭关系，能够与家人和睦相处，互相支持。";
+                mediumRemark = "不错！你有一定的家庭关系基础，但还有提升空间。";
+                lowRemark = "需要注意！你在家庭关系方面还需要加强，学习如何更好地与家人沟通和相处。";
+                break;
+        }
+
+        if (percentage >= 80) return highRemark;
+        if (percentage >= 60) return mediumRemark;
+        return lowRemark;
+    }
+
+    // 获取维度建议
+    function getDimensionSuggestions(dimension, score) {
+        const maxScore = 20;
+        const percentage = (score / maxScore) * 100;
+
+        let suggestions = [];
+
+        switch(dimension) {
+            case 'emotion':
+                if (percentage < 80) {
+                    suggestions.push("学习简单的呼吸法，当你感到生气或难过时，深吸一口气再慢慢呼出，重复几次。");
+                    suggestions.push("尝试写日记，记录自己的情绪变化和原因。");
+                    suggestions.push("学习简单的放松技巧，如听音乐、画画或做自己喜欢的事情。");
+                    suggestions.push("当你感到情绪低落时，试着想一些让你开心的事情或回忆。");
+                }
+                if (percentage < 60) {
+                    suggestions.push("不要害怕表达自己的情绪，告诉信任的人你的感受。");
+                    suggestions.push("学习认识自己的情绪触发点，提前做好应对准备。");
+                }
+                break;
+            case 'social':
+                if (percentage < 80) {
+                    suggestions.push("尝试主动与同学打招呼，微笑着说\"你好\"。");
+                    suggestions.push("参加一些集体活动，如运动会、文艺表演等。");
+                    suggestions.push("学习倾听他人说话，不要打断别人。");
+                    suggestions.push("尝试分享自己的玩具或零食给朋友。");
+                }
+                if (percentage < 60) {
+                    suggestions.push("可以先从一个好朋友开始，慢慢扩大自己的社交圈。");
+                    suggestions.push("学习一些简单的社交技巧，如如何开始和结束对话。");
+                }
+                break;
+            case 'self':
+                if (percentage < 80) {
+                    suggestions.push("每天找出自己做得好的一件事，并给自己一个小奖励。");
+                    suggestions.push("尝试新的活动，发现自己的兴趣和才能。");
+                    suggestions.push("学习接受自己的不完美，每个人都有缺点。");
+                    suggestions.push("写一张\"我的优点清单\"，经常看看。");
+                }
+                if (percentage < 60) {
+                    suggestions.push("不要总是和别人比较，每个人都是独一无二的。");
+                    suggestions.push("设定一些小目标，逐步实现，增强自信心。");
+                }
+                break;
+            case 'learning':
+                if (percentage < 80) {
+                    suggestions.push("制定一个简单的学习计划，合理安排时间。");
+                    suggestions.push("尝试不同的学习方法，找到最适合自己的方式。");
+                    suggestions.push("遇到不懂的问题，勇敢向老师或同学请教。");
+                    suggestions.push("学习把大任务分解成小步骤，一步一步完成。");
+                }
+                if (percentage < 60) {
+                    suggestions.push("找到学习的乐趣，可以通过游戏化的方式学习。");
+                    suggestions.push("不要害怕失败，从错误中学习是成长的重要部分。");
+                }
+                break;
+            case 'family':
+                if (percentage < 80) {
+                    suggestions.push("每天花一些时间和家人交流，分享自己的一天。");
+                    suggestions.push("尝试帮助家人做一些力所能及的家务。");
+                    suggestions.push("学习表达对家人的爱和感谢。");
+                    suggestions.push("当与家人有分歧时，试着平静地表达自己的想法。");
+                }
+                if (percentage < 60) {
+                    suggestions.push("可以和家人一起做一些有趣的活动，如看电影、做游戏等。");
+                    suggestions.push("如果有困难，可以寻求学校心理咨询师的帮助。");
+                }
+                break;
+        }
+
+        return suggestions;
+    }
+
+    // 获取总体评价
+    function getOverallAssessment(scores) {
+        const totalScore = scores.total;
+        const maxTotalScore = 100;
+        const percentage = (totalScore / maxTotalScore) * 100;
+
+        let assessment = "";
+
+        if (percentage >= 85) {
+            assessment = "太棒了！你拥有非常健康的心理状态！你在情绪管理、社交能力、自我认知、学习适应和家庭关系等方面都表现出色。继续保持这种积极的状态，你会成为一个更加快乐、自信的孩子！记住，每个人都会有不开心的时候，这是正常的，重要的是我们知道如何应对。";
+        } else if (percentage >= 70) {
+            assessment = "很好！你的心理健康状况总体良好。你在大多数方面都表现不错，但还有一些地方可以继续提升。记住，心理健康就像身体健康一样，需要我们不断地关注和培养。继续保持积极的生活态度，遇到困难时不要害怕寻求帮助。";
+        } else if (percentage >= 55) {
+            assessment = "不错！你的心理健康状况一般。你在某些方面表现良好，但在其他方面还需要加强。不要担心，每个人都有自己的优点和需要改进的地方。重要的是认识到自己的不足，并愿意努力改进。你可以尝试下面的建议，帮助自己变得更加健康快乐。";
+        } else if (percentage >= 40) {
+            assessment = "注意！你的心理健康状况有待提高。你可能在某些方面遇到了一些困难，这影响了你的整体心理健康。不要灰心，这并不意味着你有什么问题，只是说明你需要更多的关注和帮助。可以尝试下面的建议，同时也可以寻求老师或心理咨询师的帮助。";
+        } else {
+            assessment = "警告！你的心理健康状况较差，需要及时关注和帮助。你可能在多个方面都遇到了困难，这对你的学习和生活都可能产生影响。请不要害怕，勇敢地向老师、家长或心理咨询师寻求帮助。他们会给你支持和指导，帮助你度过困难时期。记住，每个人都需要帮助，寻求帮助是勇敢的表现。";
+        }
+
+        // 找出最强和最弱的维度
+        const dimensions = ['emotion', 'social', 'self', 'learning', 'family'];
+        const dimensionNames = {
+            'emotion': '情绪管理',
+            'social': '社交能力',
+            'self': '自我认知',
+            'learning': '学习适应',
+            'family': '家庭关系'
+        };
+
+        let strongestDimension = dimensions[0];
+        let weakestDimension = dimensions[0];
+
+        dimensions.forEach(dimension => {
+            if (scores[dimension] > scores[strongestDimension]) {
+                strongestDimension = dimension;
+            }
+            if (scores[dimension] < scores[weakestDimension]) {
+                weakestDimension = dimension;
+            }
+        });
+
+        assessment += ` 在五个维度中，你的${dimensionNames[strongestDimension]}能力最强，这是你的优势所在。而${dimensionNames[weakestDimension]}方面相对较弱，需要多加关注和改进。`;
+
+        return assessment;
+    }
+
+    // 显示评估报告
+    function showReport() {
+        // 计算得分
+        const scores = calculateScores();
+
+        // 更新报告数据
+        document.getElementById('total-score').textContent = scores.total;
+        document.getElementById('emotion-score').textContent = scores.emotion;
+        document.getElementById('social-score').textContent = scores.social;
+        document.getElementById('self-score').textContent = scores.self;
+        document.getElementById('learning-score').textContent = scores.learning;
+        document.getElementById('family-score').textContent = scores.family;
+        document.getElementById('score-remark').textContent = getScoreRemark(scores.total);
+
+        // 更新总体评价
+        document.getElementById('overall-assessment').textContent = getOverallAssessment(scores);
+
+        // 更新维度分析
+        document.getElementById('emotion-analysis').textContent = getDimensionRemark('emotion', scores.emotion);
+        document.getElementById('social-analysis').textContent = getDimensionRemark('social', scores.social);
+        document.getElementById('self-analysis').textContent = getDimensionRemark('self', scores.self);
+        document.getElementById('learning-analysis').textContent = getDimensionRemark('learning', scores.learning);
+        document.getElementById('family-analysis').textContent = getDimensionRemark('family', scores.family);
+
+        // 更新建议列表
+        updateSuggestionList('emotion-suggestions', getDimensionSuggestions('emotion', scores.emotion));
+        updateSuggestionList('social-suggestions', getDimensionSuggestions('social', scores.social));
+        updateSuggestionList('self-suggestions', getDimensionSuggestions('self', scores.self));
+        updateSuggestionList('learning-suggestions', getDimensionSuggestions('learning', scores.learning));
+        updateSuggestionList('family-suggestions', getDimensionSuggestions('family', scores.family));
+
+        // 显示雷达图
+        showRadarChart(scores);
+
+        // 切换显示
+        assessmentSection.style.display = 'none';
+        reportSection.style.display = 'block';
+    }
+
+    // 更新建议列表
+    function updateSuggestionList(elementId, suggestions) {
+        const element = document.getElementById(elementId);
+        element.innerHTML = '';
+
+        if (suggestions.length === 0) {
+            const li = document.createElement('li');
+            li.textContent = '你在这方面表现很好，继续保持！';
+            element.appendChild(li);
+            return;
+        }
+
+        suggestions.forEach(suggestion => {
+            const li = document.createElement('li');
+            li.textContent = suggestion;
+            element.appendChild(li);
+        });
+    }
+
+    // 显示雷达图
+    function showRadarChart(scores) {
+        const ctx = document.getElementById('radar-chart').getContext('2d');
+
+        // 销毁已存在的图表
+        if (window.radarChart) {
+            window.radarChart.destroy();
+        }
+
+        window.radarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['情绪管理', '社交能力', '自我认知', '学习适应', '家庭关系'],
+                datasets: [{
+                    label: '得分',
+                    data: [scores.emotion, scores.social, scores.self, scores.learning, scores.family],
+                    backgroundColor: 'rgba(56, 178, 172, 0.2)',
+                    borderColor: 'rgba(56, 178, 172, 1)',
+                    pointBackgroundColor: 'rgba(56, 178, 172, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(56, 178, 172, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 20,
+                        ticks: {
+                            stepSize: 5
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: '心理健康各维度得分',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 重新开始评估
+    function restartAssessment() {
+        // 重置数据
+        currentQuestionIndex = 0;
+        Object.keys(answers).forEach(key => delete answers[key]);
+
+        // 更新显示
+        updateQuestionDisplay();
+
+        // 切换显示
+        reportSection.style.display = 'none';
+        assessmentSection.style.display = 'block';
+    }
+
+    // 事件监听
+    prevBtn.addEventListener('click', goToPrevQuestion);
+    nextBtn.addEventListener('click', goToNextQuestion);
+    retryBtn.addEventListener('click', restartAssessment);
+
+    // 初始化
+    function init() {
+        initQuestionNumbers();
+        updateQuestionDisplay();
+        handleOptionSelection();
+    }
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
