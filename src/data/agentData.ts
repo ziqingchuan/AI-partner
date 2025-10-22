@@ -2,15 +2,6 @@ export const agents = [
   // 一、forTeach
   {
     id: 'coze-agent-1-forTeach',
-    name: '小学语文备课助手',
-    intro: '帮助老师智能进行语文学科的备课、课堂互动设计等工作。',
-    coverUrl: 'covers/语文备课助手.png',
-    type: 'forTeach',
-    link: 'https://www.coze.cn/store/agent/7533172395222548506',
-    tag: ['语文', '智能体', '备课']
-  },
-  {
-    id: 'coze-agent-2-forTeach',
     name: '低年级识字教学工具',
     intro: '针对一至三年级设计汉字趣味讲解，辅助老师降低识字教学难度。',
     coverUrl: 'covers/识字工具.png',
@@ -19,16 +10,7 @@ export const agents = [
     tag: ['语文', '智能体', '识字']
   },
   {
-    id: 'coze-agent-3-forTeach',
-    name: '小学英语口语练习',
-    intro: '通过与智能体语音对话，进行小学英语口语训练',
-    coverUrl: 'covers/英语口语练习.png',
-    type: 'forTeach',
-    link: 'https://www.coze.cn/store/agent/7420134985094610955',
-    tag: ['英语', '智能体', '口语']
-  },
-  {
-    id: 'coze-agent-4-forTeach',
+    id: 'coze-agent-2-forTeach',
     name: '高年级阅读指导智能体',
     intro: '为四至五年级提供阅读技巧指导，生成段落分析示例，助力老师提升学生阅读理解力。',
     coverUrl: 'covers/阅读技巧指导.png',
@@ -37,7 +19,7 @@ export const agents = [
     tag: ['语文', '智能体', '阅读']
   },
   {
-    id: 'coze-agent-5-forTeach',
+    id: 'coze-agent-3-forTeach',
     name: '小学数学思维导图',
     intro: '为老师整理并提供关于小学数学问题的相关知识的思维导图',
     coverUrl: 'covers/数学思维导图.png',
@@ -46,7 +28,7 @@ export const agents = [
     tag: ['数学', '归纳', '智能体']
   },
   {
-    id: 'coze-agent-6-forTeach',
+    id: 'coze-agent-4-forTeach',
     name: '数学应用题小助手',
     intro: '根据您输入的知识点类型为您生成应用题目，并给出每个题目的考查点。',
     coverUrl: 'covers/应用题助手.png',
@@ -55,7 +37,7 @@ export const agents = [
     tag: ['数学', '智能体', '应用题']
   },
   {
-    id: 'coze-agent-7-forTeach',
+    id: 'coze-agent-5-forTeach',
     name: '小学数学备课助手',
     intro: '根据不同教材版本、不同学段、不同知识点为您生成详细的教案',
     coverUrl: 'covers/数学备课助手.png',
@@ -64,13 +46,40 @@ export const agents = [
     tag: ['备课', '智能体', '数学']
   },
   {
-    id: 'coze-agent-8-forTeach',
+    id: 'coze-agent-6-forTeach',
     name: '英语课文教学助手',
     intro: '针对英语课文给出详细的知识点以及讲解思路',
     coverUrl: 'covers/英语课文助手.png',
     type: 'forTeach',
     link: 'https://www.coze.cn/store/agent/7562562641689100324',
     tag: ['英语', '智能体', '备课']
+  },
+  {
+    id: 'coze-agent-7-forTeach',
+    name: '小学语文备课助手',
+    intro: '帮助老师智能进行语文学科的备课、课堂互动设计等工作。',
+    coverUrl: 'covers/语文备课助手.png',
+    type: 'forTeach',
+    link: 'https://www.coze.cn/store/agent/7533172395222548506',
+    tag: ['语文', '智能体', '备课']
+  },
+  {
+    id: 'coze-agent-8-forTeach',
+    name: '科学实验课设计助手',
+    intro: '为老师提供特定主题的科学实验课的详细课程设计，以及word文档下载',
+    coverUrl: 'covers/科学实验设计.png',
+    type: 'forTeach',
+    link: 'https://www.coze.cn/store/agent/7563867219051200564',
+    tag: ['科学', '智能体', '实验课']
+  },
+  {
+    id: 'coze-agent-9-forTeach',
+    name: '小学英语口语练习',
+    intro: '通过与智能体语音对话，进行小学英语口语训练',
+    coverUrl: 'covers/英语口语练习.png',
+    type: 'forTeach',
+    link: 'https://www.coze.cn/store/agent/7420134985094610955',
+    tag: ['英语', '智能体', '口语']
   },
   {
     id: 'ds-html-1-forTeach',
@@ -83,6 +92,15 @@ export const agents = [
   },
   {
     id: 'coze-html-1-forTeach',
+    name: '找因数动画工具',
+    intro: '帮助老师以动画形式演示查看一个数的全部因子的过程，帮助学生理解',
+    coverUrl: 'covers/寻找因数.png',
+    type: 'forTeach',
+    link: 'interactive/teach-find-gradient.html',
+    tag: ['数学', '演示', '因数']
+  },
+  {
+    id: 'coze-html-2-forTeach',
     name: '智能随机点名互动轮盘',
     intro: '输入学生名单后生成彩色转盘，点击旋转随机选中学生。',
     coverUrl: 'covers/点名轮盘.png',
@@ -91,7 +109,7 @@ export const agents = [
     tag: ['教师', '点名', '工具']
   },
   {
-    id: 'coze-html-2-forTeach',
+    id: 'coze-html-3-forTeach',
     name: '分级数学题互动出题器',
     intro: '选择年级与题型（如"3年级乘法"），实时生成可交互的题目（输入答案后即时判断对错）',
     coverUrl: 'covers/数学出题器.png',
@@ -100,7 +118,7 @@ export const agents = [
     tag: ['练习', '计算', '数学']
   },
   {
-    id: 'coze-html-3-forTeach',
+    id: 'coze-html-4-forTeach',
     name: '英语单词3D翻转卡片',
     intro: '提供可点击翻转的立体卡片（正面单词/背面释义与用法），用于教学',
     coverUrl: 'covers/英语单词卡.png',
@@ -109,7 +127,7 @@ export const agents = [
     tag: ['单词', '教学', '英语']
   },
   {
-    id: 'coze-html-4-forTeach',
+    id: 'coze-html-5-forTeach',
     name: '浮力实验虚拟演示台',
     intro: '帮助小朋友们演示不同物体在水中的沉浮，并介绍浮力的原理',
     coverUrl: 'covers/浮力演示.png',
@@ -181,6 +199,15 @@ export const agents = [
     type: 'forLearn',
     link: 'https://www.coze.cn/store/agent/7563651302304055330',
     tag: ['英语', '智能体', '造句']
+  },
+  {
+    id: 'coze-agent-8-forLearn',
+    name: '地理知识小助手',
+    intro: '能够帮助学生掌握地理知识，可视化查看地质结构图，整理知识思维导图',
+    coverUrl: 'covers/地理助手.png',
+    type: 'forLearn',
+    link: 'https://www.coze.cn/store/agent/7563908977260724262',
+    tag: ['地理', '智能体', '知识']
   },
   {
     id: 'coze-html-1-forLearn',
