@@ -423,8 +423,6 @@
                 }
             });
 
-
-
             // 显示解析
             showExplanation(isCorrect, question.explanation);
 
@@ -437,8 +435,13 @@
             } else {
                 nextBtn.classList.remove('hidden');
             }
-        });
 
+            // 滚动到页面底部
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth' // 平滑滚动效果
+            });
+        });
         // 上一题按钮点击事件
         prevBtn.addEventListener('click', () => {
             if (currentQuestionIndex > 0) {
@@ -451,6 +454,12 @@
         nextBtn.addEventListener('click', () => {
             currentQuestionIndex++;
             loadQuestion(currentQuestionIndex);
+        });
+
+        // 滚动到页面底部
+        window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth' // 平滑滚动效果
         });
     }
 
