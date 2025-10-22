@@ -274,7 +274,7 @@ export const agents = [
   },
   {
     id: 'coze-html-8-forLearn',
-    name: 'for循环小测',
+    name: '科学课编程小测',
     intro: '学习for循环后帮助学生巩固课堂学习内容与易错点',
     coverUrl: 'covers/compressed_编程.png',
     type: 'forLearn',
