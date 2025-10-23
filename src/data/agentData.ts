@@ -281,6 +281,15 @@ export const agents = [
     link: 'interactive/learn-computer-loop.html',
     tag: ['编程', '复习', '小测']
   },
+  {
+    id: 'feixiang-html-1-forLearn',
+    name: '模拟站队列',
+    intro: '通过可视化模拟站队列，帮助学生理解因式分解',
+    coverUrl: 'covers/compressed_站队列.png',
+    type: 'forLearn',
+    link: 'https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/document/EyXiWujcyQbxRcWiPFckHH.html',
+    tag: ['动画', '数学', '可视化']
+  },
   // 三、forEvaluate
   {
     id: 'coze-agent-1-forEvaluate',
