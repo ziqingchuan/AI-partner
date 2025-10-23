@@ -355,6 +355,15 @@ export const agents = [
     tag: ['英语', '作文', '智能体']
   },
   {
+    id: 'coze-agent-9-forEvaluate',
+    name: '未来职业画师',
+    intro: '帮助小朋友们畅想未来的职业并作出鼓励与评价',
+    coverUrl: 'covers/compressed_职业规划.png',
+    type: 'forEvaluate',
+    link: 'https://www.coze.cn/store/agent/7564255785140666402',
+    tag: ['职业', '理想', '智能体']
+  },
+  {
     id: 'coze-html-1-forEvaluate',
     name: '学生综合素质评估工具',
     intro: '从学业、生活、礼仪、性格四个维度对学生进行评价，并最终生成评价报告与可视化图表',
