@@ -259,12 +259,12 @@
         },
         {
             id: 3,
-            question: "对于寻找因数这道题，for循环的循环条件应该是什么？",
+            question: "对于寻找 a 的因数这道题，for循环的循环条件应该是什么？",
             options: [
-                "i < n;",
-                "i <= n;",
-                "i > n;",
-                "i >= n;"
+                "i < a;",
+                "i <= a;",
+                "i > a;",
+                "i >= a;"
             ],
             correctAnswer: 1,
             explanation: `寻找因数时，我们需要检查从 1 到 n 的所有数是否能整除 n。<br></br>因此循环条件应该是<code style="background-color: rgba(179,220,255,0.18); padding: 5px 10px; border-radius: 8px;">i <= n</code>，这样 i 会取到 n 的值，<b>确保我们不会遗漏n本身这个因数</b>。`
@@ -283,12 +283,12 @@
         },
         {
             id: 5,
-            question: "对于寻找因数这道题，for循环的循环体应该是什么？",
+            question: "对于寻找 a 的因数这道题，for循环的循环体应该是什么？",
             options: [
                 "cout << i << endl;",
                 "if (a % i == 0) { cout << i << endl; }",
                 "if (a % i != 0) { cout << i << endl; }",
-                "cin >> i;"
+                "cin >> a;"
             ],
             correctAnswer: 1,
             explanation: "循环体应该检查当前的 i 是否是 a 的因数。如果是（即<code style=\"background-color: rgba(179,220,255,0.18); padding: 5px 10px; border-radius: 8px;\">a % i == 0</code>），就输出 i。这样就能找出所有能整除 a 的数，也就是 a 的所有因数。"
