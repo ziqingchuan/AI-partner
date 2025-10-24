@@ -235,12 +235,12 @@
             id: 1,
             question: "for循环的结构是什么样的？",
             options: [
-                "for (初始值; 循环体; 变量变化）｛ 循环条件 ｝;",
-                "for (初始值; 循环条件; 变量变化）｛ 循环体 ｝;",
                 "for (循环体; 循环条件; 变量变化）｛ 初始值 ｝;",
+                "for (初始值; 循环体; 变量变化）｛ 循环条件 ｝;",
                 "for (初始值; 循环条件; 循环体）｛ 变量变化 ｝;",
+                "for (初始值; 循环条件; 变量变化）｛ 循环体 ｝;",
             ],
-            correctAnswer: 1,
+            correctAnswer: 3,
             explanation: `for循环的标准结构是：<code style="background-color: rgba(179,220,255,0.18); padding: 5px 10px; border-radius: 8px;">for (初始值; 循环条件; 变量变化) { 循环体 };</code>
 <br> 首先执行初始值，然后检查循环条件，<b>如果条件为真则执行循环体</b>，最后执行变量变化，重复这个过程直到循环条件为假。`
         },
@@ -249,12 +249,12 @@
             question:
                 `<code style="background-color: rgba(179,220,255,0.18); padding: 5px 10px; border-radius: 8px;">for (int i = 1; i <= 6; i++) { cout << i << endl; }</code>这个程序执行了几次？`,
             options: [
+                "1次",
                 "5次",
                 "6次",
-                "7次",
                 "0次"
             ],
-            correctAnswer: 1,
+            correctAnswer: 2,
             explanation: `这个循环从<code style="background-color: rgba(179,220,255,0.18); padding: 5px 10px; border-radius: 8px;">i = 1</code>开始，每次增加1，直到<code style="background-color: rgba(179,220,255,0.18); padding: 5px 10px; border-radius: 8px;">i = 6</code>为止。当 i = 1、2、3、4、5、6 时都会执行循环体，所以总共执行了6次。`
         },
         {
@@ -267,18 +267,18 @@
                 "i >= a;"
             ],
             correctAnswer: 1,
-            explanation: `寻找因数时，我们需要检查从 1 到 a 的所有数是否能整除 n。<br></br>因此循环条件应该是<code style="background-color: rgba(179,220,255,0.18); padding: 5px 10px; border-radius: 8px;">i <= a</code>，这样 i 会取到 a 的值，<b>确保我们不会遗漏 a 本身这个因数</b>。`
+            explanation: `寻找因数时，我们需要检查从 1 到 a 的所有数是否能整除 a。<br></br>因此循环条件应该是<code style="background-color: rgba(179,220,255,0.18); padding: 5px 10px; border-radius: 8px;">i <= a</code>，这样 i 会取到 a 的值，<b>确保我们不会遗漏 a 本身这个因数</b>。`
         },
         {
             id: 4,
             question: "如何判断a是不是b的因数？",
             options: [
-                "a % b == 0;",
                 "b % a == 0;",
+                "a % b == 0;",
                 "a / b == 0;",
                 "b / a == 0;"
             ],
-            correctAnswer: 1,
+            correctAnswer: 0,
             explanation: "如果 a 是 b 的因数，那么 b 除以 a 的余数应该是0。在C++中，“%” 运算符表示取余操作，所以<code style=\"background-color: rgba(179,220,255,0.18); padding: 5px 10px; border-radius: 8px;\">b % a == 0</code>表示 b 除以 a 没有余数，即 a 是 b 的因数。"
         },
         {
