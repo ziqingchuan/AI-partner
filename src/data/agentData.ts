@@ -373,6 +373,15 @@ export const agents = [
     tag: ['职业', '理想', '智能体']
   },
   {
+    id: 'coze-agent-10-forEvaluate',
+    name: '五年级上册阅读评估助手',
+    intro: '帮助检测五年级上册小朋友们必读书籍的阅读情况',
+    coverUrl: 'covers/compressed_五年级上阅读测试.png',
+    type: 'forEvaluate',
+    link: 'https://www.coze.cn/store/agent/7572134031232368649',
+    tag: ['阅读', '测试', '智能体']
+  },
+  {
     id: 'coze-html-1-forEvaluate',
     name: '学生综合素质评估工具',
     intro: '从学业、生活、礼仪、性格四个维度对学生进行评价，并最终生成评价报告与可视化图表',
