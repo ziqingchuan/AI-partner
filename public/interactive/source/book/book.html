@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>把数学书从左上角平移到右下角</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .desk-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .desk {
+            width: 100%;
+            height: 500px;
+            background-color: #8B4513;
+            background-image: linear-gradient(to bottom, #8B4513, #A0522D);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                inset 0 0 25px rgba(0, 0, 0, 0.4),
+                0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 15px solid #654321;
+        }
+        
+        .desk:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(90deg, rgba(255,255,255,.05) 50%, transparent 50%),
+                linear-gradient(rgba(255,255,255,.05) 50%, transparent 50%);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+        
+        .book {
+            position: absolute;
+            width: 100px;
+            height: 130px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border-radius: 5px;
+            cursor: move;
+            box-shadow: 
+                0 5px 15px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+            transition: box-shadow 0.3s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            user-select: none;
+            top: 20px;
+            left: 20px;
+            font-size: 18px;
+			background-image: url("image/book.jpg");
+			background-size: cover; /* 或 contain、具体尺寸 */
+			background-repeat: no-repeat;
+			background-position: center center;
+        }
+        
+        .book:hover {
+            box-shadow: 
+                0 8px 20px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+        
+        .book.dragging {
+            box-shadow: 
+                0 10px 25px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+            z-index: 100;
+            transform: scale(1.02);
+        }
+        
+        /* .book:before {
+            content: '书';
+            font-size: 24px;
+        } */
+        
+        .path-line {
+            position: absolute;
+            height: 3px;
+            background-color: rgba(255, 255, 255, 0.7);
+            z-index: 5;
+            pointer-events: none;
+            transform-origin: 0 0;
+            border-radius: 2px;
+        }
+        
+        .current-drag-line {
+            position: absolute;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.95);
+            z-index: 6;
+            pointer-events: none;
+            transform-origin: 0 0;
+            border-radius: 2px;
+        }
+        
+        .arrow-head {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 15px solid rgba(255, 255, 255, 0.95);
+            z-index: 7;
+            pointer-events: none;
+            transform-origin: center;
+        }
+        
+        .reset-btn {
+            padding: 12px 30px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .reset-btn:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .reset-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .desk {
+                height: 400px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .desk {
+                height: 350px;
+            }
+            
+            .book {
+                width: 80px;
+                height: 110px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>把数学书从左上角平移到右下角</h1>
+        
+        <div class="desk-container">
+            <div class="desk" id="desk">
+                <div class="book" id="book"></div>
+            </div>
+        </div>
+        
+        <button class="reset-btn" id="reset-btn">重置</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const book = document.getElementById('book');
+            const desk = document.getElementById('desk');
+            const resetBtn = document.getElementById('reset-btn');
+            
+            // 获取实际尺寸
+            function getActualDimensions() {
+                const deskStyle = window.getComputedStyle(desk);
+                const borderLeft = parseInt(deskStyle.borderLeftWidth) || 0;
+                const borderRight = parseInt(deskStyle.borderRightWidth) || 0;
+                const borderTop = parseInt(deskStyle.borderTopWidth) || 0;
+                const borderBottom = parseInt(deskStyle.borderBottomWidth) || 0;
+                
+                const deskContentWidth = desk.offsetWidth - borderLeft - borderRight;
+                const deskContentHeight = desk.offsetHeight - borderTop - borderBottom;
+                
+                const bookWidth = book.offsetWidth;
+                const bookHeight = book.offsetHeight;
+                
+                const maxX = Math.max(0, deskContentWidth - bookWidth);
+                const maxY = Math.max(0, deskContentHeight - bookHeight);
+                
+                return {
+                    maxX: maxX,
+                    maxY: maxY,
+                    bookWidth: bookWidth,
+                    bookHeight: bookHeight
+                };
+            }
+            
+            // 初始位置
+            const startX = 0;
+            const startY = 0;
+            let currentX = startX;
+            let currentY = startY;
+            
+            // 路径类型
+            const PATH_TYPES = {
+                RIGHT_THEN_DOWN: 1,
+                DOWN_THEN_RIGHT: 2,
+                DIAGONAL: 3
+            };
+            
+            // 当前状态
+            let isDragging = false;
+            let dragStartMouseX, dragStartMouseY;
+            let currentPathType = PATH_TYPES.RIGHT_THEN_DOWN;
+            let movePhase = 0;
+            let dragStartPos = {x: startX, y: startY};
+            
+            // 路径管理
+            let historicalPaths = [];
+            let currentDragLine = null;
+            let currentArrowHead = null;
+            
+            // 创建历史路径线
+            function createHistoricalPath(fromX, fromY, toX, toY, pathType) {
+                const dims = getActualDimensions();
+                const dx = toX - fromX;
+                const dy = toY - fromY;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                
+                if (length < 5) return null;
+                
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                const pathLine = document.createElement('div');
+                pathLine.className = 'path-line';
+                pathLine.style.left = `${fromX + dims.bookWidth/2}px`;
+                pathLine.style.top = `${fromY + dims.bookHeight/2}px`;
+                pathLine.style.width = `${length}px`;
+                pathLine.style.transform = `rotate(${angle}deg)`;
+                desk.appendChild(pathLine);
+                
+                historicalPaths.push({
+                    element: pathLine,
+                    fromX: fromX,
+                    fromY: fromY,
+                    toX: toX,
+                    toY: toY,
+                    length: length,
+                    type: pathType
+                });
+                
+                return pathLine;
+            }
+            
+            // 创建当前拖动指示器
+            function createCurrentDragIndicator() {
+                if (currentDragLine) currentDragLine.remove();
+                if (currentArrowHead) currentArrowHead.remove();
+                
+                currentDragLine = document.createElement('div');
+                currentDragLine.className = 'current-drag-line';
+                currentDragLine.style.display = 'none';
+                desk.appendChild(currentDragLine);
+                
+                currentArrowHead = document.createElement('div');
+                currentArrowHead.className = 'arrow-head';
+                currentArrowHead.style.display = 'none';
+                desk.appendChild(currentArrowHead);
+            }
+            
+            // 更新当前拖动指示器
+            function updateCurrentDragIndicator(fromX, fromY, toX, toY) {
+                if (!currentDragLine || !currentArrowHead) return;
+                
+                const dims = getActualDimensions();
+                const dx = toX - fromX;
+                const dy = toY - fromY;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                currentDragLine.style.left = `${fromX + dims.bookWidth/2}px`;
+                currentDragLine.style.top = `${fromY + dims.bookHeight/2}px`;
+                currentDragLine.style.width = `${length}px`;
+                currentDragLine.style.transform = `rotate(${angle}deg)`;
+                currentDragLine.style.display = length > 5 ? 'block' : 'none';
+                
+                if (length > 20) {
+                    currentArrowHead.style.left = `${toX + dims.bookWidth/2 - 10}px`;
+                    currentArrowHead.style.top = `${toY + dims.bookHeight/2 - 15}px`;
+                    currentArrowHead.style.transform = `rotate(${angle}deg)`;
+                    currentArrowHead.style.display = 'block';
+                } else {
+                    currentArrowHead.style.display = 'none';
+                }
+            }
+            
+            // 隐藏当前拖动指示器
+            function hideCurrentDragIndicator() {
+                if (currentDragLine) currentDragLine.style.display = 'none';
+                if (currentArrowHead) currentArrowHead.style.display = 'none';
+            }
+            
+            // 清除所有路径
+            function clearAllPaths() {
+                historicalPaths.forEach(path => {
+                    if (path.element && path.element.parentNode) {
+                        path.element.remove();
+                    }
+                });
+                historicalPaths = [];
+                
+                hideCurrentDragIndicator();
+            }
+            
+            // 根据鼠标移动确定路径类型
+            function determinePathType(mouseDeltaX, mouseDeltaY) {
+                if (Math.abs(mouseDeltaX) > 10 && Math.abs(mouseDeltaY) > 10) {
+                    const angle = Math.atan2(Math.abs(mouseDeltaY), Math.abs(mouseDeltaX)) * 180 / Math.PI;
+                    if (angle > 30 && angle < 60) {
+                        return PATH_TYPES.DIAGONAL;
+                    }
+                }
+                
+                if (Math.abs(mouseDeltaX) > Math.abs(mouseDeltaY)) {
+                    return PATH_TYPES.RIGHT_THEN_DOWN;
+                } else {
+                    return PATH_TYPES.DOWN_THEN_RIGHT;
+                }
+            }
+            
+            // 根据路径类型和阶段约束位置
+            function getConstrainedPosition(startPos, targetX, targetY, pathType, phase) {
+                const dims = getActualDimensions();
+                let newX = targetX;
+                let newY = targetY;
+                
+                switch(pathType) {
+                    case PATH_TYPES.RIGHT_THEN_DOWN:
+                        if (phase === 1) {
+                            newY = startPos.y;
+                            newX = Math.max(startPos.x, Math.min(targetX, dims.maxX));
+                        } else if (phase === 2) {
+                            newX = dims.maxX;
+                            newY = Math.max(startPos.y, Math.min(targetY, dims.maxY));
+                        }
+                        break;
+                        
+                    case PATH_TYPES.DOWN_THEN_RIGHT:
+                        if (phase === 1) {
+                            newX = startPos.x;
+                            newY = Math.max(startPos.y, Math.min(targetY, dims.maxY));
+                        } else if (phase === 2) {
+                            newY = dims.maxY;
+                            newX = Math.max(startPos.x, Math.min(targetX, dims.maxX));
+                        }
+                        break;
+                        
+                    case PATH_TYPES.DIAGONAL:
+                        const targetDx = dims.maxX - startPos.x;
+                        const targetDy = dims.maxY - startPos.y;
+                        const targetSlope = targetDy / targetDx;
+                        
+                        const mouseDx = targetX - startPos.x;
+                        const mouseDy = targetY - startPos.y;
+                        
+                        const mouseDistance = Math.sqrt(mouseDx * mouseDx + mouseDy * mouseDy);
+                        const mouseAngle = Math.atan2(mouseDy, mouseDx);
+                        const targetAngle = Math.atan2(targetDy, targetDx);
+                        
+                        const projectedLength = mouseDistance * Math.cos(mouseAngle - targetAngle);
+                        const maxLength = Math.sqrt(targetDx * targetDx + targetDy * targetDy);
+                        
+                        const finalLength = Math.max(0, Math.min(projectedLength, maxLength));
+                        
+                        newX = startPos.x + finalLength * Math.cos(targetAngle);
+                        newY = startPos.y + finalLength * Math.sin(targetAngle);
+                        break;
+                }
+                
+                newX = Math.max(0, Math.min(newX, dims.maxX));
+                newY = Math.max(0, Math.min(newY, dims.maxY));
+                
+                return {x: newX, y: newY};
+            }
+            
+            // 确定移动阶段
+            function determineMovePhase(currentX, currentY, maxX, maxY, pathType) {
+                if (pathType === PATH_TYPES.DIAGONAL) {
+                    return 1;
+                }
+                
+                if (pathType === PATH_TYPES.RIGHT_THEN_DOWN) {
+                    if (currentX >= maxX - 5) {
+                        return 2;
+                    } else {
+                        return 1;
+                    }
+                }
+                
+                if (pathType === PATH_TYPES.DOWN_THEN_RIGHT) {
+                    if (currentY >= maxY - 5) {
+                        return 2;
+                    } else {
+                        return 1;
+                    }
+                }
+                
+                return 1;
+            }
+            
+            // 重置书籍位置
+            function resetBookPosition() {
+                clearAllPaths();
+                
+                book.style.top = `${startY}px`;
+                book.style.left = `${startX}px`;
+                currentX = startX;
+                currentY = startY;
+                currentPathType = PATH_TYPES.RIGHT_THEN_DOWN;
+                movePhase = 0;
+                dragStartPos = {x: startX, y: startY};
+                
+                createCurrentDragIndicator();
+                
+                book.style.boxShadow = '0 0 0 4px rgba(46, 204, 113, 0.8), inset 0 1px 0 rgba(255,255,255,0.2)';
+                setTimeout(() => {
+                    if (!isDragging) {
+                        book.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)';
+                    }
+                }, 500);
+            }
+            
+            // 开始拖动
+            function startDrag(e) {
+                isDragging = true;
+                book.classList.add('dragging');
+                
+                const clientX = e.clientX || e.touches[0].clientX;
+                const clientY = e.clientY || e.touches[0].clientY;
+                
+                dragStartMouseX = clientX;
+                dragStartMouseY = clientY;
+                dragStartPos = {x: currentX, y: currentY};
+                movePhase = 1;
+                
+                createCurrentDragIndicator();
+                
+                if (e.type === 'mousedown') {
+                    document.addEventListener('mousemove', doDrag);
+                    document.addEventListener('mouseup', stopDrag);
+                } else {
+                    document.addEventListener('touchmove', doDrag);
+                    document.addEventListener('touchend', stopDrag);
+                }
+                
+                e.preventDefault();
+            }
+            
+            // 执行拖动
+            function doDrag(e) {
+                if (!isDragging) return;
+                
+                const clientX = e.clientX || e.touches[0].clientX;
+                const clientY = e.clientY || e.touches[0].clientY;
+                
+                const mouseDeltaX = clientX - dragStartMouseX;
+                const mouseDeltaY = clientY - dragStartMouseY;
+                
+                if (movePhase === 1 && Math.abs(mouseDeltaX) + Math.abs(mouseDeltaY) > 10) {
+                    currentPathType = determinePathType(mouseDeltaX, mouseDeltaY);
+                    createCurrentDragIndicator();
+                }
+                
+                let targetX = dragStartPos.x + mouseDeltaX;
+                let targetY = dragStartPos.y + mouseDeltaY;
+                
+                const dims = getActualDimensions();
+                
+                movePhase = determineMovePhase(currentX, currentY, dims.maxX, dims.maxY, currentPathType);
+                
+                let constrainedPos = getConstrainedPosition(
+                    dragStartPos, 
+                    targetX, 
+                    targetY, 
+                    currentPathType, 
+                    movePhase
+                );
+                
+                updateCurrentDragIndicator(dragStartPos.x, dragStartPos.y, constrainedPos.x, constrainedPos.y);
+                
+                currentX = constrainedPos.x;
+                currentY = constrainedPos.y;
+                
+                book.style.left = `${currentX}px`;
+                book.style.top = `${currentY}px`;
+            }
+            
+            // 停止拖动
+            function stopDrag() {
+                if (!isDragging) return;
+                
+                isDragging = false;
+                book.classList.remove('dragging');
+                
+                createHistoricalPath(dragStartPos.x, dragStartPos.y, currentX, currentY, currentPathType);
+                
+                hideCurrentDragIndicator();
+                
+                document.removeEventListener('mousemove', doDrag);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('touchmove', doDrag);
+                document.removeEventListener('touchend', stopDrag);
+            }
+            
+            // 事件监听器
+            book.addEventListener('mousedown', startDrag);
+            book.addEventListener('touchstart', startDrag);
+            resetBtn.addEventListener('click', resetBookPosition);
+            
+            // 初始化
+            setTimeout(() => {
+                const dims = getActualDimensions();
+                
+                currentX = Math.min(startX, dims.maxX);
+                currentY = Math.min(startY, dims.maxY);
+                book.style.left = `${currentX}px`;
+                book.style.top = `${currentY}px`;
+                
+                createCurrentDragIndicator();
+            }, 100);
+            
+            window.addEventListener('resize', function() {
+                const dims = getActualDimensions();
+                
+                currentX = Math.max(0, Math.min(currentX, dims.maxX));
+                currentY = Math.max(0, Math.min(currentY, dims.maxY));
+                
+                book.style.left = `${currentX}px`;
+                book.style.top = `${currentY}px`;
+            });
+            
+            resetBookPosition();
+        });
+    </script>
+</body>
+</html>

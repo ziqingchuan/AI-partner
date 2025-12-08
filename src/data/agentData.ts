@@ -282,6 +282,15 @@ export const agents = [
     tag: ['编程', '复习', '小测']
   },
   {
+    id: 'coze-html-9-forLearn',
+    name: '精彩活动',
+    intro: '选择您感兴趣的活动，探索更多精彩内容',
+    coverUrl: 'covers/compressed_精彩活动.png',
+    type: 'forLearn',
+    link: 'interactive/learn-activity.html',
+    tag: ['交互', '体验', '游戏']
+  },
+  {
     id: 'feixiang-html-1-forLearn',
     name: '模拟站队列',
     intro: '通过可视化模拟站队列，帮助学生理解因式分解',
