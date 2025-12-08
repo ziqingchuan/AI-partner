@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可拖动的时钟指针</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            /* display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #ffffff; */
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+			min-height: 100vh;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			padding: 20px;
+        }
+        
+        .clock-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+        }
+        
+        .clock {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            cursor: grab;
+            user-select: none;
+            z-index: 2;
+        }
+        
+        .clock:active {
+            cursor: grabbing;
+        }
+        
+        /* 时钟背景和边框 */
+        .clock-background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 12px solid #5E8AB2;
+            border-radius: 50%;
+            background-color: #ffffff;
+            box-shadow: 0 0 30px rgba(94, 138, 178, 0.3), inset 0 0 20px rgba(94, 138, 178, 0.1);
+            z-index: 1;
+        }
+        
+        /* SVG边缘扫过区域 */
+        .swept-area {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            z-index: 2;
+            pointer-events: none;
+        }
+        
+        .clock-center {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #5E8AB2;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(94, 138, 178, 0.5);
+        }
+        
+        /* 指针样式 - 加长 */
+        .hour-hand {
+            position: absolute;
+            width: 8px;
+            height: 150px;
+            background-color: #ff3333;
+            border-radius: 4px;
+            top: 50%;
+            left: 50%;
+            transform-origin: 50% 100%;
+            transform: translate(-50%, -100%) rotate(0deg);
+            box-shadow: 0 0 8px rgba(255, 50, 50, 0.5);
+            z-index: 5;
+            pointer-events: none;
+        }
+        
+        .hour-hand::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ff3333;
+            border-radius: 50%;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        /* 字母标记 - 黑色，远离时钟边缘 */
+        .marker {
+            position: absolute;
+            font-size: 3rem;
+            font-weight: bold;
+            z-index: 11;
+            pointer-events: none;
+            color: #000000;
+        }
+        
+        /* 将字母移动到更远的位置 */
+        .marker-a {
+            top: -85px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .marker-b {
+            top: 50%;
+            right: -85px;
+            transform: translateY(-50%);
+        }
+        
+        .marker-c {
+            bottom: -85px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .marker-d {
+            top: 50%;
+            left: -85px;
+            transform: translateY(-50%);
+        }
+        
+        /* 字母对应的刻度线 - 在时钟内部 */
+        .letter-tick {
+            position: absolute;
+            width: 4px;
+            height: 20px;
+            background-color: #5E8AB2;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            transform-origin: 50% 200px;
+            z-index: 3;
+        }
+        
+        /* 字母A对应的刻度线 (0度/12点) */
+        .tick-a {
+            transform: translateX(-50%) rotate(0deg);
+        }
+        
+        /* 字母B对应的刻度线 (90度/3点) */
+        .tick-b {
+            transform: translateX(-50%) rotate(90deg);
+        }
+        
+        /* 字母C对应的刻度线 (180度/6点) */
+        .tick-c {
+            transform: translateX(-50%) rotate(180deg);
+        }
+        
+        /* 字母D对应的刻度线 (270度/9点) */
+        .tick-d {
+            transform: translateX(-50%) rotate(270deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="clock-container">
+        <!-- 时钟背景 -->
+        <div class="clock-background"></div>
+        
+        <!-- SVG边缘扫过区域 - 只在边缘填充 -->
+        <svg class="swept-area" id="sweptArea" viewBox="0 0 400 400">
+            <!-- 创建环形扇形路径，只填充边缘区域 -->
+            <path id="sweptPath" d="" fill="orange" />
+        </svg>
+        
+        <!-- 时钟主体 -->
+        <div class="clock" id="clock">
+            <div class="clock-center"></div>
+            <div class="hour-hand" id="hourHand"></div>
+            
+            <!-- 字母对应的刻度线 -->
+            <div class="letter-tick tick-a"></div>
+            <div class="letter-tick tick-b"></div>
+            <div class="letter-tick tick-c"></div>
+            <div class="letter-tick tick-d"></div>
+        </div>
+        
+        <!-- 字母标记放在容器内，但时钟外 -->
+        <div class="marker marker-a">A</div>
+        <div class="marker marker-b">B</div>
+        <div class="marker marker-c">C</div>
+        <div class="marker marker-d">D</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const clock = document.getElementById('clock');
+            const hourHand = document.getElementById('hourHand');
+            const sweptPath = document.getElementById('sweptPath');
+            
+            let isDragging = false;
+            let currentAngle = 0;
+            let startAngle = 0;
+            let mouseStartAngle = 0;
+            
+            // 初始化指针位置（指向A）
+            updateHandPosition(0);
+            
+            // 鼠标按下事件
+            clock.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                isDragging = true;
+                clock.style.cursor = 'grabbing';
+                
+                const rect = clock.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const mouseX = e.clientX - centerX;
+                const mouseY = e.clientY - centerY;
+                
+                // 计算鼠标的初始角度
+                mouseStartAngle = Math.atan2(mouseY, mouseX) * (180 / Math.PI);
+                
+                // 将指针角度转换为与鼠标角度相同的坐标系
+                const pointerAngleInAtan2 = currentAngle - 90;
+                startAngle = pointerAngleInAtan2;
+                
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
+            });
+			clock.addEventListener('touchstart', function(e) {
+			    e.preventDefault();
+			    isDragging = true;
+			    clock.style.cursor = 'grabbing';
+			    
+			    const rect = clock.getBoundingClientRect();
+			    const centerX = rect.left + rect.width / 2;
+			    const centerY = rect.top + rect.height / 2;
+			    // 获取第一个触摸点的坐标
+			    const touch = e.touches[0];
+			    const touchX = touch.clientX - centerX;
+			    const touchY = touch.clientY - centerY;
+			    
+			    // 计算触摸的初始角度
+			    mouseStartAngle = Math.atan2(touchY, touchX) * (180 / Math.PI);
+			    const pointerAngleInAtan2 = currentAngle - 90;
+			    startAngle = pointerAngleInAtan2;
+			    
+			    document.addEventListener('touchmove', handleTouchMove);
+			    document.addEventListener('touchend', handleMouseUp);
+			});
+			// 触摸事件
+            function handleTouchMove(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                
+                const rect = clock.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const touch = e.touches[0];
+                const touchX = touch.clientX - centerX;
+                const touchY = touch.clientY - centerY;
+                
+                const mouseCurrentAngle = Math.atan2(touchY, touchX) * (180 / Math.PI);
+                let angleDiff = mouseCurrentAngle - mouseStartAngle;
+                let newAngleInAtan2 = startAngle + angleDiff;
+                let newAngle = newAngleInAtan2 + 90;
+                
+                // 规范化角度到0-360度
+                newAngle = ((newAngle % 360) + 360) % 360;
+                
+                updateHandPosition(newAngle);
+            }
+            // 鼠标移动事件
+            function handleMouseMove(e) {
+                if (!isDragging) return;
+                
+                const rect = clock.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const mouseX = e.clientX - centerX;
+                const mouseY = e.clientY - centerY;
+                
+                const mouseCurrentAngle = Math.atan2(mouseY, mouseX) * (180 / Math.PI);
+                let angleDiff = mouseCurrentAngle - mouseStartAngle;
+                let newAngleInAtan2 = startAngle + angleDiff;
+                let newAngle = newAngleInAtan2 + 90;
+                
+                // 规范化角度到0-360度
+                newAngle = ((newAngle % 360) + 360) % 360;
+                
+                updateHandPosition(newAngle);
+            }
+            
+            // 鼠标释放事件
+            function handleMouseUp() {
+                if (isDragging) {
+                    isDragging = false;
+                    clock.style.cursor = 'grab';
+                    
+                    document.removeEventListener('mousemove', handleMouseMove);
+                    document.removeEventListener('mouseup', handleMouseUp);
+                }
+            }
+            
+            // 更新指针位置和扫过区域
+            function updateHandPosition(angle) {
+                currentAngle = angle;
+                
+                // 更新指针旋转
+                hourHand.style.transform = `translate(-50%, -100%) rotate(${angle}deg)`;
+                
+                // 更新边缘扫过区域
+                updateSweptEdge(angle);
+            }
+            
+            // 更新边缘扫过区域 - 创建环形扇形
+            function updateSweptEdge(angle) {
+                if (!sweptPath) return;
+                
+                if (angle === 0) {
+                    // 角度为0时，不显示扇形
+                    sweptPath.setAttribute('d', '');
+                    return;
+                }
+                
+                // 将角度转换为弧度
+                const rad = angle * Math.PI / 180;
+                
+                // 环形扇形的内外半径
+                const innerRadius = 180;  // 内半径（靠近中心）
+                const outerRadius = 194;  // 外半径（靠近边框，12px边框的一半）
+                
+                const centerX = 200;
+                const centerY = 200;
+                
+                // 计算起点和终点坐标
+                // 起点在12点钟方向（A点）
+                const startAngleRad = -Math.PI / 2; // -90度，12点钟方向
+                const endAngleRad = startAngleRad + rad;
+                
+                // 内圆起点和终点
+                const innerStartX = centerX + innerRadius * Math.cos(startAngleRad);
+                const innerStartY = centerY + innerRadius * Math.sin(startAngleRad);
+                const innerEndX = centerX + innerRadius * Math.cos(endAngleRad);
+                const innerEndY = centerY + innerRadius * Math.sin(endAngleRad);
+                
+                // 外圆起点和终点
+                const outerStartX = centerX + outerRadius * Math.cos(startAngleRad);
+                const outerStartY = centerY + outerRadius * Math.sin(startAngleRad);
+                const outerEndX = centerX + outerRadius * Math.cos(endAngleRad);
+                const outerEndY = centerY + outerRadius * Math.sin(endAngleRad);
+                
+                // 判断是否需要大弧（角度大于180度）
+                const largeArcFlag = angle > 180 ? 1 : 0;
+                
+                // 创建环形扇形路径
+                // 路径顺序：从内圆起点开始 -> 沿内圆到内圆终点 -> 直线到外圆终点 -> 沿外圆回到外圆起点 -> 闭合
+                const pathData = [
+                    `M${innerStartX},${innerStartY}`,  // 移动到内圆起点
+                    `A${innerRadius},${innerRadius} 0 ${largeArcFlag},1 ${innerEndX},${innerEndY}`,  // 内圆弧
+                    `L${outerEndX},${outerEndY}`,  // 直线到外圆终点
+                    `A${outerRadius},${outerRadius} 0 ${largeArcFlag},0 ${outerStartX},${outerStartY}`,  // 外圆弧（反向）
+                    'Z'  // 闭合路径
+                ].join(' ');
+                
+                sweptPath.setAttribute('d', pathData);
+            }
+            
+            // 初始化扫过区域
+            updateSweptEdge(0);
+        });
+    </script>
+</body>
+</html>

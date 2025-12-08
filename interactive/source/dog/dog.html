@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小狗平移互动</title>
+    <style>
+        body {
+           /* font-family: Arial, sans-serif;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            box-sizing: border-box; */
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+			min-height: 100vh;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			padding: 20px;
+        }
+        .question {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .reset-btn {
+            padding: 8px 16px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .reset-btn:hover {
+            background-color: #45a049;
+        }
+        .dog-container {
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            flex-wrap: nowrap;
+            /* 让小狗容器在小屏幕上也居中 */
+            justify-content: center;
+        }
+        .dog-item {
+            position: relative;
+            cursor: grab;
+            user-select: none;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .dog-item:active {
+            cursor: grabbing;
+        }
+        .dog-img {
+            width: 120px;
+            height: auto;
+            display: block;
+        }
+        .dog-label {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 16px;
+            height: 24px;
+            line-height: 24px;
+            width: 100%;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="question">下面哪些小狗的图案可以通过平移互相重合？</div>
+    <button class="reset-btn" id="resetBtn">重置所有小狗位置</button>
+    <div class="dog-container">
+        <div class="dog-item" draggable="false">
+            <img src="image/图片1.png" alt="小狗1" class="dog-img" data-id="1">
+            <div class="dog-label">①</div>
+        </div>
+        <div class="dog-item" draggable="false">
+            <img src="image/图片2.png" alt="小狗2" class="dog-img" data-id="2">
+            <div class="dog-label">②</div>
+        </div>
+        <div class="dog-item" draggable="false">
+            <img src="image/图片3.png" alt="小狗3" class="dog-img" data-id="3">
+            <div class="dog-label">③</div>
+        </div>
+        <div class="dog-item" draggable="false">
+            <img src="image/图片4.png" alt="小狗4" class="dog-img" data-id="4">
+            <div class="dog-label">④</div>
+        </div>
+        <div class="dog-item" draggable="false">
+            <img src="image/图片1.png" alt="小狗5" class="dog-img" data-id="5">
+            <div class="dog-label">⑤</div>
+        </div>
+        <div class="dog-item" draggable="false">
+            <img src="image/图片4.png" alt="小狗6" class="dog-img" data-id="6">
+            <div class="dog-label">⑥</div>
+        </div>
+    </div>
+
+    <script>
+        const dogItems = document.querySelectorAll('.dog-item');
+        const resetBtn = document.getElementById('resetBtn');
+        let activeDog = null;
+        let startX = 0;
+        let currentX = 0;
+        let initialX = 0; // 补充声明initialX变量
+        // 存储每个元素的当前偏移量
+        const offsets = new Map();
+
+        // 初始化偏移量
+        dogItems.forEach(item => {
+            offsets.set(item, 0);
+        });
+
+        dogItems.forEach(item => {
+            item.addEventListener('mousedown', (e) => {
+                activeDog = item;
+                startX = e.clientX;
+                // 使用存储的偏移量作为基准，而不是实时的offsetLeft
+                initialX = offsets.get(item);
+                activeDog.style.transition = 'none';
+            });
+			item.addEventListener('touchstart', (e) => {
+			    activeDog = item;
+			    // 获取第一个触摸点的坐标
+			    const touch = e.touches[0];
+			    startX = touch.clientX;
+			    initialX = offsets.get(item);
+			    activeDog.style.transition = 'none';
+			});
+        });
+
+		// 添加触摸移动事件处理
+		document.addEventListener('touchmove', (e) => {
+		    if (!activeDog) return;
+		    e.preventDefault();
+		    const touch = e.touches[0];
+		    currentX = touch.clientX - startX;
+		    const newPosition = initialX + currentX;
+		    activeDog.style.left = `${newPosition}px`;
+		    activeDog.style.position = 'relative';
+		    offsets.set(activeDog, newPosition);
+		});
+		
+		// 添加触摸结束事件处理
+		document.addEventListener('touchend', () => {
+		    if (activeDog) {
+		        activeDog = null;
+		    }
+		});
+
+        document.addEventListener('mousemove', (e) => {
+            if (!activeDog) return;
+            e.preventDefault();
+            currentX = e.clientX - startX;
+            const newPosition = initialX + currentX;
+            activeDog.style.left = `${newPosition}px`;
+            activeDog.style.position = 'relative';
+            // 更新存储的偏移量
+            offsets.set(activeDog, newPosition);
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (activeDog) {
+                activeDog = null;
+            }
+        });
+
+        document.querySelectorAll('.dog-img').forEach(img => {
+            img.addEventListener('dragstart', (e) => e.preventDefault());
+        });
+
+        resetBtn.addEventListener('click', () => {
+            dogItems.forEach(item => {
+                item.style.transition = 'left 0.3s ease';
+                item.style.left = '0px';
+                item.style.position = 'relative';
+                // 重置偏移量存储
+                offsets.set(item, 0);
+                
+                setTimeout(() => {
+                    item.style.transition = 'none';
+                }, 300);
+            });
+        });
+    </script>
+</body>
+</html>
