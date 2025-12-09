@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>可拖动的时钟指针</title>
+    <title>可拖动的时钟指针（自定义起点终点）</title>
     <style>
         * {
             margin: 0;
@@ -12,19 +12,55 @@
         }
         
         body {
-            /* display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
-            background-color: #ffffff; */
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-			background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-			min-height: 100vh;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .controls {
+            margin-bottom: 50px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+        
+        .control-group label {
+            font-weight: bold;
+            color: #3a5a7c;
+            font-size: 14px;
+        }
+        
+        select {
+            padding: 8px 12px;
+            border: 2px solid #5E8AB2;
+            border-radius: 4px;
+            background-color: white;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 120px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus {
+            border-color: #3a5a7c;
         }
         
         .clock-container {
@@ -82,7 +118,7 @@
             box-shadow: 0 0 10px rgba(94, 138, 178, 0.5);
         }
         
-        /* 指针样式 - 加长 */
+        /* 指针样式 */
         .hour-hand {
             position: absolute;
             width: 8px;
@@ -110,7 +146,7 @@
             transform: translateX(-50%);
         }
         
-        /* 字母标记 - 黑色，远离时钟边缘 */
+        /* 字母标记 */
         .marker {
             position: absolute;
             font-size: 3rem;
@@ -120,32 +156,31 @@
             color: #000000;
         }
         
-        /* 将字母移动到更远的位置 */
         .marker-a {
-            top: -85px;
+            top: -60px;
             left: 50%;
             transform: translateX(-50%);
         }
         
         .marker-b {
             top: 50%;
-            right: -85px;
+            right: -60px;
             transform: translateY(-50%);
         }
         
         .marker-c {
-            bottom: -85px;
+            bottom: -60px;
             left: 50%;
             transform: translateX(-50%);
         }
         
         .marker-d {
             top: 50%;
-            left: -85px;
+            left: -60px;
             transform: translateY(-50%);
         }
         
-        /* 字母对应的刻度线 - 在时钟内部 */
+        /* 字母对应的刻度线 */
         .letter-tick {
             position: absolute;
             width: 4px;
@@ -158,36 +193,63 @@
             z-index: 3;
         }
         
-        /* 字母A对应的刻度线 (0度/12点) */
         .tick-a {
             transform: translateX(-50%) rotate(0deg);
         }
         
-        /* 字母B对应的刻度线 (90度/3点) */
         .tick-b {
             transform: translateX(-50%) rotate(90deg);
         }
         
-        /* 字母C对应的刻度线 (180度/6点) */
         .tick-c {
             transform: translateX(-50%) rotate(180deg);
         }
         
-        /* 字母D对应的刻度线 (270度/9点) */
         .tick-d {
             transform: translateX(-50%) rotate(270deg);
         }
     </style>
 </head>
 <body>
+    <div class="controls">
+        <div class="control-group">
+            <label>旋转方向</label>
+            <select id="directionSelect">
+                <option value="clockwise">顺时针</option>
+                <option value="counterclockwise">逆时针</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>起点位置</label>
+            <select id="startPointSelect">
+                <option value="A">无限制</option>
+                <option value="A">A (12点)</option>
+                <option value="B">B (3点)</option>
+                <option value="C">C (6点)</option>
+                <option value="D">D (9点)</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>终点位置</label>
+            <select id="endPointSelect">
+                <option value="unlimited" selected>无限制</option>
+                <option value="A">A (12点)</option>
+                <option value="B">B (3点)</option>
+                <option value="C">C (6点)</option>
+                <option value="D">D (9点)</option>
+            </select>
+        </div>
+    </div>
+    
     <div class="clock-container">
         <!-- 时钟背景 -->
         <div class="clock-background"></div>
         
-        <!-- SVG边缘扫过区域 - 只在边缘填充 -->
+        <!-- SVG边缘扫过区域 -->
         <svg class="swept-area" id="sweptArea" viewBox="0 0 400 400">
-            <!-- 创建环形扇形路径，只填充边缘区域 -->
-            <path id="sweptPath" d="" fill="orange" />
+            <path id="sweptPath" d="" fill="rgba(255, 165, 0, 0.7)" />
         </svg>
         
         <!-- 时钟主体 -->
@@ -202,7 +264,7 @@
             <div class="letter-tick tick-d"></div>
         </div>
         
-        <!-- 字母标记放在容器内，但时钟外 -->
+        <!-- 字母标记 -->
         <div class="marker marker-a">A</div>
         <div class="marker marker-b">B</div>
         <div class="marker marker-c">C</div>
@@ -214,14 +276,76 @@
             const clock = document.getElementById('clock');
             const hourHand = document.getElementById('hourHand');
             const sweptPath = document.getElementById('sweptPath');
+            const directionSelect = document.getElementById('directionSelect');
+            const startPointSelect = document.getElementById('startPointSelect');
+            const endPointSelect = document.getElementById('endPointSelect');
+            
+            // 字母到角度的映射
+            const pointAngles = {
+                'A': 0,    // 12点方向
+                'B': 90,   // 3点方向
+                'C': 180,  // 6点方向
+                'D': 270   // 9点方向
+            };
             
             let isDragging = false;
-            let currentAngle = 0;
+            let currentAngle = 0; // 相对于起点的角度
             let startAngle = 0;
             let mouseStartAngle = 0;
+            let direction = 'clockwise'; // 默认顺时针
+            let startPoint = 'A'; // 默认起点
+            let endPoint = 'unlimited';   // 默认终点
+            let baseAngle = 0; // 无限制模式下的基准角度
             
-            // 初始化指针位置（指向A）
-            updateHandPosition(0);
+            // 初始化
+            resetPointer();
+            
+            // 方向选择事件
+            directionSelect.addEventListener('change', function() {
+                direction = this.value;
+                resetPointer();
+            });
+            
+            // 起点选择事件
+            startPointSelect.addEventListener('change', function() {
+                const selectedPoint = this.value;
+                // 只有当两者都不是无限制时才检查是否相同
+                if (selectedPoint !== 'unlimited' && endPoint !== 'unlimited' && selectedPoint === endPoint) {
+                    alert('起点和终点不能相同！');
+                    this.value = startPoint; // 恢复之前的选择
+                    return;
+                }
+                
+                startPoint = selectedPoint;
+                resetPointer();
+            });
+            
+            // 终点选择事件
+            endPointSelect.addEventListener('change', function() {
+                const selectedPoint = this.value;
+                // 只有当两者都不是无限制时才检查是否相同
+                if (selectedPoint !== 'unlimited' && startPoint !== 'unlimited' && selectedPoint === startPoint) {
+                    alert('起点和终点不能相同！');
+                    this.value = endPoint; // 恢复之前的选择
+                    return;
+                }
+                
+                endPoint = selectedPoint;
+                resetPointer();
+            });
+            
+            // 重置指针位置
+            function resetPointer() {
+                currentAngle = 0;
+                baseAngle = 0;
+                if (startPoint === 'unlimited') {
+                    // 无限制模式下初始角度为0度（12点方向）
+                    updateHandPosition(0);
+                } else {
+                    // 有限制模式下初始角度为起点角度
+                    updateHandPosition(0);
+                }
+            }
             
             // 鼠标按下事件
             clock.addEventListener('mousedown', function(e) {
@@ -239,34 +363,47 @@
                 mouseStartAngle = Math.atan2(mouseY, mouseX) * (180 / Math.PI);
                 
                 // 将指针角度转换为与鼠标角度相同的坐标系
-                const pointerAngleInAtan2 = currentAngle - 90;
+                let pointerAngleInAtan2;
+                if (startPoint === 'unlimited') {
+                    // 无限制模式下使用当前绝对角度
+                    pointerAngleInAtan2 = (baseAngle + currentAngle) - 90;
+                } else {
+                    pointerAngleInAtan2 = currentAngle - 90 + pointAngles[startPoint];
+                }
                 startAngle = pointerAngleInAtan2;
                 
                 document.addEventListener('mousemove', handleMouseMove);
                 document.addEventListener('mouseup', handleMouseUp);
             });
-			clock.addEventListener('touchstart', function(e) {
-			    e.preventDefault();
-			    isDragging = true;
-			    clock.style.cursor = 'grabbing';
-			    
-			    const rect = clock.getBoundingClientRect();
-			    const centerX = rect.left + rect.width / 2;
-			    const centerY = rect.top + rect.height / 2;
-			    // 获取第一个触摸点的坐标
-			    const touch = e.touches[0];
-			    const touchX = touch.clientX - centerX;
-			    const touchY = touch.clientY - centerY;
-			    
-			    // 计算触摸的初始角度
-			    mouseStartAngle = Math.atan2(touchY, touchX) * (180 / Math.PI);
-			    const pointerAngleInAtan2 = currentAngle - 90;
-			    startAngle = pointerAngleInAtan2;
-			    
-			    document.addEventListener('touchmove', handleTouchMove);
-			    document.addEventListener('touchend', handleMouseUp);
-			});
-			// 触摸事件
+            
+            // 触摸事件
+            clock.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                isDragging = true;
+                clock.style.cursor = 'grabbing';
+                
+                const rect = clock.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const touch = e.touches[0];
+                const touchX = touch.clientX - centerX;
+                const touchY = touch.clientY - centerY;
+                
+                mouseStartAngle = Math.atan2(touchY, touchX) * (180 / Math.PI);
+                
+                let pointerAngleInAtan2;
+                if (startPoint === 'unlimited') {
+                    pointerAngleInAtan2 = (baseAngle + currentAngle) - 90;
+                } else {
+                    pointerAngleInAtan2 = currentAngle - 90 + pointAngles[startPoint];
+                }
+                startAngle = pointerAngleInAtan2;
+                
+                document.addEventListener('touchmove', handleTouchMove);
+                document.addEventListener('touchend', handleMouseUp);
+            });
+            
+            // 触摸移动
             function handleTouchMove(e) {
                 if (!isDragging) return;
                 e.preventDefault();
@@ -279,16 +416,10 @@
                 const touchY = touch.clientY - centerY;
                 
                 const mouseCurrentAngle = Math.atan2(touchY, touchX) * (180 / Math.PI);
-                let angleDiff = mouseCurrentAngle - mouseStartAngle;
-                let newAngleInAtan2 = startAngle + angleDiff;
-                let newAngle = newAngleInAtan2 + 90;
-                
-                // 规范化角度到0-360度
-                newAngle = ((newAngle % 360) + 360) % 360;
-                
-                updateHandPosition(newAngle);
+                handleAngleChange(mouseCurrentAngle);
             }
-            // 鼠标移动事件
+            
+            // 鼠标移动
             function handleMouseMove(e) {
                 if (!isDragging) return;
                 
@@ -299,17 +430,71 @@
                 const mouseY = e.clientY - centerY;
                 
                 const mouseCurrentAngle = Math.atan2(mouseY, mouseX) * (180 / Math.PI);
+                handleAngleChange(mouseCurrentAngle);
+            }
+            
+            // 处理角度变化
+            function handleAngleChange(mouseCurrentAngle) {
                 let angleDiff = mouseCurrentAngle - mouseStartAngle;
-                let newAngleInAtan2 = startAngle + angleDiff;
-                let newAngle = newAngleInAtan2 + 90;
                 
-                // 规范化角度到0-360度
-                newAngle = ((newAngle % 360) + 360) % 360;
+                // 对于逆时针旋转，角度变化应该取反
+                if (direction === 'counterclockwise') {
+                    angleDiff = -angleDiff;
+                }
+                
+                let newAngleInAtan2 = startAngle + angleDiff;
+                let newAngle;
+                
+                if (startPoint === 'unlimited') {
+                    // 无限制模式下的角度计算
+                    newAngle = newAngleInAtan2 + 90 - baseAngle;
+                    // 允许角度超过360度或小于0度
+                } else {
+                    // 有限制模式下的角度计算
+                    newAngle = newAngleInAtan2 + 90 - pointAngles[startPoint];
+                    // 规范化角度到0-360度
+                    newAngle = ((newAngle % 360) + 360) % 360;
+                }
+                
+                // 计算从起点到终点的最大允许角度（如果不是无限制模式）
+                let maxAngle = Infinity; // 无限制模式下为无穷大
+                if (startPoint !== 'unlimited' && endPoint !== 'unlimited') {
+                    maxAngle = calculateMaxAngle();
+                    // 限制角度范围
+                    if (newAngle > maxAngle) {
+                        newAngle = maxAngle;
+                    }
+                    if (newAngle < 0) {
+                        newAngle = 0;
+                    }
+                }
                 
                 updateHandPosition(newAngle);
             }
             
-            // 鼠标释放事件
+            // 计算从起点到终点的最大角度
+            function calculateMaxAngle() {
+                const startAngleVal = pointAngles[startPoint];
+                const endAngleVal = pointAngles[endPoint];
+                
+                if (direction === 'clockwise') {
+                    // 顺时针方向：计算从起点到终点的最短顺时针距离
+                    if (endAngleVal >= startAngleVal) {
+                        return endAngleVal - startAngleVal;
+                    } else {
+                        return 360 - (startAngleVal - endAngleVal);
+                    }
+                } else {
+                    // 逆时针方向：计算从起点到终点的最短逆时针距离
+                    if (endAngleVal <= startAngleVal) {
+                        return startAngleVal - endAngleVal;
+                    } else {
+                        return 360 - (endAngleVal - startAngleVal);
+                    }
+                }
+            }
+            
+            // 鼠标释放
             function handleMouseUp() {
                 if (isDragging) {
                     isDragging = false;
@@ -324,37 +509,77 @@
             function updateHandPosition(angle) {
                 currentAngle = angle;
                 
+                // 计算绝对角度（相对于12点方向）
+                let absoluteAngle;
+                if (startPoint === 'unlimited') {
+                    // 无限制模式下直接使用角度值（支持360度以上）
+                    absoluteAngle = (baseAngle + angle) % 360;
+                    if (absoluteAngle < 0) absoluteAngle += 360;
+                } else if (direction === 'clockwise') {
+                    absoluteAngle = (pointAngles[startPoint] + angle) % 360;
+                } else {
+                    absoluteAngle = (pointAngles[startPoint] - angle + 360) % 360;
+                }
+                
                 // 更新指针旋转
-                hourHand.style.transform = `translate(-50%, -100%) rotate(${angle}deg)`;
+                hourHand.style.transform = `translate(-50%, -100%) rotate(${absoluteAngle}deg)`;
                 
                 // 更新边缘扫过区域
-                updateSweptEdge(angle);
+                updateSweptEdge(angle, absoluteAngle);
             }
             
-            // 更新边缘扫过区域 - 创建环形扇形
-            function updateSweptEdge(angle) {
+            // 更新扫过区域
+            function updateSweptEdge(angle, absoluteAngle) {
                 if (!sweptPath) return;
                 
                 if (angle === 0) {
-                    // 角度为0时，不显示扇形
                     sweptPath.setAttribute('d', '');
                     return;
                 }
                 
-                // 将角度转换为弧度
-                const rad = angle * Math.PI / 180;
+                let startAngleAbs, sweptAngle;
+                
+                if (startPoint === 'unlimited') {
+                    // 无限制模式下的起点角度为基准角度
+                    startAngleAbs = baseAngle % 360;
+                    if (startAngleAbs < 0) startAngleAbs += 360;
+                    
+                    // 计算扫过的角度
+                    if (direction === 'clockwise') {
+                        sweptAngle = angle % 360;
+                    } else {
+                        sweptAngle = -angle % 360;
+                    }
+                } else {
+                    // 有限制模式下的起点角度
+                    startAngleAbs = pointAngles[startPoint];
+                    sweptAngle = angle;
+                    
+                    // 限制最大角度
+                    if (endPoint !== 'unlimited') {
+                        const maxAngle = calculateMaxAngle();
+                        sweptAngle = Math.min(sweptAngle, maxAngle);
+                    }
+                }
+                
+                // 转换为弧度
+                const startAngleRad = (startAngleAbs - 90) * Math.PI / 180;
+                
+                // 根据方向确定扫过角度的正负
+                let sweptAngleRad;
+                if (direction === 'clockwise') {
+                    sweptAngleRad = sweptAngle * Math.PI / 180;
+                } else {
+                    sweptAngleRad = -sweptAngle * Math.PI / 180;
+                }
+                
+                const endAngleRad = startAngleRad + sweptAngleRad;
                 
                 // 环形扇形的内外半径
-                const innerRadius = 180;  // 内半径（靠近中心）
-                const outerRadius = 194;  // 外半径（靠近边框，12px边框的一半）
-                
+                const innerRadius = 180;
+                const outerRadius = 194;
                 const centerX = 200;
                 const centerY = 200;
-                
-                // 计算起点和终点坐标
-                // 起点在12点钟方向（A点）
-                const startAngleRad = -Math.PI / 2; // -90度，12点钟方向
-                const endAngleRad = startAngleRad + rad;
                 
                 // 内圆起点和终点
                 const innerStartX = centerX + innerRadius * Math.cos(startAngleRad);
@@ -368,17 +593,18 @@
                 const outerEndX = centerX + outerRadius * Math.cos(endAngleRad);
                 const outerEndY = centerY + outerRadius * Math.sin(endAngleRad);
                 
-                // 判断是否需要大弧（角度大于180度）
-                const largeArcFlag = angle > 180 ? 1 : 0;
+                // 判断是否需要大弧（超过180度）
+                const largeArcFlag = Math.abs(sweptAngle) > 180 ? 1 : 0;
+                // 根据方向确定弧线绘制方向
+                const sweepFlag = direction === 'clockwise' ? 1 : 0;
                 
                 // 创建环形扇形路径
-                // 路径顺序：从内圆起点开始 -> 沿内圆到内圆终点 -> 直线到外圆终点 -> 沿外圆回到外圆起点 -> 闭合
                 const pathData = [
-                    `M${innerStartX},${innerStartY}`,  // 移动到内圆起点
-                    `A${innerRadius},${innerRadius} 0 ${largeArcFlag},1 ${innerEndX},${innerEndY}`,  // 内圆弧
-                    `L${outerEndX},${outerEndY}`,  // 直线到外圆终点
-                    `A${outerRadius},${outerRadius} 0 ${largeArcFlag},0 ${outerStartX},${outerStartY}`,  // 外圆弧（反向）
-                    'Z'  // 闭合路径
+                    `M${innerStartX},${innerStartY}`,
+                    `A${innerRadius},${innerRadius} 0 ${largeArcFlag},${sweepFlag} ${innerEndX},${innerEndY}`,
+                    `L${outerEndX},${outerEndY}`,
+                    `A${outerRadius},${outerRadius} 0 ${largeArcFlag},${1 - sweepFlag} ${outerStartX},${outerStartY}`,
+                    'Z'
                 ].join(' ');
                 
                 sweptPath.setAttribute('d', pathData);
