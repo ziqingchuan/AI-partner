@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>小船平移：最终完美版</title>
+    <title>小船平移：最终修正版</title>
     <style>
         /* 1. 基础设置 */
         body {
@@ -45,15 +45,14 @@
             align-items: center;
             position: relative;
             min-height: 200px;
-            z-index: 1; /* 保证在礼花下层 */
+            z-index: 1;
         }
 
-        /* ⭐️ 关键修复：只针对主画板设置白底和阴影 */
         #mainCanvas {
             background: #fff;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             border-radius: 6px;
-            touch-action: none; /* 禁止触摸滚动 */
+            touch-action: none;
             display: block;
         }
 
@@ -75,13 +74,13 @@
         #btn-check { background: #27ae60; color: white; border: none; }
         #msg { margin-top: 5px; height: 20px; font-size: 0.9rem; font-weight: bold; }
 
-        /* 6. 礼花层：强制透明背景，置顶 */
+        /* 6. 礼花层 */
         #fireworks {
             position: fixed; top: 0; left: 0; 
             width: 100%; height: 100%;
-            pointer-events: none; /* 让点击穿透 */
+            pointer-events: none;
             z-index: 999;
-            background: transparent !important; /* 确保完全透明 */
+            background: transparent !important;
         }
     </style>
 </head>
@@ -117,16 +116,16 @@ window.onload = function() {
     const ctx = canvas.getContext('2d');
 
     // --- 2. 核心逻辑参数 ---
-    const LOGIC_COLS = 16; // 仅显示16列，正好放下内容，右侧无多余留白
+    // 为了容纳更大的船，稍微增加一点列数，保证右侧不拥挤
+    const LOGIC_COLS = 17; 
     const LOGIC_ROWS = 9;  
-    const TARGET = 9;
+    const TARGET = 9; // 目标平移格数保持不变
     
     let gridSize = 40;
     let mode = 'move';
     let dragOffset = 0;
-    let annotations = []; // 标注数据
+    let annotations = []; 
 
-    // 交互变量
     let isDown = false;
     let startPos = {x:0, y:0};
     let currPos = {x:0, y:0};
@@ -136,24 +135,21 @@ window.onload = function() {
         const w = container.clientWidth;
         const h = container.clientHeight;
 
-        // 动态计算格子大小：取宽高的限制最小值，留出20px边距
         gridSize = Math.floor(Math.min((w - 20) / LOGIC_COLS, (h - 20) / LOGIC_ROWS));
-        if(gridSize < 22) gridSize = 22; // 最小值保护
+        if(gridSize < 22) gridSize = 22;
 
-        // 设置画布物理尺寸，精确匹配格子，消除留白
         canvas.width = gridSize * LOGIC_COLS;
         canvas.height = gridSize * LOGIC_ROWS;
 
         draw();
     }
-    // 同时也调整礼花画布大小
+    
     const fC = document.getElementById('fireworks');
     window.addEventListener('resize', () => {
         fC.width = window.innerWidth;
         fC.height = window.innerHeight;
         resize();
     });
-    // 初始化
     fC.width = window.innerWidth;
     fC.height = window.innerHeight;
     resize();
@@ -165,7 +161,7 @@ window.onload = function() {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // 网格
-        ctx.strokeStyle = '#eee';
+        ctx.strokeStyle = '#e0e6ed';
         ctx.lineWidth = 1;
         for(let i=0; i<=LOGIC_COLS; i++) {
             ctx.beginPath(); ctx.moveTo(i*gridSize, 0); ctx.lineTo(i*gridSize, canvas.height); ctx.stroke();
@@ -174,41 +170,91 @@ window.onload = function() {
             ctx.beginPath(); ctx.moveTo(0, i*gridSize); ctx.lineTo(canvas.width, i*gridSize); ctx.stroke();
         }
 
-        // 坐标基准 (第2列, 第4行)
+        // 坐标基准 (第2列, 第5行 - 作为船身甲板基准线，因为帆变高了，基准线下移一行以留出空间)
         const bx = 2 * gridSize;
-        const by = 4 * gridSize;
+        const by = 5 * gridSize;
 
         // 绘制三条船
-        drawBoat(bx + TARGET * gridSize, by, '#f0f0f0', '#ccc', '目标');
-        drawBoat(bx, by, null, '#999', '起始', true);
-        drawBoat(bx + dragOffset * gridSize, by, 'rgba(52, 152, 219, 0.7)', '#2980b9');
+        // 1. 目标船 (右侧)：浅绿填充，绿色实线
+        drawBoat(bx + TARGET * gridSize, by, '#e9f7ef', '#00b894', '目标', false);
+        
+        // 2. 起始船 (左侧)：无填充，绿色虚线
+        drawBoat(bx, by, null, '#00b894', '起始', true);
+        
+        // 3. 拖动船 (动态)：蓝色半透明
+        drawBoat(bx + dragOffset * gridSize, by, 'rgba(52, 152, 219, 0.6)', '#2980b9', null, false);
+
+        // 绘制粉色箭头 (示意平移)，位置随船身变宽而调整
+        if(mode === 'move' && dragOffset < 1) {
+            drawArrow(bx + 5.5*gridSize, by - 0.5*gridSize);
+        }
 
         // 绘制标注
         drawAnnotations();
     }
 
-    function drawBoat(x, y, fill, stroke, label, isDash) {
+    // 绘制粉色箭头
+    function drawArrow(x, y) {
         ctx.save();
         ctx.translate(x, y);
+        ctx.fillStyle = '#ff7675';
         ctx.beginPath();
-        ctx.moveTo(0,0); ctx.lineTo(4*gridSize,0);
-        ctx.lineTo(3*gridSize, gridSize); ctx.lineTo(1*gridSize, gridSize);
+        ctx.moveTo(0, -5);
+        ctx.lineTo(2.5 * gridSize, -5);
+        ctx.lineTo(2.5 * gridSize, -12);
+        ctx.lineTo(3.5 * gridSize, 0);
+        ctx.lineTo(2.5 * gridSize, 12);
+        ctx.lineTo(2.5 * gridSize, 5);
+        ctx.lineTo(0, 5);
         ctx.closePath();
-        ctx.moveTo(2*gridSize,0); ctx.lineTo(2*gridSize, -2*gridSize);
-        ctx.lineTo(3*gridSize, -1*gridSize); ctx.lineTo(2*gridSize, -1*gridSize);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // --- 核心绘制小船函数 (已修正尺寸) ---
+    function drawBoat(x, y, fill, stroke, label, isDash) {
+        ctx.save();
+        ctx.translate(x, y); // 将坐标系移动到船身甲板左上角
+
+        // 设置样式
+        if(fill) ctx.fillStyle = fill;
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
         
-        if(fill) { ctx.fillStyle=fill; ctx.fill(); }
-        ctx.strokeStyle = stroke; ctx.lineWidth = 2;
-        if(isDash) ctx.setLineDash([5,5]); else ctx.setLineDash([]);
+        if(isDash) ctx.setLineDash([6, 6]); else ctx.setLineDash([]);
+
+        // 1. 绘制船身 (梯形) - 【修改点：宽度增加】
+        ctx.beginPath();
+        ctx.moveTo(0, 0);                 // 左上
+        ctx.lineTo(5 * gridSize, 0);      // 右上 (宽度改为 5 格)
+        ctx.lineTo(4 * gridSize, gridSize); // 右下 (向内收1格，横坐标为 4)
+        ctx.lineTo(1 * gridSize, gridSize); // 左下 (向内收1格，横坐标为 1)
+        ctx.closePath();
+        if(fill) ctx.fill();
         ctx.stroke();
 
+        // 2. 绘制船帆 (多边形) - 【修改点：高度增加】
+        ctx.beginPath();
+        // 保持帆在船身中间位置 (横坐标2到3之间)
+        ctx.moveTo(2 * gridSize, 0);           // 帆底左
+        ctx.lineTo(2 * gridSize, -3 * gridSize); // 帆左上 (高度改为向上 3 格)
+        ctx.lineTo(3 * gridSize, -2 * gridSize); // 帆右上 (高度改为向上 2 格，形成斜坡)
+        ctx.lineTo(3 * gridSize, 0);           // 帆底右
+        ctx.closePath();
+        if(fill) ctx.fill();
+        ctx.stroke();
+
+        // 标签
         if(label) {
-            ctx.fillStyle='#999'; ctx.font='12px sans-serif'; ctx.fillText(label, 0, -10);
+            ctx.fillStyle = '#7f8c8d';
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'center';
+            // 标签位置随帆高度调整，并居中于新的船身宽度(2.5处)
+            ctx.fillText(label, 2.5 * gridSize, -3.3 * gridSize);
         }
-        if(fill && !label) {
-            ctx.fillStyle='white';
-            ctx.beginPath(); ctx.arc(4*gridSize, 0, 3, 0, 6.28); ctx.fill(); // 关键点
-        }
+
         ctx.restore();
     }
 
@@ -220,10 +266,10 @@ window.onload = function() {
                 ctx.beginPath(); ctx.arc(a.x, a.y, 5, 0, 6.28); ctx.fill();
             } else {
                 ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 3;
+                ctx.setLineDash([]); 
                 ctx.beginPath(); ctx.moveTo(a.x1, a.y1); ctx.lineTo(a.x2, a.y2); ctx.stroke();
             }
         });
-        // 预览线
         if(mode === 'draw' && isDown) {
             ctx.strokeStyle = 'rgba(231, 76, 60, 0.5)'; ctx.lineWidth = 3;
             ctx.setLineDash([5,5]);
@@ -248,9 +294,9 @@ window.onload = function() {
 
         if(mode === 'move') {
             const bx = (2 + dragOffset) * gridSize;
-            const by = 2 * gridSize; // 船顶大概位置
-            // 判定点击
-            if(p.x > bx && p.x < bx + 4*gridSize && p.y > by && p.y < by + 3*gridSize) {
+            const by = 5 * gridSize; 
+            // 扩大点击判定区域以适应更大的船
+            if(p.x > bx && p.x < bx + 5*gridSize && p.y > by - 3*gridSize && p.y < by + gridSize) {
                 // hit
             } else {
                 isDown = false;
@@ -268,7 +314,7 @@ window.onload = function() {
             const dx = p.x - startPos.x;
             dragOffset += dx / gridSize;
             if(dragOffset < 0) dragOffset = 0;
-            if(dragOffset > 11) dragOffset = 11;
+            if(dragOffset > TARGET + 1) dragOffset = TARGET + 1; // 限制最大拖动范围
             startPos = p;
         }
         draw();
@@ -319,10 +365,10 @@ window.onload = function() {
         const val = parseInt(document.getElementById('ans').value);
         const div = document.getElementById('msg');
         if(val === TARGET) {
-            div.innerHTML = '<span style="color:green">🎉 正确！平移了 9 格！</span>';
+            div.innerHTML = '<span style="color:green; font-size:1.1em">🎉 正确！平移了 9 格！</span>';
             fire();
         } else {
-            div.innerHTML = '<span style="color:red">❌ 不对哦，再数数？</span>';
+            div.innerHTML = '<span style="color:#e74c3c">❌ 不对哦，建议找一个关键点（比如船头），数数它平移了几格？</span>';
         }
     };
 
