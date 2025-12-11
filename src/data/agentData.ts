@@ -290,6 +290,15 @@ export const agents = [
     link: 'interactive/learn-activity.html',
     tag: ['交互', '体验', '游戏']
   },
+    {
+    id: 'coze-html-10-forLearn',
+    name: '小船平移',
+    intro: '数一数小船平移了几格？',
+    coverUrl: 'covers/compressed_小船.png',
+    type: 'forLearn',
+    link: 'interactive/learn-boat-move.html',
+    tag: ['平移', '体验', '数字']
+  },
   {
     id: 'feixiang-html-1-forLearn',
     name: '模拟站队列',
