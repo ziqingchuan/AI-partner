@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>小船平移：最终完美版</title>
+    <style>
+        /* 1. 基础设置 */
+        body {
+            margin: 0; padding: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f5f7fa;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        /* 2. 顶部标题 */
+        header { flex-shrink: 0; text-align: center; margin-bottom: 5px; z-index: 10; }
+        h2 { margin: 0; color: #333; font-size: 1.2rem; }
+        .subtitle { color: #e67e22; font-weight: bold; font-size: 0.9rem; margin-top: 3px; }
+
+        /* 3. 按钮工具栏 */
+        .toolbar {
+            flex-shrink: 0; margin-bottom: 10px; display: flex; gap: 10px; z-index: 10;
+        }
+        button {
+            padding: 8px 18px; border-radius: 20px; border: 1px solid #ddd;
+            background: #fff; font-weight: bold; color: #555;
+            cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-size: 0.95rem;
+        }
+        button.active { background: #3498db; color: white; border-color: #2980b9; }
+        button.clear { color: #e74c3c; border-color: #fadbd8; }
+
+        /* 4. 画布容器 (居中布局) */
+        #canvas-container {
+            flex: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            min-height: 200px;
+            z-index: 1; /* 保证在礼花下层 */
+        }
+
+        /* ⭐️ 关键修复：只针对主画板设置白底和阴影 */
+        #mainCanvas {
+            background: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 6px;
+            touch-action: none; /* 禁止触摸滚动 */
+            display: block;
+        }
+
+        /* 5. 底部验证栏 */
+        footer {
+            flex-shrink: 0;
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 10px;
+            text-align: center;
+            z-index: 10;
+        }
+        input {
+            width: 50px; padding: 6px; text-align: center;
+            border: 2px solid #3498db; border-radius: 6px; font-size: 1.1rem; margin: 0 5px;
+        }
+        #btn-check { background: #27ae60; color: white; border: none; }
+        #msg { margin-top: 5px; height: 20px; font-size: 0.9rem; font-weight: bold; }
+
+        /* 6. 礼花层：强制透明背景，置顶 */
+        #fireworks {
+            position: fixed; top: 0; left: 0; 
+            width: 100%; height: 100%;
+            pointer-events: none; /* 让点击穿透 */
+            z-index: 999;
+            background: transparent !important; /* 确保完全透明 */
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="fireworks"></canvas>
+
+    <header>
+        <h2>活动一：数一数</h2>
+        <div class="subtitle">小船图向右平移了几格？</div>
+    </header>
+
+    <div class="toolbar">
+        <button id="mode-move" class="active" onclick="setMode('move')">✋ 拖动</button>
+        <button id="mode-draw" onclick="setMode('draw')">✏️ 标注</button>
+        <button class="clear" onclick="clearInk()">🗑️ 清除</button>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="mainCanvas"></canvas>
+    </div>
+
+    <footer>
+        <div>向右平移 <input type="number" id="ans" placeholder="?"> 格 <button id="btn-check" onclick="check()">验证</button></div>
+        <div id="msg"></div>
+    </footer>
+
+<script>
+window.onload = function() {
+    // --- 1. 获取元素 ---
+    const container = document.getElementById('canvas-container');
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // --- 2. 核心逻辑参数 ---
+    const LOGIC_COLS = 16; // 仅显示16列，正好放下内容，右侧无多余留白
+    const LOGIC_ROWS = 9;  
+    const TARGET = 9;
+    
+    let gridSize = 40;
+    let mode = 'move';
+    let dragOffset = 0;
+    let annotations = []; // 标注数据
+
+    // 交互变量
+    let isDown = false;
+    let startPos = {x:0, y:0};
+    let currPos = {x:0, y:0};
+
+    // --- 3. 自适应布局 ---
+    function resize() {
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+
+        // 动态计算格子大小：取宽高的限制最小值，留出20px边距
+        gridSize = Math.floor(Math.min((w - 20) / LOGIC_COLS, (h - 20) / LOGIC_ROWS));
+        if(gridSize < 22) gridSize = 22; // 最小值保护
+
+        // 设置画布物理尺寸，精确匹配格子，消除留白
+        canvas.width = gridSize * LOGIC_COLS;
+        canvas.height = gridSize * LOGIC_ROWS;
+
+        draw();
+    }
+    // 同时也调整礼花画布大小
+    const fC = document.getElementById('fireworks');
+    window.addEventListener('resize', () => {
+        fC.width = window.innerWidth;
+        fC.height = window.innerHeight;
+        resize();
+    });
+    // 初始化
+    fC.width = window.innerWidth;
+    fC.height = window.innerHeight;
+    resize();
+
+    // --- 4. 绘图引擎 ---
+    function draw() {
+        // 背景
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 网格
+        ctx.strokeStyle = '#eee';
+        ctx.lineWidth = 1;
+        for(let i=0; i<=LOGIC_COLS; i++) {
+            ctx.beginPath(); ctx.moveTo(i*gridSize, 0); ctx.lineTo(i*gridSize, canvas.height); ctx.stroke();
+        }
+        for(let i=0; i<=LOGIC_ROWS; i++) {
+            ctx.beginPath(); ctx.moveTo(0, i*gridSize); ctx.lineTo(canvas.width, i*gridSize); ctx.stroke();
+        }
+
+        // 坐标基准 (第2列, 第4行)
+        const bx = 2 * gridSize;
+        const by = 4 * gridSize;
+
+        // 绘制三条船
+        drawBoat(bx + TARGET * gridSize, by, '#f0f0f0', '#ccc', '目标');
+        drawBoat(bx, by, null, '#999', '起始', true);
+        drawBoat(bx + dragOffset * gridSize, by, 'rgba(52, 152, 219, 0.7)', '#2980b9');
+
+        // 绘制标注
+        drawAnnotations();
+    }
+
+    function drawBoat(x, y, fill, stroke, label, isDash) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.beginPath();
+        ctx.moveTo(0,0); ctx.lineTo(4*gridSize,0);
+        ctx.lineTo(3*gridSize, gridSize); ctx.lineTo(1*gridSize, gridSize);
+        ctx.closePath();
+        ctx.moveTo(2*gridSize,0); ctx.lineTo(2*gridSize, -2*gridSize);
+        ctx.lineTo(3*gridSize, -1*gridSize); ctx.lineTo(2*gridSize, -1*gridSize);
+        
+        if(fill) { ctx.fillStyle=fill; ctx.fill(); }
+        ctx.strokeStyle = stroke; ctx.lineWidth = 2;
+        if(isDash) ctx.setLineDash([5,5]); else ctx.setLineDash([]);
+        ctx.stroke();
+
+        if(label) {
+            ctx.fillStyle='#999'; ctx.font='12px sans-serif'; ctx.fillText(label, 0, -10);
+        }
+        if(fill && !label) {
+            ctx.fillStyle='white';
+            ctx.beginPath(); ctx.arc(4*gridSize, 0, 3, 0, 6.28); ctx.fill(); // 关键点
+        }
+        ctx.restore();
+    }
+
+    function drawAnnotations() {
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        annotations.forEach(a => {
+            if(a.type === 'point') {
+                ctx.fillStyle = '#e74c3c';
+                ctx.beginPath(); ctx.arc(a.x, a.y, 5, 0, 6.28); ctx.fill();
+            } else {
+                ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.moveTo(a.x1, a.y1); ctx.lineTo(a.x2, a.y2); ctx.stroke();
+            }
+        });
+        // 预览线
+        if(mode === 'draw' && isDown) {
+            ctx.strokeStyle = 'rgba(231, 76, 60, 0.5)'; ctx.lineWidth = 3;
+            ctx.setLineDash([5,5]);
+            ctx.beginPath(); ctx.moveTo(startPos.x, startPos.y); ctx.lineTo(currPos.x, currPos.y); ctx.stroke();
+            ctx.setLineDash([]);
+        }
+    }
+
+    // --- 5. 交互 ---
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        let cx = e.clientX, cy = e.clientY;
+        if(e.touches && e.touches.length) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; }
+        return { x: cx - rect.left, y: cy - rect.top };
+    }
+
+    const start = (e) => {
+        if(e.type==='touchstart') e.preventDefault();
+        isDown = true;
+        const p = getPos(e);
+        startPos = p; currPos = p;
+
+        if(mode === 'move') {
+            const bx = (2 + dragOffset) * gridSize;
+            const by = 2 * gridSize; // 船顶大概位置
+            // 判定点击
+            if(p.x > bx && p.x < bx + 4*gridSize && p.y > by && p.y < by + 3*gridSize) {
+                // hit
+            } else {
+                isDown = false;
+            }
+        }
+    };
+
+    const move = (e) => {
+        if(!isDown) return;
+        if(e.type==='touchmove') e.preventDefault();
+        const p = getPos(e);
+        currPos = p;
+
+        if(mode === 'move') {
+            const dx = p.x - startPos.x;
+            dragOffset += dx / gridSize;
+            if(dragOffset < 0) dragOffset = 0;
+            if(dragOffset > 11) dragOffset = 11;
+            startPos = p;
+        }
+        draw();
+    };
+
+    const end = () => {
+        if(!isDown) return;
+        isDown = false;
+        if(mode === 'move') {
+            let target = Math.round(dragOffset);
+            animateSnap(target);
+        } else {
+            const dx = currPos.x - startPos.x;
+            const dy = currPos.y - startPos.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if(dist < 10) annotations.push({type:'point', x:startPos.x, y:startPos.y});
+            else annotations.push({type:'line', x1:startPos.x, y1:startPos.y, x2:currPos.x, y2:currPos.y});
+            draw();
+        }
+    };
+
+    function animateSnap(target) {
+        let start = dragOffset;
+        let p = 0;
+        const tick = () => {
+            p += 0.2;
+            if(p >= 1) { dragOffset = target; draw(); }
+            else { dragOffset = start + (target - start) * p; draw(); requestAnimationFrame(tick); }
+        };
+        tick();
+    }
+
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('touchstart', start, {passive:false});
+    window.addEventListener('mousemove', move);
+    window.addEventListener('touchmove', move, {passive:false});
+    window.addEventListener('mouseup', end);
+    window.addEventListener('touchend', end);
+
+    // --- 6. 按钮功能 ---
+    window.setMode = (m) => {
+        mode = m;
+        document.getElementById('mode-move').className = m==='move'?'active':'';
+        document.getElementById('mode-draw').className = m==='draw'?'active':'';
+    };
+    window.clearInk = () => { annotations = []; draw(); };
+    window.check = () => {
+        const val = parseInt(document.getElementById('ans').value);
+        const div = document.getElementById('msg');
+        if(val === TARGET) {
+            div.innerHTML = '<span style="color:green">🎉 正确！平移了 9 格！</span>';
+            fire();
+        } else {
+            div.innerHTML = '<span style="color:red">❌ 不对哦，再数数？</span>';
+        }
+    };
+
+    // 礼花
+    const fX = fC.getContext('2d');
+    let pts = [];
+    function fire() {
+        pts = [];
+        for(let i=0;i<150;i++) pts.push({x:window.innerWidth/2, y:window.innerHeight/2, vx:(Math.random()-0.5)*20, vy:(Math.random()-0.5)*20, c:`hsl(${Math.random()*360},100%,50%)`, l:1});
+        loopF();
+    }
+    function loopF() {
+        fX.clearRect(0,0,fC.width,fC.height);
+        pts.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.5; p.l-=0.02; fX.fillStyle=p.c; fX.fillRect(p.x,p.y,6,6); });
+        pts = pts.filter(p=>p.l>0);
+        if(pts.length) requestAnimationFrame(loopF);
+    }
+};
+</script>
+</body>
+</html>
