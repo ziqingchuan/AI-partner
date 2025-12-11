@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>小鱼平移：最终完美互动版</title>
+    <style>
+        /* --- 界面样式 --- */
+        body {
+            margin: 0; padding: 10px;
+            font-family: "Comic Sans MS", "Microsoft YaHei", sans-serif;
+            background-color: #f4f7fc;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        header { text-align: center; margin-bottom: 5px; flex-shrink: 0; }
+        h2 { margin: 0; color: #483D8B; font-size: 1.4rem; }
+        .subtitle { font-size: 0.9rem; color: #666; margin-top: 2px; }
+
+        /* 工具栏 */
+        .toolbar {
+            display: flex; gap: 10px; margin-bottom: 8px; z-index: 10;
+        }
+        .tool-btn {
+            padding: 6px 16px; border-radius: 20px; border: 2px solid #ddd;
+            background: #fff; font-weight: bold; color: #555;
+            cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-size: 0.95rem; display: flex; align-items: center; gap: 5px;
+            transition: all 0.2s;
+        }
+        .tool-btn.active {
+            background: #483D8B; color: white; border-color: #483D8B;
+            box-shadow: 0 4px 8px rgba(72, 61, 139, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* 画布容器 */
+        #canvas-container {
+            flex: 1;
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin: 5px 0;
+            overflow: hidden;
+            touch-action: none;
+        }
+        
+        canvas { display: block; }
+
+        /* 底部控制栏 */
+        footer {
+            flex-shrink: 0;
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 16px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+            margin-bottom: 10px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 90%;
+            max-width: 600px;
+        }
+        .controls { display: flex; justify-content: center; align-items: center; gap: 8px; }
+        
+        input {
+            width: 50px; padding: 6px; text-align: center;
+            border: 2px solid #483D8B; border-radius: 8px; 
+            font-size: 1.2rem; font-weight: bold; color: #483D8B;
+            outline: none;
+        }
+        button.action-btn {
+            padding: 8px 20px; border-radius: 8px; border: none;
+            font-weight: bold; cursor: pointer; color: white;
+            transition: transform 0.1s;
+        }
+        button.action-btn:active { transform: scale(0.95); }
+        #btn-check { background: #ff7675; box-shadow: 0 3px 0 #d63031; }
+        #btn-reset { background: #74b9ff; box-shadow: 0 3px 0 #0984e3; }
+        
+        #msg { height: 20px; font-weight: bold; font-size: 1rem; color: #e74c3c; }
+        
+        /* 礼花层 */
+        #fireworks { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+    </style>
+</head>
+<body>
+
+    <canvas id="fireworks"></canvas>
+
+    <header>
+        <h2>🐟 小鱼平移：动手画一画</h2>
+        <div class="subtitle">第一步：点击选点 | 第二步：用笔画弧线</div>
+    </header>
+
+    <div class="toolbar">
+        <button class="tool-btn active" id="mode-point" onclick="setMode('point')">👆 指点模式</button>
+        <button class="tool-btn" id="mode-draw" onclick="setMode('draw')">✏️ 画笔模式</button>
+        <button class="tool-btn" style="color:#e74c3c; border-color:#fadbd8" onclick="clearInk()">🗑️ 清除笔迹</button>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="mainCanvas"></canvas>
+    </div>
+
+    <footer>
+        <div class="controls">
+            <span>向右平移</span>
+            <input type="number" id="ans" placeholder="?" min="0" max="20">
+            <span>格</span>
+            <button class="action-btn" id="btn-check" onclick="startVerify()">验证</button>
+            <button class="action-btn" id="btn-reset" onclick="reset()">重置</button>
+        </div>
+        <div id="msg"></div>
+    </footer>
+
+<script>
+    // --- 1. 基础配置 ---
+    const GRID_COLS = 16;
+    const GRID_ROWS = 9;
+    const TARGET_STEPS = 7; 
+
+    const COLORS = {
+        grid: '#ccdbe8',
+        fishStroke: '#5e4b8b', 
+        fishFill: 'rgba(190, 180, 210, 0.4)',
+        highlight: '#ff4757',  // 高亮红
+        ink: '#e74c3c',        // 笔迹红
+        moveFill: 'rgba(52, 152, 219, 0.6)', 
+        moveStroke: '#2980b9'
+    };
+
+    // --- 2. 几何定义 ---
+    const POINTS = [
+        {x:0, y:0},         // 0: 嘴
+        {x:-2, y:-2},       // 1: 背鳍
+        {x:-2, y:2},        // 2: 腹鳍
+        {x:-2, y:0},        // 3: 尾连接
+        {x:-3, y:-1},       // 4: 尾上
+        {x:-3, y:1}         // 5: 尾下
+    ];
+    const EDGES = [
+        [0,1], [1,2], [2,0],       // 身体
+        [3,4], [4,5], [5,3]        // 尾巴
+    ];
+
+    const START_POS = { col: 4, row: 4.5 };
+
+    // --- 3. 状态变量 ---
+    let canvas, ctx, fCanvas, fCtx;
+    let gridSize = 40;
+    let mode = 'point'; 
+    
+    // 交互状态
+    let isDrawing = false;
+    let inkPaths = [];     
+    let currentPath = [];  
+    
+    let highlightedPart = null; // 选中的部分
+
+    // 动画状态
+    let animState = {
+        isAnimating: false,
+        step: 0,           
+        visualOffset: 0    
+    };
+
+    // --- 4. 初始化 ---
+    window.onload = function() {
+        canvas = document.getElementById('mainCanvas');
+        ctx = canvas.getContext('2d');
+        fCanvas = document.getElementById('fireworks');
+        fCtx = fCanvas.getContext('2d');
+        
+        resize();
+        window.addEventListener('resize', resize);
+        
+        const container = document.getElementById('canvas-container');
+        container.addEventListener('mousedown', onDown);
+        container.addEventListener('touchstart', onDown, {passive: false});
+        container.addEventListener('mousemove', onMove);
+        container.addEventListener('touchmove', onMove, {passive: false});
+        window.addEventListener('mouseup', onUp);
+        window.addEventListener('touchend', onUp);
+
+        draw();
+    };
+
+    function resize() {
+        const container = document.getElementById('canvas-container');
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        gridSize = Math.floor(Math.min((w - 20) / GRID_COLS, (h - 20) / GRID_ROWS));
+        if(gridSize < 25) gridSize = 25;
+        canvas.width = gridSize * GRID_COLS;
+        canvas.height = gridSize * GRID_ROWS;
+        fCanvas.width = window.innerWidth;
+        fCanvas.height = window.innerHeight;
+        draw();
+    }
+
+    // --- 5. 绘图引擎 ---
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        drawGrid();
+
+        const startX = START_POS.col * gridSize;
+        const startY = START_POS.row * gridSize;
+        const targetX = (START_POS.col + TARGET_STEPS) * gridSize;
+
+        // 目标小鱼
+        drawFish(targetX, startY, 'target');
+
+        // 起始小鱼 (Ghost)
+        drawFish(startX, startY, 'ghost');
+
+        // 高亮显示 (只要有选中就显示，不受模式影响，动画时隐藏)
+        if (!animState.isAnimating && highlightedPart) {
+            drawHighlight(startX, startY, targetX, startY);
+        }
+
+        // 移动的小鱼
+        if (animState.isAnimating || animState.step > 0) {
+            const moveX = startX + animState.visualOffset * gridSize;
+            drawFish(moveX, startY, 'moving');
+        }
+
+        // 笔迹
+        drawInk();
+    }
+
+    function drawGrid() {
+        ctx.strokeStyle = COLORS.grid;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = 0; i <= GRID_COLS; i++) {
+            ctx.moveTo(i * gridSize, 0);
+            ctx.lineTo(i * gridSize, canvas.height);
+        }
+        for (let i = 0; i <= GRID_ROWS; i++) {
+            ctx.moveTo(0, i * gridSize);
+            ctx.lineTo(canvas.width, i * gridSize);
+        }
+        ctx.stroke();
+    }
+
+    function drawFish(x, y, type) {
+        ctx.save();
+        ctx.translate(x, y);
+
+        if (type === 'ghost') {
+            ctx.strokeStyle = COLORS.fishStroke;
+            ctx.setLineDash([5, 5]); 
+            ctx.lineWidth = 2;
+            ctx.fillStyle = 'transparent';
+        } else if (type === 'target') {
+            ctx.strokeStyle = COLORS.fishStroke;
+            ctx.setLineDash([]);
+            ctx.lineWidth = 3;
+            ctx.fillStyle = COLORS.fishFill;
+        } else if (type === 'moving') {
+            ctx.strokeStyle = COLORS.moveStroke;
+            ctx.setLineDash([]);
+            ctx.lineWidth = 3;
+            ctx.fillStyle = COLORS.moveFill;
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(POINTS[0].x * gridSize, POINTS[0].y * gridSize);
+        ctx.lineTo(POINTS[1].x * gridSize, POINTS[1].y * gridSize);
+        ctx.lineTo(POINTS[2].x * gridSize, POINTS[2].y * gridSize);
+        ctx.closePath();
+        if(type !== 'ghost') ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(POINTS[3].x * gridSize, POINTS[3].y * gridSize);
+        ctx.lineTo(POINTS[4].x * gridSize, POINTS[4].y * gridSize);
+        ctx.lineTo(POINTS[5].x * gridSize, POINTS[5].y * gridSize);
+        ctx.closePath();
+        if(type !== 'ghost') ctx.fill();
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    function drawHighlight(x1, y1, x2, y2) {
+        ctx.save();
+        ctx.strokeStyle = COLORS.highlight;
+        ctx.fillStyle = COLORS.highlight;
+        ctx.lineWidth = 4;
+        ctx.lineCap = "round";
+
+        if (highlightedPart.type === 'point') {
+            const p = POINTS[highlightedPart.index];
+            // 起点
+            ctx.beginPath(); ctx.arc(x1 + p.x*gridSize, y1 + p.y*gridSize, 6, 0, Math.PI*2); ctx.fill();
+            // 终点
+            ctx.beginPath(); ctx.arc(x2 + p.x*gridSize, y2 + p.y*gridSize, 6, 0, Math.PI*2); ctx.fill();
+        } 
+        else if (highlightedPart.type === 'edge') {
+            const e = EDGES[highlightedPart.index];
+            const pA = POINTS[e[0]];
+            const pB = POINTS[e[1]];
+            
+            ctx.beginPath();
+            ctx.moveTo(x1 + pA.x*gridSize, y1 + pA.y*gridSize);
+            ctx.lineTo(x1 + pB.x*gridSize, y1 + pB.y*gridSize);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x2 + pA.x*gridSize, y2 + pA.y*gridSize);
+            ctx.lineTo(x2 + pB.x*gridSize, y2 + pB.y*gridSize);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    function drawInk() {
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = COLORS.ink;
+        ctx.lineWidth = 3;
+
+        for(let path of inkPaths) {
+            if(path.length < 2) continue;
+            ctx.beginPath();
+            ctx.moveTo(path[0].x, path[0].y);
+            for(let i=1; i<path.length; i++) ctx.lineTo(path[i].x, path[i].y);
+            ctx.stroke();
+        }
+        if(currentPath.length >= 2) {
+            ctx.beginPath();
+            ctx.moveTo(currentPath[0].x, currentPath[0].y);
+            for(let i=1; i<currentPath.length; i++) ctx.lineTo(currentPath[i].x, currentPath[i].y);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    // --- 6. 交互逻辑 ---
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        let cx = e.clientX, cy = e.clientY;
+        if (e.touches && e.touches.length > 0) {
+            cx = e.touches[0].clientX;
+            cy = e.touches[0].clientY;
+        }
+        return { x: cx - rect.left, y: cy - rect.top };
+    }
+
+    function onDown(e) {
+        if (animState.isAnimating) return;
+        e.preventDefault(); 
+        const pos = getPos(e);
+
+        if (mode === 'point') {
+            checkHighlight(pos);
+            draw();
+        } else if (mode === 'draw') {
+            isDrawing = true;
+            currentPath = [pos];
+            draw();
+        }
+    }
+
+    function onMove(e) {
+        if (animState.isAnimating) return;
+        e.preventDefault();
+        const pos = getPos(e);
+
+        if (mode === 'draw' && isDrawing) {
+            currentPath.push(pos);
+            draw();
+        }
+    }
+
+    function onUp(e) {
+        if (mode === 'draw' && isDrawing) {
+            isDrawing = false;
+            if (currentPath.length > 0) inkPaths.push(currentPath);
+            currentPath = [];
+            draw();
+        }
+    }
+
+    function checkHighlight(pos) {
+        // 在Point模式下点击，如果没点中，则取消高亮；如果点中，则更新高亮
+        // 注意：此函数只在 mode === 'point' 时调用
+        highlightedPart = null;
+        const startX = START_POS.col * gridSize;
+        const startY = START_POS.row * gridSize;
+
+        // 1. 点
+        for (let i = 0; i < POINTS.length; i++) {
+            const p = POINTS[i];
+            const px = startX + p.x * gridSize;
+            const py = startY + p.y * gridSize;
+            if (Math.hypot(pos.x - px, pos.y - py) < 15) {
+                highlightedPart = { type: 'point', index: i };
+                document.getElementById('msg').innerText = "选好了点，快切换画笔数一数吧！";
+                return;
+            }
+        }
+
+        // 2. 线
+        for (let i = 0; i < EDGES.length; i++) {
+            const e = EDGES[i];
+            const p1 = { x: startX + POINTS[e[0]].x * gridSize, y: startY + POINTS[e[0]].y * gridSize };
+            const p2 = { x: startX + POINTS[e[1]].x * gridSize, y: startY + POINTS[e[1]].y * gridSize };
+            
+            if (pointToLineDist(pos, p1, p2) < 10) {
+                highlightedPart = { type: 'edge', index: i };
+                document.getElementById('msg').innerText = "选好了边，快切换画笔数一数吧！";
+                return;
+            }
+        }
+        document.getElementById('msg').innerText = "";
+    }
+
+    function pointToLineDist(p, v, w) {
+        const l2 = (w.x - v.x)**2 + (w.y - v.y)**2;
+        if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+        let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+        t = Math.max(0, Math.min(1, t));
+        return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+    }
+
+    // --- 7. 动画与验证 ---
+    function startVerify() {
+        const val = parseInt(document.getElementById('ans').value);
+        const msg = document.getElementById('msg');
+        
+        if (isNaN(val)) {
+            msg.innerHTML = "请输入数字";
+            return;
+        }
+
+        // 验证时清除高亮，避免视觉干扰
+        highlightedPart = null;
+        animState.isAnimating = true;
+        animState.step = 0;
+        animState.visualOffset = 0;
+        
+        animateStep(val);
+    }
+
+    function animateStep(targetVal) {
+        if (animState.step >= targetVal) {
+            animState.isAnimating = false;
+            checkResult(targetVal);
+            return;
+        }
+
+        let progress = 0;
+        const startOff = animState.step;
+        const endOff = animState.step + 1;
+
+        function loop() {
+            progress += 0.1; 
+            if (progress >= 1) {
+                progress = 1;
+                animState.visualOffset = endOff;
+                animState.step++;
+                draw();
+                setTimeout(() => animateStep(targetVal), 300); 
+            } else {
+                animState.visualOffset = startOff + (endOff - startOff) * (1 - Math.pow(1 - progress, 2));
+                draw();
+                requestAnimationFrame(loop);
+            }
+        }
+        loop();
+    }
+
+    function checkResult(val) {
+        const msg = document.getElementById('msg');
+        if (val === TARGET_STEPS) {
+            msg.innerHTML = '<span style="color:green">🎉 正确！平移了 7 格</span>';
+            fire();
+        } else {
+            msg.innerHTML = `<span style="color:#e74c3c">❌ 移动了 ${val} 格，还没对齐哦</span>`;
+        }
+    }
+
+    // --- 8. 核心修改：切换模式不再清除高亮 ---
+    window.setMode = function(m) {
+        mode = m;
+        document.getElementById('mode-point').className = m==='point'?'tool-btn active':'tool-btn';
+        document.getElementById('mode-draw').className = m==='draw'?'tool-btn active':'tool-btn';
+        // 关键：去掉了 highlightedPart = null; 
+        draw();
+    };
+
+    window.clearInk = function() {
+        inkPaths = [];
+        draw();
+    };
+
+    window.reset = function() {
+        animState.isAnimating = false;
+        animState.step = 0;
+        animState.visualOffset = 0;
+        highlightedPart = null;
+        inkPaths = [];
+        document.getElementById('ans').value = '';
+        document.getElementById('msg').innerText = '';
+        fCtx.clearRect(0,0,fCanvas.width,fCanvas.height);
+        draw();
+    };
+
+    function fire() {
+        let pts = [];
+        for(let i=0; i<100; i++) pts.push({
+            x: window.innerWidth/2, y: window.innerHeight/2,
+            vx: (Math.random()-0.5)*20, vy: (Math.random()-0.5)*20,
+            c: `hsl(${Math.random()*360},100%,50%)`, life: 1
+        });
+        function fLoop() {
+            fCtx.clearRect(0,0,fCanvas.width,fCanvas.height);
+            let alive = false;
+            pts.forEach(p => {
+                p.x+=p.vx; p.y+=p.vy; p.vy+=0.5; p.life-=0.02;
+                if(p.life>0) { fCtx.fillStyle=p.c; fCtx.fillRect(p.x,p.y,5,5); alive=true; }
+            });
+            if(alive) requestAnimationFrame(fLoop);
+        }
+        fLoop();
+    }
+
+</script>
+</body>
+</html>
