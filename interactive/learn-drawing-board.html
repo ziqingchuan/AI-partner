@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>钉子板AI实验室（平板专用版）</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #f3f4f6;
+            --panel-bg: #ffffff;
+            --accent-red: #dc2626;
+            --accent-green: #10b981;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden; /* 禁止整个页面滚动 */
+            -webkit-user-select: none; /* 禁止选中文本 */
+            user-select: none;
+        }
+
+        /* 顶部导航栏 */
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 100;
+            height: 50px;
+        }
+
+        h1 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+        
+        .mode-switch-container { display: flex; align-items: center; gap: 10px; }
+        .switch { position: relative; display: inline-block; width: 60px; height: 32px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--accent-green);
+            transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 24px; width: 24px;
+            left: 4px; bottom: 4px; background-color: white;
+            transition: .4s; border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        input:checked + .slider { background-color: var(--accent-red); }
+        input:checked + .slider:before { transform: translateX(28px); }
+        .mode-label { font-weight: bold; font-size: 0.9rem; color: rgba(255,255,255,0.9); }
+
+        /* 主体布局 */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            height: calc(100vh - 74px); /* 减去header高度 */
+            position: relative;
+        }
+
+        /* 左侧画布区 */
+        #canvas-container {
+            flex: 1;
+            position: relative;
+            background-color: #fff;
+            overflow: hidden;
+            touch-action: none; /* 关键：禁止画布区域的所有原生触摸行为 */
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .guide-text {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.95);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #4b5563;
+            pointer-events: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+            white-space: nowrap;
+        }
+
+        /* 右侧数据面板 */
+        #data-panel {
+            width: 280px;
+            background-color: var(--panel-bg);
+            border-left: 1px solid #e5e7eb;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 50;
+            box-shadow: -4px 0 15px rgba(0,0,0,0.03);
+        }
+
+        .data-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .data-card h3 { margin: 0 0 4px 0; color: #64748b; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .data-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #111827;
+            height: 40px;
+            line-height: 40px;
+            font-family: 'Courier New', monospace; /* 数字等宽，防止跳动 */
+        }
+
+        .highlight-value { color: var(--primary-color); }
+
+        /* 按钮样式优化 */
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s;
+            width: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .btn:active { transform: scale(0.96); }
+
+        .btn-reset { 
+            background-color: #ef4444; 
+            color: white; 
+            margin-top: auto; 
+            box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-reveal {
+            background-color: var(--primary-color);
+            color: white;
+            display: none;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+        }
+
+        /* 平板竖屏适配 */
+        @media (max-width: 820px) {
+            main { flex-direction: column; }
+            #data-panel { 
+                width: auto;
+                height: auto;
+                flex-direction: row; 
+                border-left: none; 
+                border-top: 1px solid #e5e7eb;
+                padding: 10px;
+                gap: 10px;
+            }
+            .data-card { flex: 1; padding: 5px; }
+            .data-value { font-size: 1.5rem; height: 30px; line-height: 30px; }
+            .btn { width: auto; padding: 0 20px; font-size: 0.9rem; }
+            .btn-reset { margin-top: 0; }
+            #canvas-container { height: 65vh; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>钉子板AI实验室</h1>
+    <div class="mode-switch-container">
+        <span class="mode-label" id="mode-text">探索模式</span>
+        <label class="switch">
+            <input type="checkbox" id="mode-toggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+</header>
+
+<main>
+    <div id="canvas-container">
+        <div class="guide-text" id="guide">👆 点击钉子画图，回到起点闭合</div>
+        <canvas id="board"></canvas>
+    </div>
+
+    <div id="data-panel">
+        <div class="data-card">
+            <h3>内部钉子数 (a)</h3>
+            <div class="data-value" id="val-a">-</div>
+        </div>
+        <div class="data-card">
+            <h3>边上钉子数 (n)</h3>
+            <div class="data-value" id="val-n">-</div>
+        </div>
+        <div class="data-card">
+            <h3>面积 (S)</h3>
+            <div class="data-value highlight-value" id="val-s">-</div>
+        </div>
+        
+        <button class="btn btn-reveal" id="btn-reveal" onclick="revealData()">👀 揭晓</button>
+        <button class="btn btn-reset" onclick="resetBoard()">🗑️ 重画</button>
+    </div>
+</main>
+
+<script>
+    // --- 核心配置 ---
+    const CONFIG = {
+        gridSpacing: 40, // 逻辑网格间距
+        dotRadius: 3,
+        vertexRadius: 6,
+        snapDistance: 20 // 吸附范围
+    };
+
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+    
+    // 状态变量
+    let points = []; // 存储逻辑坐标 {x, y}
+    let isClosed = false;
+    let isGuessMode = false;
+    let computedData = { a: 0, n: 0, s: 0 };
+    let dpr = 1; // 设备像素比
+
+    // UI 元素
+    const ui = {
+        a: document.getElementById('val-a'),
+        n: document.getElementById('val-n'),
+        s: document.getElementById('val-s'),
+        btnReveal: document.getElementById('btn-reveal'),
+        guide: document.getElementById('guide'),
+        modeText: document.getElementById('mode-text')
+    };
+
+    // --- 初始化 ---
+    function init() {
+        setupHighDPICanvas();
+        window.addEventListener('resize', () => {
+            setupHighDPICanvas();
+            draw();
+        });
+
+        // 模式切换监听
+        document.getElementById('mode-toggle').addEventListener('change', (e) => {
+            isGuessMode = e.target.checked;
+            ui.modeText.textContent = isGuessMode ? "验证模式" : "探索模式";
+            if (isClosed) updateUI();
+        });
+
+        // 统一处理触控和鼠标事件
+        canvas.addEventListener('touchstart', handleTouch, { passive: false });
+        canvas.addEventListener('mousedown', handleMouse);
+    }
+
+    // --- 高清屏适配 (Retina) ---
+    function setupHighDPICanvas() {
+        const container = document.getElementById('canvas-container');
+        const rect = container.getBoundingClientRect();
+        
+        dpr = window.devicePixelRatio || 1;
+        
+        // 设置Canvas的实际像素大小
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        
+        // 设置CSS大小
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        
+        // 缩放绘图上下文，使得绘图逻辑仍然基于CSS像素
+        ctx.scale(dpr, dpr);
+        
+        draw();
+    }
+
+    // --- 事件处理 ---
+    function handleTouch(e) {
+        e.preventDefault(); // 阻止滚动和默认行为
+        const touch = e.touches[0];
+        processInput(touch.clientX, touch.clientY);
+    }
+
+    function handleMouse(e) {
+        processInput(e.clientX, e.clientY);
+    }
+
+    function processInput(clientX, clientY) {
+        if (isClosed) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        // 寻找最近的网格点 (吸附算法)
+        const gx = Math.round(x / CONFIG.gridSpacing);
+        const gy = Math.round(y / CONFIG.gridSpacing);
+        
+        // 检查点击位置是否有效（在画布范围内）
+        const realX = gx * CONFIG.gridSpacing;
+        const realY = gy * CONFIG.gridSpacing;
+        
+        // 边界检查：防止点到画布边缘太近
+        if (realX < CONFIG.gridSpacing || realX > rect.width - CONFIG.gridSpacing || 
+            realY < CONFIG.gridSpacing || realY > rect.height - CONFIG.gridSpacing) {
+            return;
+        }
+
+        // 距离检查：如果点击位置离网格点太远，不响应（防误触）
+        const dist = Math.hypot(x - realX, y - realY);
+        if (dist > CONFIG.snapDistance) return;
+
+        const newPoint = { x: gx, y: gy };
+
+        // 逻辑判断
+        // 1. 闭合检测
+        if (points.length > 2 && newPoint.x === points[0].x && newPoint.y === points[0].y) {
+            isClosed = true;
+            calculate();
+            draw();
+            ui.guide.textContent = "✅ 图形已闭合";
+            return;
+        }
+
+        // 2. 重复点检测
+        if (points.length > 0) {
+            const last = points[points.length - 1];
+            if (last.x === newPoint.x && last.y === newPoint.y) return;
+        }
+
+        points.push(newPoint);
+        draw();
+        updateGuide();
+    }
+
+    function updateGuide() {
+        if (points.length === 0) ui.guide.textContent = "👆 点击钉子画图";
+        else if (points.length < 3) ui.guide.textContent = "👉 继续点击下一个钉子";
+        else ui.guide.textContent = "🔴 点击第一个红点即可闭合";
+    }
+
+    // --- 绘图逻辑 ---
+    function draw() {
+        const width = canvas.width / dpr;
+        const height = canvas.height / dpr;
+
+        ctx.clearRect(0, 0, width, height);
+        
+        // 1. 画网格
+        ctx.fillStyle = '#9ca3af';
+        for (let x = CONFIG.gridSpacing; x < width; x += CONFIG.gridSpacing) {
+            for (let y = CONFIG.gridSpacing; y < height; y += CONFIG.gridSpacing) {
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, Math.PI * 2); // 网格点小一点，视觉更清爽
+                ctx.fill();
+            }
+        }
+
+        if (points.length === 0) return;
+
+        // 2. 画线
+        ctx.strokeStyle = '#2563eb';
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        
+        const start = gridToPixel(points[0]);
+        ctx.moveTo(start.x, start.y);
+
+        for (let i = 1; i < points.length; i++) {
+            const p = gridToPixel(points[i]);
+            ctx.lineTo(p.x, p.y);
+        }
+
+        if (isClosed) {
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(37, 99, 235, 0.15)';
+            ctx.fill();
+        }
+
+        ctx.stroke();
+
+        // 3. 画顶点
+        for (let i = 0; i < points.length; i++) {
+            const p = gridToPixel(points[i]);
+            ctx.beginPath();
+            // 起点显示为红色，其他蓝色
+            ctx.fillStyle = (i === 0 && !isClosed) ? '#dc2626' : '#2563eb';
+            // 起点大一点
+            const r = (i === 0 && !isClosed) ? 7 : 5;
+            ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 选中的点加白边
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    }
+
+    function gridToPixel(p) {
+        return { x: p.x * CONFIG.gridSpacing, y: p.y * CONFIG.gridSpacing };
+    }
+
+    function resetBoard() {
+        points = [];
+        isClosed = false;
+        computedData = { a: 0, n: 0, s: 0 };
+        ui.guide.textContent = "👆 点击钉子画图，回到起点闭合";
+        ui.btnReveal.style.display = 'none';
+        
+        ui.a.textContent = '-';
+        ui.n.textContent = '-';
+        ui.s.textContent = '-';
+        ui.s.classList.remove('highlight-value');
+        
+        draw();
+    }
+
+    function updateUI() {
+        if (!isClosed) return;
+        if (isGuessMode) {
+            ui.a.textContent = "??";
+            ui.n.textContent = "??";
+            ui.s.textContent = "??";
+            ui.s.classList.remove('highlight-value');
+            ui.btnReveal.style.display = 'block';
+        } else {
+            showRealData();
+            ui.btnReveal.style.display = 'none';
+        }
+    }
+
+    function revealData() {
+        showRealData();
+        ui.btnReveal.style.display = 'none';
+    }
+
+    function showRealData() {
+        // 数字滚动特效
+        animateValue(ui.a, computedData.a);
+        animateValue(ui.n, computedData.n);
+        animateValue(ui.s, computedData.s);
+        ui.s.classList.add('highlight-value');
+    }
+    
+    function animateValue(obj, end) {
+        obj.textContent = end; // 简单起见直接显示，平板上动画过多可能掉帧
+    }
+
+    // --- 算法部分 (同上版，保持严谨) ---
+    function calculate() {
+        const n = getBoundaryPoints();
+        const s = getArea();
+        const a = getInternalPoints();
+        computedData = { a, n, s };
+        updateUI();
+    }
+
+    function getBoundaryPoints() {
+        let n = 0;
+        for (let i = 0; i < points.length; i++) {
+            const p1 = points[i];
+            const p2 = points[(i + 1) % points.length];
+            n += gcd(Math.abs(p1.x - p2.x), Math.abs(p1.y - p2.y));
+        }
+        return n;
+    }
+
+    function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+    function getArea() {
+        let area = 0;
+        for (let i = 0; i < points.length; i++) {
+            const p1 = points[i];
+            const p2 = points[(i + 1) % points.length];
+            area += p1.x * p2.y - p2.x * p1.y;
+        }
+        return Math.abs(area) / 2;
+    }
+
+    function getInternalPoints() {
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (let p of points) {
+            minX = Math.min(minX, p.x);
+            maxX = Math.max(maxX, p.x);
+            minY = Math.min(minY, p.y);
+            maxY = Math.max(maxY, p.y);
+        }
+        let count = 0;
+        for (let x = minX + 1; x < maxX; x++) {
+            for (let y = minY + 1; y < maxY; y++) {
+                if (isPointInPolygon({x, y}, points)) count++;
+            }
+        }
+        return count;
+    }
+
+    function isPointInPolygon(p, polygon) {
+        let inside = false;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            const xi = polygon[i].x, yi = polygon[i].y;
+            const xj = polygon[j].x, yj = polygon[j].y;
+            if (isPointOnSegment(p, polygon[i], polygon[j])) return false;
+            const intersect = ((yi > p.y) !== (yj > p.y)) &&
+                (p.x < (xj - xi) * (p.y - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+        }
+        return inside;
+    }
+
+    function isPointOnSegment(p, a, b) {
+        const crossProduct = (p.y - a.y) * (b.x - a.x) - (p.x - a.x) * (b.y - a.y);
+        if (Math.abs(crossProduct) > Number.EPSILON) return false;
+        const dotProduct = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);
+        if (dotProduct < 0) return false;
+        const squaredLength = (b.x - a.x)*(b.x - a.x) + (b.y - a.y)*(b.y - a.y);
+        return dotProduct <= squaredLength;
+    }
+
+    // 启动
+    init();
+
+</script>
+</body>
+</html>
