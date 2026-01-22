@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新春数学闯关大会</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Microsoft YaHei', sans-serif; }
+        body {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 40px rgba(231, 76, 60, 0.15);
+            text-align: center;
+            border: 8px solid #e74c3c;
+            position: relative;
+            overflow: hidden;
+        }
+        .container::before {
+            content: '✨';
+            font-size: 60px;
+            position: absolute;
+            top: -30px;
+            left: 20px;
+            opacity: 0.3;
+        }
+        .container::after {
+            content: '❄️';
+            font-size: 50px;
+            position: absolute;
+            bottom: -25px;
+            right: 20px;
+            opacity: 0.3;
+        }
+        h1 {
+            color: #c0392b;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 0px #f1c40f;
+        }
+        .subtitle {
+            color: #e67e22;
+            font-size: 1.2rem;
+            margin-bottom: 35px;
+            font-weight: bold;
+        }
+        .btn-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .level-btn {
+            display: block;
+            padding: 22px 20px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .level-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.2);
+        }
+        .level-btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-3px);
+        }
+        #btn1 { background: linear-gradient(to right, #e74c3c, #c0392b); }
+        #btn2 { background: linear-gradient(to right, #f39c12, #e67e22); }
+        #btn3 { background: linear-gradient(to right, #2ecc71, #27ae60); }
+        #btn4 { background: linear-gradient(to right, #3498db, #2980b9); }
+        .btn-icon {
+            font-size: 1.8rem;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .tips {
+            background: #fff9e6;
+            border-left: 5px solid #f1c40f;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            text-align: left;
+            font-size: 0.95rem;
+            color: #7f8c8d;
+        }
+        .footer {
+            margin-top: 25px;
+            color: #95a5a6;
+            font-size: 0.9rem;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 30px 20px; }
+            h1 { font-size: 2rem; }
+            .level-btn { padding: 18px 15px; font-size: 1.2rem; }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-dragon"></i> 新春数学闯关大会</h1>
+        <p class="subtitle">四大趣味关卡，等你来挑战！</p>
+        
+        <div class="btn-grid">
+            <a href="https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/document/8EFdWae7zefVPWLoDsYwZj.html" 
+               target="_blank" class="level-btn" id="btn1">
+                <i class="btn-icon fas fa-fire"></i>第一关：鞭炮乐算坊
+            </a>
+            <a href="https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/document/pCC49FR4H8G5uM2pH72WpM.html" 
+               target="_blank" class="level-btn" id="btn2">
+                <i class="btn-icon fas fa-lightbulb"></i>第二关：灯笼数谜会
+            </a>
+            <a href="https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/document/ykR3coYk5GNTPTQ55tLhqV.html" 
+               target="_blank" class="level-btn" id="btn3">
+                <i class="btn-icon fas fa-shapes"></i>第三关：福字图形屋
+            </a>
+            <a href="https://musk-online.fbcontent.cn/pub-musk-ai-studio/workflow/file/document/5xJCMowTNy2f3rjhd9fnEU.html" 
+               target="_blank" class="level-btn" id="btn4">
+                <i class="btn-icon fas fa-shopping-cart"></i>第四关：年货妙算集
+            </a>
+        </div>
+        
+        <div class="tips">
+            <p><strong>📱 使用说明：</strong></p>
+            <p>1. 点击上方任一按钮，即可开始对应关卡挑战。</p>
+            <p>2. 建议按顺序闯关，体验最佳。</p>
+            <p>3. 如果打不开，请检查网络或稍后再试。</p>
+        </div>
+        
+        <div class="footer">
+            <p>设计者：小学数学老师 | 祝同学们闯关成功！</p>
+        </div>
+    </div>
+
+    <script>
+        // 简单的点击动画
+        document.querySelectorAll('.level-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                // 动画效果
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+                
+                // 可选：添加音效（需要网络音效链接）
+                // try { new Audio('https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3').play(); } catch(err) {}
+            });
+        });
+        
+        // 添加键盘快捷键支持（按1,2,3,4）
+        document.addEventListener('keydown', function(e) {
+            const key = e.key;
+            const btnMap = {'1':0, '2':1, '3':2, '4':3};
+            if (btnMap[key] !== undefined) {
+                document.querySelectorAll('.level-btn')[btnMap[key]].click();
+            }
+        });
+    </script>
+</body>
+</html>

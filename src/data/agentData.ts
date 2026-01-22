@@ -308,6 +308,15 @@ export const agents = [
     link: 'interactive/learn-fish-move.html',
     tag: ['平移', '体验', '数字']
   },
+    {
+    id: 'coze-html-12-forLearn',
+    name: '钉子板实验室',
+    intro: '来绘制你想要的形状吧！',
+    coverUrl: 'covers/compressed_画板.png',
+    type: 'forLearn',
+    link: 'interactive/learn-drawing-board.html',
+    tag: ['图形', '绘制', '画板']
+  },
   {
     id: 'feixiang-html-1-forLearn',
     name: '模拟站队列',
@@ -318,6 +327,15 @@ export const agents = [
     tag: ['动画', '数学', '可视化']
   },
   // 三、forEvaluate
+  {
+    id: 'coze-html-top-1-forEvaluate',
+    name: '新春数学闯关大会',
+    intro: '小朋友们快来闯关，检测一下你的数学能力吧！',
+    coverUrl: 'covers/compressed_新春数学.png',
+    type: 'forEvaluate',
+    link: 'interactive/evaluate-math-exam.html',
+    tag: ['数学', '测试', '闯关']
+  },
   {
     id: 'coze-agent-1-forEvaluate',
     name: '语文作文评测工具',
