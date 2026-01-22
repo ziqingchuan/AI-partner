@@ -55,10 +55,9 @@
     <main class="main-content">
       <div v-if="filteredAgents.length > 0" class="agents-grid">
         <div
-            v-for="agent in filteredAgents"
+            v-for="agent in paginatedAgents"
             :key="agent.id"
             class="agent-card"
-
             @click="goToAgentLink(agent.link)"
         >
           <div class="agent-image-container">
@@ -66,6 +65,7 @@
                 :src="agent.coverUrl"
                 :alt="agent.name"
                 class="agent-cover"
+                @load="handleImageLoad(agent.coverUrl)"
             />
             <div v-if="agent.isPinned" class="pinned-badge">置顶</div>
           </div>
@@ -81,7 +81,38 @@
         </div>
       </div>
 
-      <div v-else class="no-results">
+      <!-- 分页控件 -->
+      <div v-if="filteredAgents.length > itemsPerPage" class="pagination">
+        <button 
+          class="pagination-btn" 
+          :disabled="!hasPrevPage" 
+          @click="prevPage"
+        >
+          上一页
+        </button>
+        
+        <div class="page-numbers">
+          <button
+            v-for="page in totalPages"
+            :key="page"
+            class="page-number"
+            :class="{ active: page === currentPage }"
+            @click="goToPage(page)"
+          >
+            {{ page }}
+          </button>
+        </div>
+        
+        <button 
+          class="pagination-btn" 
+          :disabled="!hasNextPage" 
+          @click="nextPage"
+        >
+          下一页
+        </button>
+      </div>
+
+      <div v-else-if="filteredAgents.length === 0" class="no-results">
         <p>没有找到符合条件的AI助手</p>
       </div>
     </main>
@@ -95,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { agents } from '../data/agentData';
 import type { Agent, UseType } from '../types';
 
@@ -103,10 +134,14 @@ import type { Agent, UseType } from '../types';
 const activeType = ref<UseType>('forTeach');
 const searchQuery = ref('');
 const currentSearch = ref('');
+const currentPage = ref(1);
+const itemsPerPage = ref(9);
+const loadedImages = ref(new Set<string>());
 
 // 处理搜索（保持不变，仅删除高亮相关逻辑）
 const handleSearch = () => {
   currentSearch.value = searchQuery.value.trim();
+  currentPage.value = 1; // 搜索时重置到第一页
 };
 
 // 清空搜索状态
@@ -114,23 +149,22 @@ const clearSearch = () => {
   currentSearch.value = '';
   searchQuery.value = '';
   activeType.value = 'forTeach';
-}
+  currentPage.value = 1;
+};
 
 // 跳转到指定助手链接
 const goToAgentLink = (link: string) => {
   // 验证link有效性，避免空链接跳转
   if (link && link.trim()) {
-    // 方式1：当前窗口跳转（常用）
-    // window.location.href = link;
-    // 方式2：新窗口跳转（如需新窗口打开，替换上面代码为下面这行）
     window.open(link, '_blank');
   }
 };
 
-// 监听分类变化，清空搜索（保持不变）
+// 监听分类变化，清空搜索
 watch(activeType, () => {
   currentSearch.value = '';
   searchQuery.value = '';
+  currentPage.value = 1;
 });
 
 watch(searchQuery, () => {
@@ -158,6 +192,75 @@ const filteredAgents = computed(() => {
     if (!aPinned && bPinned) return 1;
     return 0;
   });
+});
+
+// 计算分页相关数据
+const paginatedAgents = computed(() => {
+  const startIndex = (currentPage.value - 1) * itemsPerPage.value;
+  const endIndex = startIndex + itemsPerPage.value;
+  return filteredAgents.value.slice(startIndex, endIndex);
+});
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredAgents.value.length / itemsPerPage.value);
+});
+
+const hasNextPage = computed(() => {
+  return currentPage.value < totalPages.value;
+});
+
+const hasPrevPage = computed(() => {
+  return currentPage.value > 1;
+});
+
+const nextPage = () => {
+  if (hasNextPage.value) {
+    currentPage.value++;
+  }
+};
+
+const prevPage = () => {
+  if (hasPrevPage.value) {
+    currentPage.value--;
+  }
+};
+
+const goToPage = (page: number) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+  }
+};
+
+// 图片懒加载处理
+const handleImageLoad = (imageUrl: string) => {
+  loadedImages.value.add(imageUrl);
+};
+
+// 预加载下一页的图片
+const preloadNextPageImages = () => {
+  if (!hasNextPage.value) return;
+
+  const nextPageStart = currentPage.value * itemsPerPage.value;
+  const nextPageEnd = nextPageStart + itemsPerPage.value;
+  const nextPageAgents = filteredAgents.value.slice(nextPageStart, nextPageEnd);
+
+  nextPageAgents.forEach(agent => {
+    if (!loadedImages.value.has(agent.coverUrl)) {
+      const img = new Image();
+      img.src = agent.coverUrl;
+      img.onload = () => loadedImages.value.add(agent.coverUrl);
+    }
+  });
+};
+
+// 监听页码变化，预加载下一页
+watch(currentPage, () => {
+  setTimeout(preloadNextPageImages, 100);
+});
+
+// 初始化时预加载第一页
+onMounted(() => {
+  preloadNextPageImages();
 });
 </script>
 
@@ -339,6 +442,64 @@ const filteredAgents = computed(() => {
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
+/* 分页样式 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-top: 40px;
+  padding: 20px 0;
+}
+
+.pagination-btn {
+  padding: 10px 20px;
+  border: 1px solid rgba(12, 67, 255, 0.3);
+  background-color: white;
+  color: rgba(12, 67, 255, 0.8);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: rgba(12, 67, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 8px;
+}
+
+.page-number {
+  padding: 8px 12px;
+  border: 1px solid rgba(12, 67, 255, 0.2);
+  background-color: white;
+  color: rgba(12, 67, 255, 0.8);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 40px;
+}
+
+.page-number:hover {
+  background-color: rgba(12, 67, 255, 0.1);
+}
+
+.page-number.active {
+  background-color: rgba(12, 67, 255, 0.6);
+  color: white;
+  border-color: rgba(12, 67, 255, 0.6);
+}
+
 .agent-image-container {
   position: relative;
   flex-shrink: 0;
@@ -495,6 +656,28 @@ const filteredAgents = computed(() => {
   }
   .search-input {
     padding: 12px 15px;
+    font-size: 0.9rem;
+  }
+  
+  /* 移动端分页样式 */
+  .pagination {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .page-numbers {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .page-number {
+    padding: 6px 10px;
+    min-width: 35px;
+    font-size: 0.9rem;
+  }
+  
+  .pagination-btn {
+    padding: 8px 16px;
     font-size: 0.9rem;
   }
 }

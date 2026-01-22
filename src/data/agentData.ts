@@ -330,10 +330,20 @@ export const agents = [
   {
     id: 'coze-html-top-1-forEvaluate',
     name: '新春数学闯关大会',
-    intro: '小朋友们快来闯关，检测一下你的数学能力吧！',
+    intro: '一年级的小朋友们快来闯关，检测一下你的数学能力吧！',
     coverUrl: 'covers/compressed_新春数学.png',
     type: 'forEvaluate',
-    link: 'interactive/evaluate-math-exam.html',
+    link: 'interactive/evaluate-math-exam1.html',
+    tag: ['数学', '测试', '闯关'],
+    isPinned: true
+  },
+    {
+    id: 'coze-html-top-2-forEvaluate',
+    name: '马年游戏乐园',
+    intro: '欢迎二年级的小朋友们来到马年游戏乐园，测试您的学习成果！',
+    coverUrl: 'covers/compressed_数学乐园.png',
+    type: 'forEvaluate',
+    link: 'interactive/evaluate-math-exam2.html',
     tag: ['数学', '测试', '闯关'],
     isPinned: true
   },
