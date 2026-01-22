@@ -8,4 +8,5 @@ export interface Agent {
     type: UseType;
     link: string;
     tag: string[];
+    isPinned?: boolean;
 }

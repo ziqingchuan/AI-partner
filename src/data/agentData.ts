@@ -334,7 +334,8 @@ export const agents = [
     coverUrl: 'covers/compressed_新春数学.png',
     type: 'forEvaluate',
     link: 'interactive/evaluate-math-exam.html',
-    tag: ['数学', '测试', '闯关']
+    tag: ['数学', '测试', '闯关'],
+    isPinned: true
   },
   {
     id: 'coze-agent-1-forEvaluate',

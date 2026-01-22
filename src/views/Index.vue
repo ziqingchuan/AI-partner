@@ -61,13 +61,15 @@
 
             @click="goToAgentLink(agent.link)"
         >
-          <img
-              :src="agent.coverUrl"
-              :alt="agent.name"
-              class="agent-cover"
-          />
+          <div class="agent-image-container">
+            <img
+                :src="agent.coverUrl"
+                :alt="agent.name"
+                class="agent-cover"
+            />
+            <div v-if="agent.isPinned" class="pinned-badge">置顶</div>
+          </div>
           <div class="agent-info">
-            <!-- 移除高亮组件，直接显示文本 -->
             <h3 class="agent-name">{{ agent.name }}</h3>
             <p class="agent-intro">{{ agent.intro }}</p>
             <div class="agent-tags">
@@ -95,18 +97,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { agents } from '../data/agentData';
-// 定义类型
-export type UseType = 'forTeach' | 'forLearn' | 'forEvaluate';
-
-export interface Agent {
-  id: string;
-  name: string;
-  intro: string;
-  coverUrl: string;
-  type: UseType;
-  link: string;
-  tag: string;
-}
+import type { Agent, UseType } from '../types';
 
 // 状态管理（保持不变）
 const activeType = ref<UseType>('forTeach');
@@ -146,9 +137,9 @@ watch(searchQuery, () => {
   handleSearch();
 });
 
-// 筛选 agents（保持不变，搜索逻辑正常保留）
+// 筛选 agents，并添加置顶排序
 const filteredAgents = computed(() => {
-  return agents.filter(agent => {
+  const filtered = agents.filter(agent => {
     const typeMatch = agent.type === activeType.value;
     if (!currentSearch.value) return typeMatch;
 
@@ -157,6 +148,15 @@ const filteredAgents = computed(() => {
     const introMatch = agent.intro.toLowerCase().includes(searchLower);
     const tagMatch = agent.tag.some(tag => tag.toLowerCase().includes(searchLower));
     return typeMatch && (nameMatch || introMatch || tagMatch);
+  });
+
+  // 置顶的在前，其他保持原顺序
+  return [...filtered].sort((a, b) => {
+    const aPinned = a.isPinned || false;
+    const bPinned = b.isPinned || false;
+    if (aPinned && !bPinned) return -1;
+    if (!aPinned && bPinned) return 1;
+    return 0;
   });
 });
 </script>
@@ -339,12 +339,30 @@ const filteredAgents = computed(() => {
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
+.agent-image-container {
+  position: relative;
+  flex-shrink: 0;
+}
+
 .agent-cover {
   width: 80px;
   height: 80px;
   object-fit: cover;
   border-radius: 8px;
-  flex-shrink: 0;
+}
+
+.pinned-badge {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  background-color: #ff4757;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 12px;
+  z-index: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .agent-info {
