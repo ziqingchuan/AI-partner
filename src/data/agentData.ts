@@ -337,7 +337,7 @@ export const agents = [
     tag: ['数学', '测试', '闯关'],
     isPinned: true
   },
-    {
+  {
     id: 'coze-html-top-2-forEvaluate',
     name: '马年游戏乐园',
     intro: '欢迎二年级的小朋友们来到马年游戏乐园，测试您的学习成果！',

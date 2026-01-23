@@ -3,304 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>马年游戏关卡选择</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>趣味数学新春游园会</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         body {
+            background: linear-gradient(135deg, #ff6b6b, #ff9966, #ffcc00);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #C62828; /* 大红色背景 */
+            font-family: 'Arial Rounded MT Bold', 'Microsoft YaHei', sans-serif;
             padding: 20px;
         }
         
         .container {
             width: 100%;
-            max-width: 700px;
-            text-align: center;
+            max-width: 550px;
             background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(200, 50, 0, 0.25);
             padding: 40px 30px;
-            border: 8px solid #FFD700; /* 金色边框 */
+            border: 5px solid #ffcc00;
+            text-align: center;
         }
         
-        .header {
+        h1 {
+            color: #d40000;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 0 #ffcc00;
             margin-bottom: 40px;
+            letter-spacing: 1px;
         }
         
-        .header h1 {
-            font-size: 2.8rem;
-            color: #C62828;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .header h1 i {
-            color: #FFD700;
-        }
-        
-        .header p {
-            font-size: 1.2rem;
-            color: #555;
-            line-height: 1.6;
-        }
-        
-        .buttons-container {
+        .games-area {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 25px;
         }
         
-        .level-btn {
-            display: flex;
-            align-items: center;
+        .game-btn {
             width: 100%;
-            max-width: 550px;
-            padding: 22px 25px;
-            background-color: #FFF;
-            border: 3px solid #FFD700;
-            border-radius: 12px;
-            color: #C62828;
-            font-size: 1.5rem;
-            font-weight: 700;
-            text-decoration: none;
+            padding: 22px 20px;
+            background: linear-gradient(135deg, #ff3333, #ff6600);
+            border: none;
+            border-radius: 15px;
+            font-size: 1.6rem;
+            font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            text-align: left;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            color: white;
+            box-shadow: 0 8px 20px rgba(204, 0, 0, 0.2);
         }
         
-        .level-btn:hover {
+        .game-btn:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-            background-color: #FFEBEE;
-            border-color: #C62828;
+            box-shadow: 0 12px 25px rgba(204, 0, 0, 0.3);
+            background: linear-gradient(135deg, #ff4444, #ff7700);
         }
         
-        .level-btn:active {
+        .game-btn:active {
             transform: translateY(-2px);
         }
         
-        .level-icon {
-            font-size: 2rem;
-            margin-right: 15px;
-            width: 45px;
-            color: #C62828;
-        }
-        
-        .level-text {
-            flex-grow: 1;
-        }
-        
-        .level-subtext {
-            display: block;
-            font-size: 1.1rem;
-            font-weight: normal;
-            color: #666;
-            margin-top: 5px;
-        }
-        
-        .level-arrow {
-            font-size: 1.5rem;
-            color: #C62828;
-            transition: transform 0.3s;
-        }
-        
-        .level-btn:hover .level-arrow {
-            transform: translateX(8px);
-            color: #FFD700;
-        }
-        
-        /* 每个按钮不同的左侧装饰 */
-        .level-btn:nth-child(1) {
-            border-left: 8px solid #C62828;
-        }
-        
-        .level-btn:nth-child(2) {
-            border-left: 8px solid #4A148C;
-        }
-        
-        .level-btn:nth-child(3) {
-            border-left: 8px solid #FF6F00;
-        }
-        
-        .footer {
-            margin-top: 40px;
-            color: #C62828;
-            font-size: 1rem;
-            text-align: center;
-            padding-top: 20px;
-            border-top: 2px solid #FFD700;
-            font-weight: bold;
-        }
-        
-        /* 简单的马年主题装饰 - 仅有一个简单的马头图标在标题处 */
-        .horse-icon {
-            display: inline-block;
-            font-size: 2.5rem;
-            color: #FFD700;
-            margin: 0 10px;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 30px 20px;
-                max-width: 90%;
-            }
-            
-            .header h1 {
-                font-size: 2.2rem;
-            }
-            
-            .header p {
-                font-size: 1.1rem;
-            }
-            
-            .level-btn {
-                font-size: 1.3rem;
-                padding: 18px 20px;
-            }
-            
-            .level-icon {
-                font-size: 1.8rem;
-                width: 40px;
-            }
-            
-            .level-subtext {
-                font-size: 1rem;
-            }
-            
-            .horse-icon {
+        @media (max-width: 600px) {
+            h1 {
                 font-size: 2rem;
+                margin-bottom: 30px;
+            }
+            
+            .game-btn {
+                font-size: 1.4rem;
+                padding: 20px 15px;
             }
         }
         
-        @media (max-width: 480px) {
-            .header h1 {
-                font-size: 1.9rem;
+        @media (max-width: 400px) {
+            h1 {
+                font-size: 1.8rem;
             }
             
-            .level-btn {
+            .game-btn {
                 font-size: 1.2rem;
-                padding: 16px 18px;
-            }
-            
-            .level-icon {
-                font-size: 1.6rem;
-                width: 35px;
-                margin-right: 12px;
-            }
-            
-            .level-subtext {
-                font-size: 0.9rem;
+                padding: 18px 12px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>
-                <i class="fas fa-horse-head horse-icon"></i>
-                马年游戏乐园
-                <i class="fas fa-horse-head horse-icon"></i>
-            </h1>
-            <p>马年到，好运来！选择关卡开始游戏，祝您马上成功，马到功成！</p>
-        </div>
+        <h1>趣味数学 新春游园会</h1>
         
-        <div class="buttons-container">
-            <a href="https://13.r302.cc/lmdjj4v?platform=enpc&channel=copylink" class="level-btn" target="_blank">
-                <div class="level-icon">
-                    <i class="fas fa-firecracker"></i>
-                </div>
-                <div class="level-text">
-                    第一关 口算鞭炮响
-                    <span class="level-subtext">挑战口算题，点燃鞭炮迎马年</span>
-                </div>
-                <div class="level-arrow">
-                    <i class="fas fa-chevron-right"></i>
-                </div>
-            </a>
-            
-            <a href="https://13.r302.cc/lmdjpbY?platform=enpc&channel=copylink" class="level-btn" target="_blank">
-                <div class="level-icon">
-                    <i class="fas fa-compass"></i>
-                </div>
-                <div class="level-text">
-                    第二关 福字辩方向
-                    <span class="level-subtext">识别福字方向，马上有福</span>
-                </div>
-                <div class="level-arrow">
-                    <i class="fas fa-chevron-right"></i>
-                </div>
-            </a>
-            
-            <a href="https://13.r302.cc/xMdjQZ3?platform=enpc&channel=copylink" class="level-btn" target="_blank">
-                <div class="level-icon">
-                    <i class="fas fa-shopping-cart"></i>
-                </div>
-                <div class="level-text">
-                    第三关 年货大采购
-                    <span class="level-subtext">采购年货，马上有钱</span>
-                </div>
-                <div class="level-arrow">
-                    <i class="fas fa-chevron-right"></i>
-                </div>
-            </a>
-        </div>
-        
-        <div class="footer">
-            <p>点击任意按钮开始游戏 | 马年大吉，万事如意！</p>
+        <div class="games-area">
+            <a href="https://13.r302.cc/95l4dz3?platform=enpc&channel=copylink" target="_blank" class="game-btn">第一关 口算鞭炮响</a>
+            <a href="https://13.r302.cc/kA5aKy2?platform=enpc&channel=copylink" target="_blank" class="game-btn">第二关 福字辩方向</a>
+            <a href="https://13.r302.cc/bg9K9YJ?platform=enpc&channel=copylink" target="_blank" class="game-btn">第三关 年货大采购</a>
         </div>
     </div>
-
-    <script>
-        // 添加按钮点击反馈
-        document.querySelectorAll('.level-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                // 添加点击效果
-                this.style.transform = 'scale(0.97)';
-                setTimeout(() => {
-                    this.style.transform = '';
-                }, 200);
-            });
-        });
-        
-        // 添加键盘快捷键支持
-        document.addEventListener('keydown', function(e) {
-            if (e.key >= '1' && e.key <= '3') {
-                const levelIndex = parseInt(e.key) - 1;
-                const buttons = document.querySelectorAll('.level-btn');
-                
-                if (levelIndex < buttons.length) {
-                    buttons[levelIndex].click();
-                }
-            }
-        });
-        
-        // 页面加载时的简单动画
-        window.addEventListener('load', function() {
-            const buttons = document.querySelectorAll('.level-btn');
-            buttons.forEach((btn, index) => {
-                btn.style.opacity = '0';
-                btn.style.transform = 'translateY(30px)';
-                
-                setTimeout(() => {
-                    btn.style.transition = 'opacity 0.5s, transform 0.5s';
-                    btn.style.opacity = '1';
-                    btn.style.transform = 'translateY(0)';
-                }, index * 150);
-            });
-        });
-    </script>
 </body>
 </html>
