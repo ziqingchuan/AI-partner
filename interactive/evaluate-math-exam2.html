@@ -3,110 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>趣味数学新春游园会</title>
+    <title>趣味数学 新春游园会</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: Arial, sans-serif;
         }
         
         body {
-            background: linear-gradient(135deg, #ff6b6b, #ff9966, #ffcc00);
+            background-color: #f8f8f8;
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Arial Rounded MT Bold', 'Microsoft YaHei', sans-serif;
-            padding: 20px;
-        }
-        
-        .container {
-            width: 100%;
-            max-width: 550px;
-            background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 25px;
-            box-shadow: 0 15px 35px rgba(200, 50, 0, 0.25);
-            padding: 40px 30px;
-            border: 5px solid #ffcc00;
-            text-align: center;
-        }
-        
-        h1 {
-            color: #d40000;
-            font-size: 2.5rem;
-            text-shadow: 2px 2px 0 #ffcc00;
-            margin-bottom: 40px;
-            letter-spacing: 1px;
-        }
-        
-        .games-area {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 25px;
+            justify-content: center;
+            padding: 20px;
         }
         
-        .game-btn {
-            width: 100%;
-            padding: 22px 20px;
-            background: linear-gradient(135deg, #ff3333, #ff6600);
-            border: none;
-            border-radius: 15px;
-            font-size: 1.6rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .header {
             text-align: center;
-            text-decoration: none;
-            display: block;
+            margin-bottom: 40px;
+            max-width: 600px;
+        }
+        
+        h1 {
+            color: #d32f2f;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1rem;
+        }
+        
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .game-button {
+            background-color: #d32f2f;
             color: white;
-            box-shadow: 0 8px 20px rgba(204, 0, 0, 0.2);
+            text-decoration: none;
+            border-radius: 8px;
+            padding: 18px 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            transition: background-color 0.2s;
+            border: none;
+            cursor: pointer;
+            display: block;
+            width: 100%;
         }
         
-        .game-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 25px rgba(204, 0, 0, 0.3);
-            background: linear-gradient(135deg, #ff4444, #ff7700);
+        .game-button:hover {
+            background-color: #b71c1c;
         }
         
-        .game-btn:active {
-            transform: translateY(-2px);
+        .footer {
+            margin-top: 40px;
+            color: #888;
+            font-size: 0.9rem;
+            text-align: center;
         }
         
         @media (max-width: 600px) {
             h1 {
-                font-size: 2rem;
-                margin-bottom: 30px;
-            }
-            
-            .game-btn {
-                font-size: 1.4rem;
-                padding: 20px 15px;
-            }
-        }
-        
-        @media (max-width: 400px) {
-            h1 {
                 font-size: 1.8rem;
             }
             
-            .game-btn {
-                font-size: 1.2rem;
-                padding: 18px 12px;
+            .game-button {
+                padding: 16px 18px;
+                font-size: 1.1rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="header">
         <h1>趣味数学 新春游园会</h1>
+        <p class="subtitle">点击下方按钮开始游戏，体验新春数学乐趣</p>
+    </div>
+    
+    <div class="buttons-container">
+        <a href="https://13.r302.cc/xM61Lvb?platform=enpc&channel=copylink" target="_blank" class="game-button">
+            第一关 口算鞭炮响
+        </a>
         
-        <div class="games-area">
-            <a href="https://13.r302.cc/95l4dz3?platform=enpc&channel=copylink" target="_blank" class="game-btn">第一关 口算鞭炮响</a>
-            <a href="https://13.r302.cc/kA5aKy2?platform=enpc&channel=copylink" target="_blank" class="game-btn">第二关 福字辩方向</a>
-            <a href="https://13.r302.cc/bg9K9YJ?platform=enpc&channel=copylink" target="_blank" class="game-btn">第三关 年货大采购</a>
-        </div>
+        <a href="https://13.r302.cc/kA5dG29?platform=enpc&channel=copylink" target="_blank" class="game-button">
+            第二关 福字辨方向
+        </a>
+        
+        <a href="https://13.r302.cc/bg9K9YJ?platform=enpc&channel=copylink" target="_blank" class="game-button">
+            第三关 年货大采购
+        </a>
+    </div>
+    
+    <div class="footer">
+        <p>趣味数学新春游园会 © 2023 | 祝您新春快乐！</p>
     </div>
 </body>
 </html>
